@@ -50,11 +50,50 @@ impl CPU {
         }
     }
 
-    pub(crate) fn execute_mov(&mut self, mem: &mut Memory) {
+    pub(crate) fn execute_mov_word(&mut self, mem: &mut Memory) {
         let instruction = self.consume_instruction(mem);
         match instruction {
             0xC0..=0xFF => {
                 self.mov_16bit_register_addressing(instruction);
+            }
+            x => panic!("MOV instruction not implemented! for {}", x),
+        }
+    }
+
+    fn mov_8bit_register_addressing(&mut self, instruction: Byte){
+        let registers = [
+            self.get_ax_low(), self.get_cx_low(), self.get_dx_low(), self.get_bx_low(),
+            self.get_ax_high(), self.get_cx_high(), self.get_dx_high(), self.get_bx_high(),
+        ];
+
+        let source_idx = instruction & 0x0F;
+        let reg: Byte = registers[(source_idx % 8) as usize];
+
+        let prefix = (instruction & 0b00110000) >> 3;
+        let write_idx = if source_idx > 7 {
+            prefix | 0x01
+        } else {
+            prefix
+        };
+
+        match write_idx {
+            0x00 => self.set_ax_low(reg),
+            0x01 => self.set_cx_low(reg),
+            0x02 => self.set_dx_low(reg),
+            0x03 => self.set_bx_low(reg),
+            0x04 => self.set_ax_high(reg),
+            0x05 => self.set_cx_high(reg),
+            0x06 => self.set_dx_high(reg),
+            0x07 => self.set_bx_high(reg),
+            _ => panic!("Invalid register index! This can't happen!"),   
+        }
+    }
+
+    pub(crate) fn execute_mov_byte(&mut self, mem: &mut Memory) {
+        let instruction = self.consume_instruction(mem);
+        match instruction {
+            0xC0..=0xFF => {
+                self.mov_8bit_register_addressing(instruction);
             }
             x => panic!("MOV instruction not implemented! for {}", x),
         }
@@ -157,5 +196,118 @@ mod mov_16bit_register_addressing_tests {
         assert_eq!(cpu.stack_pointer, cpu.base_pointer);
         assert_eq!(cpu.stack_pointer, 0xFF00);
         assert_eq!(cpu.base_pointer, 0xFF00);
+    }
+}
+
+#[cfg(test)]
+mod mov_8bit_register_addressing_tests{
+    use super::CPU;
+    use crate::memory::Memory;
+
+    #[test]
+    fn test_mov_8bit_register_addressing_ax_low_cx_low() {
+        let mut cpu = CPU::new();
+        let mut mem = Memory::new();
+        cpu.reset(&mut mem);
+        cpu.set_cx_low(0xFF);
+
+        // check this operation
+        // MOV AL, CL
+        // 0x8A 0xC1
+        mem.write_byte(0xFFFC, 0x8A);
+        mem.write_byte(0xFFFD, 0xC1);
+        cpu.execute(&mut mem);
+        assert_eq!(cpu.get_ax_low(), cpu.get_cx_low());
+        assert_eq!(cpu.get_ax_low(), 0xFF);
+        assert_eq!(cpu.get_cx_low(), 0xFF);
+    }
+
+    #[test]
+    fn test_mov_8bit_register_addressing_ax_low_dx_low() {
+        let mut cpu = CPU::new();
+        let mut mem = Memory::new();
+        cpu.reset(&mut mem);
+        cpu.set_dx_low(0xFF);
+
+        // check this operation
+        // MOV AL, DL
+        // 0x8A 0xC2
+        mem.write_byte(0xFFFC, 0x8A);
+        mem.write_byte(0xFFFD, 0xC2);
+        cpu.execute(&mut mem);
+        assert_eq!(cpu.get_ax_low(), cpu.get_dx_low());
+        assert_eq!(cpu.get_ax_low(), 0xFF);
+        assert_eq!(cpu.get_dx_low(), 0xFF);
+    }
+
+    #[test]
+    fn test_mov_8bit_register_addressing_ax_low_bx_low() {
+        let mut cpu = CPU::new();
+        let mut mem = Memory::new();
+        cpu.reset(&mut mem);
+        cpu.set_bx_low(0xFF);
+
+        // check this operation
+        // MOV AL, BL
+        // 0x8A 0xC3
+        mem.write_byte(0xFFFC, 0x8A);
+        mem.write_byte(0xFFFD, 0xC3);
+        cpu.execute(&mut mem);
+        assert_eq!(cpu.get_ax_low(), cpu.get_bx_low());
+        assert_eq!(cpu.get_ax_low(), 0xFF);
+        assert_eq!(cpu.get_bx_low(), 0xFF);
+    }
+
+    #[test]
+    fn test_mov_8bit_register_addressing_bx_low_dx_high(){
+        let mut cpu = CPU::new();
+        let mut mem = Memory::new();
+        cpu.reset(&mut mem);
+        cpu.set_dx_high(0xFF);
+
+        // check this operation
+        // MOV BL, DH
+        // 0x8A 0xF3
+        mem.write_byte(0xFFFC, 0x8A);
+        mem.write_byte(0xFFFD, 0xF3);
+        cpu.execute(&mut mem);
+        assert_eq!(cpu.get_bx_low(), cpu.get_dx_high());
+        assert_eq!(cpu.get_bx_low(), 0xFF);
+        assert_eq!(cpu.get_dx_high(), 0xFF);
+    }
+
+    #[test]
+    fn test_mov_8bit_register_addressing_ax_high_cx_high() {
+        let mut cpu = CPU::new();
+        let mut mem = Memory::new();
+        cpu.reset(&mut mem);
+        cpu.set_cx_high(0xFF);
+
+        // check this operation
+        // MOV AH, CH
+        // 0x8A 0xE1
+        mem.write_byte(0xFFFC, 0x8A);
+        mem.write_byte(0xFFFD, 0xE1);
+        cpu.execute(&mut mem);
+        assert_eq!(cpu.get_ax_high(), cpu.get_cx_high());
+        assert_eq!(cpu.get_ax_high(), 0xFF);
+        assert_eq!(cpu.get_cx_high(), 0xFF);
+    }
+
+    #[test]
+    fn test_mov_8bit_register_addressing_ax_high_dx_low() {
+        let mut cpu = CPU::new();
+        let mut mem = Memory::new();
+
+        cpu.reset(&mut mem);
+        cpu.set_dx_low(0xFF);
+
+        // check this operation
+        // MOV AH, DL
+        // 0x8A 0xE2
+        mem.write_byte(0xFFFC, 0x8A);
+        mem.write_byte(0xFFFD, 0xE2);
+        cpu.execute(&mut mem);
+        assert_eq!(cpu.get_ax_high(), cpu.get_dx_low());
     }
 }
