@@ -4,6 +4,34 @@ use crate::{
 };
 pub mod instructions;
 
+macro_rules! generate_byte_access_methods {
+    ($register:ident) => {
+        paste::item! {
+            pub fn [<get_ $register _high>](&self) -> Byte {
+                ((self.$register & 0xFF00) >> 8) as Byte
+            }
+        }
+
+        paste::item! {
+            pub fn [<get_ $register _low>](&self) -> Byte {
+                (self.$register & 0xFF) as Byte
+            }
+        }
+
+        paste::item! {
+            pub fn [<set_ $register _high>](&mut self, value: Byte) {
+                self.$register = (self.$register & 0xFF) | ((value as Word) << 8);
+            }
+        }
+
+        paste::item! {
+            pub fn [<set_ $register _low>](&mut self, value: Byte) {
+                self.$register = (self.$register & 0xFF00) | (value as Word);
+            }
+        }
+    };
+}
+
 pub struct CPU {
     // Memory
     program_counter: Word,
@@ -26,6 +54,13 @@ pub struct CPU {
     break_command_flag: bool,
     overflow_flag: bool,
     negative_flag: bool,
+}
+
+impl CPU {
+    generate_byte_access_methods!(ax);
+    generate_byte_access_methods!(bx);
+    generate_byte_access_methods!(cx);
+    generate_byte_access_methods!(dx);
 }
 
 impl CPU {
@@ -75,7 +110,7 @@ impl CPU {
         mem.reset();
     }
 
-    fn get_flags_as_binary(&self) -> u8{
+    fn get_flags_as_binary(&self) -> u8 {
         let mut flags: u8 = 0;
         flags |= (self.carry_flag as u8) << 0;
         flags |= (self.zero_flag as u8) << 1;
@@ -98,7 +133,8 @@ impl CPU {
         match opcode {
             // 0x00 => self.brk(mem),
             // mov instruction opcode =
-            0x8B => self.execute_mov(mem),
+            0x8A => self.execute_mov_byte(mem),
+            0x8B => self.execute_mov_word(mem),
             _ => panic!("Invalid opcode: {:X}", opcode),
         }
         self.program_counter += 1;
