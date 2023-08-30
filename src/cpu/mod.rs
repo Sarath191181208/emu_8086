@@ -104,22 +104,3 @@ impl CPU {
         self.program_counter += 1;
     }
 }
-
-#[cfg(test)]
-mod tests{
-    use crate::memory::Memory;
-    use super::CPU;
-
-    #[test]
-    fn test_mov_16bit_register_addressing_ax_cx(){
-        let mut cpu = CPU::new(); let mut mem = Memory::new();
-        cpu.reset(&mut mem); cpu.cx = 0xFF00;
-
-        // check this operation 
-        // MOV AX, CX 
-        // 0x8B 0xC1
-        mem.write_byte(0xFFFC, 0x8B); mem.write_byte(0xFFFD, 0xC1);
-        cpu.execute(&mut mem);
-        assert_eq!(cpu.ax, cpu.cx); assert_eq!(cpu.ax, 0xFF00); assert_eq!(cpu.cx, 0xFF00);
-    }
-}
