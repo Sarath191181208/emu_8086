@@ -1,7 +1,7 @@
 use crate::{consts::Byte, cpu::CPU, memory::Memory};
 
 impl CPU {
-    pub(crate) fn execute_direct_mov_byte(&mut self, mem: &mut Memory, opcode: u8) {
+    pub(in crate::cpu) fn execute_direct_mov_byte(&mut self, mem: &mut Memory, opcode: u8) {
         let write_data: Byte = self.consume_instruction(mem);
         match opcode {
             0xB0 => self.set_ax_low(write_data),
@@ -16,7 +16,7 @@ impl CPU {
         }
     }
 
-    pub(crate) fn execute_direct_mov_word(&mut self, mem: &mut Memory, opcode: u8) {
+    pub(in crate::cpu) fn execute_direct_mov_word(&mut self, mem: &mut Memory, opcode: u8) {
         let write_byte_high: Byte = self.consume_instruction(mem);
         let write_byte_low: Byte = self.consume_instruction(mem);
         let write_data: u16 = (write_byte_high as u16) << 8 | (write_byte_low as u16);

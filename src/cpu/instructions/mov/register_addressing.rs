@@ -50,7 +50,7 @@ impl CPU {
         }
     }
 
-    pub(crate) fn execute_mov_word(&mut self, mem: &mut Memory) {
+    pub(in crate::cpu) fn execute_mov_word(&mut self, mem: &mut Memory) {
         let instruction = self.consume_instruction(mem);
         match instruction {
             0xC0..=0xFF => {
@@ -89,7 +89,7 @@ impl CPU {
         }
     }
 
-    pub(crate) fn execute_mov_byte(&mut self, mem: &mut Memory) {
+    pub(in crate::cpu) fn execute_mov_byte(&mut self, mem: &mut Memory) {
         let instruction = self.consume_instruction(mem);
         match instruction {
             0xC0..=0xFF => {
