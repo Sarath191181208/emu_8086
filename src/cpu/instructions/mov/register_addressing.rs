@@ -6,48 +6,21 @@ use crate::{
 
 impl CPU {
     fn mov_16bit_register_addressing(&mut self, instruction: Byte) {
-        // Let's say that the instruction is MOV AX, BX
-        // The instruction is 0x88 0xD8
-        // The first byte is the opcode, the second byte is the operands
-        // splitting the operands as the operands are 8 they repeat in a pattern
-        // AX, BX, CX, DX, SP, BP, SI, DI
-        // To obtain the source register we need to mask the last 4 bits of the second byte i.e 8
-        // To obtain the destination register we need to mask the first 4 bits of the second byte
-        let registers = [
-            self.ax, self.cx, self.dx, self.bx,
-            self.stack_pointer, self.base_pointer,
-            self.source_index, self.destination_index
-        ];
-
-        let source_idx = instruction & 0x0F;
-        let reg: Word = registers[(source_idx % 8) as usize];
-        // the write index must be as follows
-        // 0xC0 ... 0xC7 -> AX i.e 0
-        // 0xC8 ... 0xCF -> CX i.e 1
-        // 0xD0 ... 0xD7 -> DX i.e 2
-        // singe the first 4 bits are C = (1100) and D = (1101) we can just shift the instruction by 4 and mask the last 2 bits
-        // therefore (C or D or E or F) & 0b00110000 = 0b00110000 the last two bits correspond to the write index
-        // C = ( 000 | 001 ) a, c
-        // D = ( 010 | 011 ) d, b
-        // E = ( 100 | 101 )
-        let prefix = (instruction & 0b00110000) >> 3;
+        // Example instruction is 0xC8
+        // Here first 4 bits are 1100 i.e the source addr
+        let source_idx = instruction & 0x0F; // source_idx = 0x08
+        let reg: Word = self.get_16bit_register_by_index(source_idx % 8); // as there are only 8 registers %8 is used
+        // This masking is done because the instruction are from C0 -> FF
+        // This mask extracts the last 2 bits of the instruction which can be indexed to find the destination register
+        // ex: (0xC8 & 0b00110000) = (0b00000000) i.e in the 0th index
+        // (0x00) | 0x01 as source_idx > 7 => 0x01 i.e the `c` register 
+        let prefix = (instruction & 0b00110000) >> 3; // prefix = 0b0011 i.e the destination addr
         let write_idx = if source_idx > 7 {
             prefix | 0x01
         } else {
             prefix
         };
-
-        match write_idx {
-            0x00 => self.ax = reg,
-            0x01 => self.cx = reg,
-            0x02 => self.dx = reg,
-            0x03 => self.bx = reg,
-            0x04 => self.stack_pointer = reg,
-            0x05 => self.base_pointer = reg,
-            0x06 => self.source_index = reg,
-            0x07 => self.destination_index = reg,
-            _ => panic!("Invalid register index! This can't happen!"),
-        }
+        self.set_16bit_register_by_index(write_idx, reg);
     }
 
     pub(in crate::cpu) fn execute_mov_word(&mut self, mem: &mut Memory) {
@@ -60,33 +33,22 @@ impl CPU {
         }
     }
 
-    fn mov_8bit_register_addressing(&mut self, instruction: Byte){
-        let registers = [
-            self.get_ax_low(), self.get_cx_low(), self.get_dx_low(), self.get_bx_low(),
-            self.get_ax_high(), self.get_cx_high(), self.get_dx_high(), self.get_bx_high(),
-        ];
-
+    fn mov_8bit_register_addressing(&mut self, instruction: Byte) {
+        // Example instruction is 0xC8
+        // Here first 4 bits are 1100 i.e the source addr
         let source_idx = instruction & 0x0F;
-        let reg: Byte = registers[(source_idx % 8) as usize];
-
+        let reg: Byte = self.get_8bit_register_by_index(source_idx % 8);
+        // This masking is done because the instruction are from C0 -> FF
+        // This mask extracts the last 2 bits of the instruction which can be indexed to find the destination register
+        // ex: (0xC8 & 0b00110000) = (0b00000000) i.e in the 0th index
+        // (0x00) | 0x01 as source_idx > 7 => 0x01 i.e the `c` register 
         let prefix = (instruction & 0b00110000) >> 3;
         let write_idx = if source_idx > 7 {
             prefix | 0x01
         } else {
             prefix
         };
-
-        match write_idx {
-            0x00 => self.set_ax_low(reg),
-            0x01 => self.set_cx_low(reg),
-            0x02 => self.set_dx_low(reg),
-            0x03 => self.set_bx_low(reg),
-            0x04 => self.set_ax_high(reg),
-            0x05 => self.set_cx_high(reg),
-            0x06 => self.set_dx_high(reg),
-            0x07 => self.set_bx_high(reg),
-            _ => panic!("Invalid register index! This can't happen!"),   
-        }
+        self.set_8bit_register_by_index(write_idx, reg);
     }
 
     pub(in crate::cpu) fn execute_mov_byte(&mut self, mem: &mut Memory) {
@@ -200,7 +162,7 @@ mod mov_16bit_register_addressing_tests {
 }
 
 #[cfg(test)]
-mod mov_8bit_register_addressing_tests{
+mod mov_8bit_register_addressing_tests {
     use super::CPU;
     use crate::memory::Memory;
 
@@ -259,7 +221,7 @@ mod mov_8bit_register_addressing_tests{
     }
 
     #[test]
-    fn test_mov_8bit_register_addressing_bx_low_dx_high(){
+    fn test_mov_8bit_register_addressing_bx_low_dx_high() {
         let mut cpu = CPU::new();
         let mut mem = Memory::new();
         cpu.reset(&mut mem);

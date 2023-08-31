@@ -3,6 +3,7 @@ use crate::{
     Memory,
 };
 pub mod instructions;
+pub mod utils;
 
 macro_rules! generate_byte_access_methods {
     ($register:ident) => {
@@ -131,6 +132,8 @@ impl CPU {
     pub fn execute(&mut self, mem: &mut Memory) {
         let opcode = self.consume_instruction(mem);
         match opcode {
+
+
             
             // MOV AX, BX i.e register addressing 
             0x8A => self.execute_mov_byte(mem),

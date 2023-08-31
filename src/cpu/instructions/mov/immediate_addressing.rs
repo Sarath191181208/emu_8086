@@ -2,35 +2,23 @@ use crate::{consts::Byte, cpu::CPU, memory::Memory};
 
 impl CPU {
     pub(in crate::cpu) fn execute_direct_mov_byte(&mut self, mem: &mut Memory, opcode: u8) {
+        // read the data to be written i.e one byte as it's for 8bit register
         let write_data: Byte = self.consume_instruction(mem);
-        match opcode {
-            0xB0 => self.set_ax_low(write_data),
-            0xB1 => self.set_cx_low(write_data),
-            0xB2 => self.set_dx_low(write_data),
-            0xB3 => self.set_bx_low(write_data),
-            0xB4 => self.set_ax_high(write_data),
-            0xB5 => self.set_cx_high(write_data),
-            0xB6 => self.set_dx_high(write_data),
-            0xB7 => self.set_bx_high(write_data),
-            _ => panic!("Invalid opcode for direct mov byte: {:#X}", opcode),
-        }
+        // As the opcode is from 0xB0 to 0xB7, we can subtract 0xB0 from the opcode to get the 
+        // index to the register we need to write to 
+        let index: u8 = opcode - 0xB0; // opcode = 0xB0 (to) 0xB7
+        self.set_8bit_register_by_index(index, write_data);
     }
 
     pub(in crate::cpu) fn execute_direct_mov_word(&mut self, mem: &mut Memory, opcode: u8) {
+
+        // read the data to be written i.e two bytes
         let write_byte_high: Byte = self.consume_instruction(mem);
         let write_byte_low: Byte = self.consume_instruction(mem);
         let write_data: u16 = (write_byte_high as u16) << 8 | (write_byte_low as u16);
-        match opcode {
-            0xB8 => self.ax = write_data,
-            0xB9 => self.cx = write_data,
-            0xBA => self.dx = write_data,
-            0xBB => self.bx = write_data,
-            0xBC => self.stack_pointer = write_data,
-            0xBD => self.base_pointer = write_data,
-            0xBE => self.source_index = write_data,
-            0xBF => self.destination_index = write_data,
-            _ => panic!("Invalid opcode for direct mov word: {:#X}", opcode),
-        }
+        // As the opcode is from 0xB8 to 0xBF, we can subtract 0xB8 from the opcode to get the index
+        let index: u8 = opcode - 0xB8; // opcode = 0xB8 (to) 0xBF
+        self.set_16bit_register_by_index(index, write_data);
     }
 }
 
