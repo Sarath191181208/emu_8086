@@ -136,8 +136,8 @@ impl CPU {
 
             
             // MOV AX, BX i.e register addressing 
-            0x8A => self.execute_mov_byte(mem),
-            0x8B => self.execute_mov_word(mem),
+            0x8A => self.execute_mov_register_byte(mem),
+            0x8B => self.execute_mov_register_word(mem),
             
             // MOV AX, 0x1234 i.e immediate addressing 
             0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),

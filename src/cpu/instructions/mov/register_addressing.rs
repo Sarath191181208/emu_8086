@@ -1,29 +1,17 @@
 use crate::{
-    consts::{Byte, Word},
+    consts::Byte,
     cpu::CPU,
     Memory,
 };
 
 impl CPU {
     fn mov_16bit_register_addressing(&mut self, instruction: Byte) {
-        // Example instruction is 0xC8
-        // Here first 4 bits are 1100 i.e the source addr
-        let source_idx = instruction & 0x0F; // source_idx = 0x08
-        let reg: Word = self.get_16bit_register_by_index(source_idx % 8); // as there are only 8 registers %8 is used
-        // This masking is done because the instruction are from C0 -> FF
-        // This mask extracts the last 2 bits of the instruction which can be indexed to find the destination register
-        // ex: (0xC8 & 0b00110000) = (0b00000000) i.e in the 0th index
-        // (0x00) | 0x01 as source_idx > 7 => 0x01 i.e the `c` register 
-        let prefix = (instruction & 0b00110000) >> 3; // prefix = 0b0011 i.e the destination addr
-        let write_idx = if source_idx > 7 {
-            prefix | 0x01
-        } else {
-            prefix
-        };
-        self.set_16bit_register_by_index(write_idx, reg);
+        let (source_index, write_index) = self.get_index_from_c0_ff_pattern(instruction);
+        let reg = self.get_16bit_register_by_index(source_index % 8);
+        self.set_16bit_register_by_index(write_index, reg);
     }
 
-    pub(in crate::cpu) fn execute_mov_word(&mut self, mem: &mut Memory) {
+    pub(in crate::cpu) fn execute_mov_register_word(&mut self, mem: &mut Memory) {
         let instruction = self.consume_instruction(mem);
         match instruction {
             0xC0..=0xFF => {
@@ -34,24 +22,12 @@ impl CPU {
     }
 
     fn mov_8bit_register_addressing(&mut self, instruction: Byte) {
-        // Example instruction is 0xC8
-        // Here first 4 bits are 1100 i.e the source addr
-        let source_idx = instruction & 0x0F;
-        let reg: Byte = self.get_8bit_register_by_index(source_idx % 8);
-        // This masking is done because the instruction are from C0 -> FF
-        // This mask extracts the last 2 bits of the instruction which can be indexed to find the destination register
-        // ex: (0xC8 & 0b00110000) = (0b00000000) i.e in the 0th index
-        // (0x00) | 0x01 as source_idx > 7 => 0x01 i.e the `c` register 
-        let prefix = (instruction & 0b00110000) >> 3;
-        let write_idx = if source_idx > 7 {
-            prefix | 0x01
-        } else {
-            prefix
-        };
-        self.set_8bit_register_by_index(write_idx, reg);
+        let (source_index, write_index) = self.get_index_from_c0_ff_pattern(instruction);
+        let reg = self.get_8bit_register_by_index(source_index % 8);
+        self.set_8bit_register_by_index(write_index, reg);
     }
 
-    pub(in crate::cpu) fn execute_mov_byte(&mut self, mem: &mut Memory) {
+    pub(in crate::cpu) fn execute_mov_register_byte(&mut self, mem: &mut Memory) {
         let instruction = self.consume_instruction(mem);
         match instruction {
             0xC0..=0xFF => {
