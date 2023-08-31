@@ -13,8 +13,8 @@ impl CPU {
     pub(in crate::cpu) fn execute_direct_mov_word(&mut self, mem: &mut Memory, opcode: u8) {
 
         // read the data to be written i.e two bytes
-        let write_byte_high: Byte = self.consume_instruction(mem);
         let write_byte_low: Byte = self.consume_instruction(mem);
+        let write_byte_high: Byte = self.consume_instruction(mem);
         let write_data: u16 = (write_byte_high as u16) << 8 | (write_byte_low as u16);
         // As the opcode is from 0xB8 to 0xBF, we can subtract 0xB8 from the opcode to get the index
         let index: u8 = opcode - 0xB8; // opcode = 0xB8 (to) 0xBF
@@ -117,8 +117,8 @@ mod mov_16bit_register_addressing_tests {
         mov_ax_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xB8);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.ax)
@@ -129,8 +129,8 @@ mod mov_16bit_register_addressing_tests {
         mov_bx_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xBB);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.bx)
@@ -141,8 +141,8 @@ mod mov_16bit_register_addressing_tests {
         mov_cx_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xB9);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.cx)
@@ -153,8 +153,8 @@ mod mov_16bit_register_addressing_tests {
         mov_dx_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xBA);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.dx)
@@ -165,8 +165,8 @@ mod mov_16bit_register_addressing_tests {
         mov_sp_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xBC);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.stack_pointer)
@@ -177,8 +177,8 @@ mod mov_16bit_register_addressing_tests {
         mov_bp_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xBD);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.base_pointer)
@@ -189,8 +189,8 @@ mod mov_16bit_register_addressing_tests {
         mov_si_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xBE);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.source_index)
@@ -201,8 +201,8 @@ mod mov_16bit_register_addressing_tests {
         mov_di_0x1234,
         (|mem: &mut Memory| {
             mem.write_byte(0xFFFC, 0xBF);
-            mem.write_byte(0xFFFD, 0x34);
-            mem.write_byte(0xFFFE, 0x12);
+            mem.write_byte(0xFFFD, 0x12);
+            mem.write_byte(0xFFFE, 0x34);
         }),
         0x3412,
         (|cpu: &CPU| cpu.destination_index)
