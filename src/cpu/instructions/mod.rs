@@ -1,1 +1,1 @@
-pub mod mov_instruction;
+pub mod mov;
