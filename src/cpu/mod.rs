@@ -34,7 +34,7 @@ macro_rules! generate_byte_access_methods {
 
 pub struct CPU {
     // Memory
-    program_counter: Word,
+    instruction_pointer: Word,
     stack_pointer: Word,
     base_pointer: Word,
     source_index: Word,
@@ -66,7 +66,7 @@ impl CPU {
 impl CPU {
     pub fn new() -> CPU {
         CPU {
-            program_counter: 0x0000,
+            instruction_pointer: 0x0000,
             stack_pointer: 0x0000,
             base_pointer: 0x0000,
             source_index: 0x0000,
@@ -88,7 +88,7 @@ impl CPU {
     }
 
     pub fn reset(&mut self, mem: &mut Memory) {
-        self.program_counter = 0xFFFC;
+        self.instruction_pointer = 0xFFFC;
         self.stack_pointer = 0x0100;
         self.base_pointer = 0x0000;
         self.source_index = 0x0000;
@@ -123,20 +123,23 @@ impl CPU {
     }
 
     fn consume_instruction(&mut self, mem: &Memory) -> Byte {
-        let opcode = mem.read(self.program_counter);
-        self.program_counter += 1;
+        let opcode = mem.read(self.instruction_pointer);
+        self.instruction_pointer += 1;
         opcode
     }
 
     pub fn execute(&mut self, mem: &mut Memory) {
         let opcode = self.consume_instruction(mem);
         match opcode {
-            // 0x00 => self.brk(mem),
-            // mov instruction opcode =
+            
+            // MOV AX, BX i.e register addressing 
             0x8A => self.execute_mov_byte(mem),
             0x8B => self.execute_mov_word(mem),
+            
+            // MOV AX, 0x1234 i.e immediate addressing 
+            0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),
+            0xB8..=0xBF => self.execute_direct_mov_word(mem, opcode),
             _ => panic!("Invalid opcode: {:X}", opcode),
         }
-        self.program_counter += 1;
     }
 }
