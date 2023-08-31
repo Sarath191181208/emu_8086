@@ -50,11 +50,12 @@ pub struct CPU {
     // Status Flags
     carry_flag: bool,
     zero_flag: bool,
-    interrupt_disable_flag: bool,
-    decimal_mode_flag: bool,
-    break_command_flag: bool,
-    overflow_flag: bool,
     negative_flag: bool,
+    overflow_flag: bool,
+    pairity_flag: bool,
+    auxiliary_carry_flag: bool,
+    interrupt_disable_flag: bool,
+    direction_flag: bool,
 }
 
 impl CPU {
@@ -81,8 +82,9 @@ impl CPU {
             carry_flag: false,
             zero_flag: false,
             interrupt_disable_flag: false,
-            decimal_mode_flag: false,
-            break_command_flag: false,
+            pairity_flag: false,
+            auxiliary_carry_flag: false,
+            direction_flag: false,
             overflow_flag: false,
             negative_flag: false,
         }
@@ -103,8 +105,9 @@ impl CPU {
         self.carry_flag = false;
         self.zero_flag = false;
         self.interrupt_disable_flag = false;
-        self.decimal_mode_flag = false;
-        self.break_command_flag = false;
+        self.pairity_flag= false;
+        self.auxiliary_carry_flag= false;
+        self.direction_flag= false;
         self.overflow_flag = false;
         self.negative_flag = false;
 
@@ -115,11 +118,12 @@ impl CPU {
         let mut flags: u8 = 0;
         flags |= (self.carry_flag as u8) << 0;
         flags |= (self.zero_flag as u8) << 1;
-        flags |= (self.interrupt_disable_flag as u8) << 2;
-        flags |= (self.decimal_mode_flag as u8) << 3;
-        flags |= (self.break_command_flag as u8) << 4;
-        flags |= (self.overflow_flag as u8) << 6;
-        flags |= (self.negative_flag as u8) << 7;
+        flags |= (self.negative_flag as u8) << 2;
+        flags |= (self.overflow_flag as u8) << 3;
+        flags |= (self.pairity_flag as u8) << 4;
+        flags |= (self.auxiliary_carry_flag as u8) << 5;
+        flags |= (self.interrupt_disable_flag as u8) << 6;
+        flags |= (self.direction_flag as u8) << 7;
         flags
     }
 
@@ -133,7 +137,8 @@ impl CPU {
         let opcode = self.consume_instruction(mem);
         match opcode {
 
-
+            0x02 => self.execute_add_register_byte(mem),
+            0x03 => self.execute_add_register_word(mem),
             
             // MOV AX, BX i.e register addressing 
             0x8A => self.execute_mov_register_byte(mem),
