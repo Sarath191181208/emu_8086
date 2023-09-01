@@ -137,7 +137,9 @@ impl CPU {
         let opcode = self.consume_instruction(mem);
         match opcode {
 
+            // ADD 8bit register, 8bit register
             0x02 => self.execute_add_register_byte(mem),
+            // ADD 16bit register addressing
             0x03 => self.execute_add_register_word(mem),
 
             // ADD AL, 0x12 i.e immediate addressing
