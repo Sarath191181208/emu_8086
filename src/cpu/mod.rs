@@ -139,12 +139,27 @@ impl CPU {
 
             0x02 => self.execute_add_register_byte(mem),
             0x03 => self.execute_add_register_word(mem),
+
+            // ADD AL, 0x12 i.e immediate addressing
+            0x04 => {
+                let value = self.consume_instruction(mem);
+                self.set_ax_low(self.get_ax_low().wrapping_add(value));
+            }
+
+            // ADD AX, 0x1234 i.e immediate addressing
+            0x05 => self.add_ax_in_immediate_addressing(mem),
+
+            // ADD 8bit register, immediate_addressing
+            0x80 => self.execute_add_immediate_byte(mem),
+
+            // ADD 16bit register, immediate_addressing
+            0x81 | 0x83 => self.execute_add_immediate_word(mem, opcode),    
             
-            // MOV AX, BX i.e register addressing 
+            // MOV 16bit register, 16bit register
             0x8A => self.execute_mov_register_byte(mem),
             0x8B => self.execute_mov_register_word(mem),
             
-            // MOV AX, 0x1234 i.e immediate addressing 
+            // MOV 16bit register, 0x1234
             0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),
             0xB8..=0xBF => self.execute_direct_mov_word(mem, opcode),
             _ => panic!("Invalid opcode: {:X}", opcode),
