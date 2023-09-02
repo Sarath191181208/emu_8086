@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+use strum_macros::EnumString;
+
+#[derive(Debug, Clone, PartialEq, Eq, EnumString)]
 pub(crate) enum Registers8bit {
     AH,
     AL,

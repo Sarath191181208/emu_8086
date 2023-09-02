@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::tokens::{
     instructions::Instructions, registers16bit::Registers16bit, registers8bit::Registers8bit,
     Assembly8086Tokens, Token,
@@ -67,7 +69,7 @@ impl Lexer {
                             token_length += 1;
                             token_string_buffer.push(c);
                         }
-                        let token = self.str_to_token(&token_string_buffer.to_lowercase());
+                        let token = self.str_to_token(&token_string_buffer.to_uppercase());
                         self.tokens.push(Token::new(
                             match token {
                                 Some(token) => token,
@@ -85,43 +87,23 @@ impl Lexer {
     }
 
     fn str_to_token(&self, token_string: &str) -> Option<Assembly8086Tokens> {
-        // create a dict with all the tokens
-        let tokens = vec![
-            (Assembly8086Tokens::Register16bit(Registers16bit::AX), "ax"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::BX), "bx"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::CX), "cx"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::DX), "dx"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::SI), "si"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::DI), "di"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::BP), "bp"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::SP), "sp"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::CS), "cs"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::DS), "ds"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::ES), "es"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::SS), "ss"),
-            (Assembly8086Tokens::Register16bit(Registers16bit::IP), "ip"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::AH), "ah"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::AL), "al"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::BH), "bh"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::BL), "bl"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::CH), "ch"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::CL), "cl"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::DH), "dh"),
-            (Assembly8086Tokens::Register8bit(Registers8bit::DL), "dl"),
-            (Assembly8086Tokens::Instruction(Instructions::MOV), "mov"),
-            (Assembly8086Tokens::Instruction(Instructions::ADD), "add"),
-        ];
 
-        // iterate the dict and check if the token_string is in the dict
-        for (token, token_string_in_dict) in tokens {
-            if token_string == token_string_in_dict {
-                return Some(token);
-            }
+        if let Ok(instruction) = Instructions::from_str(token_string) {
+            return Some(Assembly8086Tokens::Instruction(instruction));
         }
-        if let Some(token) = self.parse_num_u8(token_string) {
+
+        if let Ok(register) = Registers16bit::from_str(token_string) {
+            return Some(Assembly8086Tokens::Register16bit(register));
+        }
+
+        if let Ok(register) = Registers8bit::from_str(token_string) {
+            return Some(Assembly8086Tokens::Register8bit(register));
+        }
+        
+        if let Some(token) = self.parse_num_u8(&token_string.to_lowercase()) {
             return Some(token);
         }
-        if let Some(token) = self.parse_num_u16(token_string) {
+        if let Some(token) = self.parse_num_u16(&token_string.to_lowercase()) {
             return Some(token);
         }
         None
