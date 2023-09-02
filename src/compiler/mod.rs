@@ -1,6 +1,7 @@
 pub mod compilation_error;
 pub mod lexer;
 pub mod tokens;
+pub mod tests;
 
 use compilation_error::CompilationError;
 use lexer::Lexer;
@@ -106,7 +107,7 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
                             };
                             compiled_bytes.push(0x8B);
                             let ins = (0xC0) | (high_reg_idx / 2) << 4;
-                            let ins2 = low_reg_idx | (high_reg_idx % 2) << 4;
+                            let ins2 = low_reg_idx | (high_reg_idx % 2) << 3;
                             compiled_bytes.push(ins | ins2);
 
                             compiled_bytes_ref.push(CompiledBytes::new(
@@ -169,7 +170,7 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
                             compiled_bytes.push(0x8A);
                             let ins = (0xC0) | (high_reg.get_as_idx() / 2) << 4;
                             let ins2 =
-                                (low_reg.get_as_idx() / 2) | (high_reg.get_as_idx() % 2) << 4;
+                                (low_reg.get_as_idx() / 2) | (high_reg.get_as_idx() % 2) << 3;
                             compiled_bytes.push(ins);
                             compiled_bytes.push(ins2);
 
