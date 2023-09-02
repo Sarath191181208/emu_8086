@@ -10,6 +10,7 @@ macro_rules! test_compile {
                 Ok(instructions) => instructions,
                 Err(e) => {
                     e.print_compilation_error($code);
+                    assert!(false);
                     return;
                 }
             };
