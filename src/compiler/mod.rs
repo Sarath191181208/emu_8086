@@ -1,7 +1,7 @@
 pub mod compilation_error;
 pub mod lexer;
-pub mod tokens;
 pub mod tests;
+pub mod tokens;
 
 use compilation_error::CompilationError;
 use lexer::Lexer;
@@ -169,10 +169,8 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
                         Assembly8086Tokens::Register8bit(low_reg) => {
                             compiled_bytes.push(0x8A);
                             let ins = (0xC0) | (high_reg.get_as_idx() / 2) << 4;
-                            let ins2 =
-                                (low_reg.get_as_idx() / 2) | (high_reg.get_as_idx() % 2) << 3;
-                            compiled_bytes.push(ins);
-                            compiled_bytes.push(ins2);
+                            let ins2 = (low_reg.get_as_idx()) | (high_reg.get_as_idx() % 2) << 3;
+                            compiled_bytes.push(ins | ins2);
 
                             compiled_bytes_ref.push(CompiledBytes::new(
                                 vec![0x8A],
@@ -222,8 +220,8 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
     Ok((compiled_bytes, compiled_bytes_ref))
 }
 
-impl Lexer{
-        pub fn print_tokens(&self) {
+impl Lexer {
+    pub fn print_tokens(&self) {
         // print a formatted headding
         println!(
             "| {0: <20} | {1: <10} | {2: <10} | {3: <10} |",
@@ -274,7 +272,6 @@ impl Lexer{
             );
         }
     }
-
 }
 
 pub fn compile_str(
