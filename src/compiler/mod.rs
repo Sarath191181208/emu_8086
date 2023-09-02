@@ -3,11 +3,16 @@ pub mod lexer;
 pub mod tests;
 pub mod tokens;
 
+mod parsers;
+
 use compilation_error::CompilationError;
 use lexer::Lexer;
 use tokens::instructions::Instructions;
 
-use self::tokens::{Assembly8086Tokens, Token};
+use self::{
+    parsers::{add::parse_add, mov::parse_mov},
+    tokens::{Assembly8086Tokens, Token},
+};
 
 #[derive(Debug)]
 pub struct CompiledBytes {
@@ -43,178 +48,49 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
     let token = lexed_str_without_spaces[i];
     match token.token_type {
         Assembly8086Tokens::Instruction(Instructions::MOV) => {
-            if lexed_str_without_spaces.len() - 1 < i + 1 {
+            i = parse_mov(
+                &lexed_str_without_spaces,
+                token,
+                i,
+                len_lexed_strings,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
+
+            // check if i hasn't consumed all the instructions
+            if i < lexed_str_without_spaces.len() - 1 {
+                let unparsed_tokens_start = lexed_str_without_spaces[i + 1];
                 return Err(CompilationError::new(
-                    token.line_number,
-                    token.column_number + token.token_length,
-                    (len_lexed_strings + 1) as u32,
-                    "Insufficient arguments to MOV",
+                    unparsed_tokens_start.line_number,
+                    unparsed_tokens_start.column_number,
+                    (len_lexed_strings - unparsed_tokens_start.column_number) as u32,
+                    &format!("Can't compile starting with {:?} as the MOV instuction only supports 2 arguments", unparsed_tokens_start.token_type),
                 ));
             }
-            let high_token = lexed_str_without_spaces[i + 1];
-            match &high_token.token_type {
-                Assembly8086Tokens::Register16bit(high_reg) => {
-                    if i + 3 > lexed_str_without_spaces.len() - 1 {
-                        return Err(CompilationError::new(
-                            high_token.line_number,
-                            high_token.column_number + high_token.token_length + 1,
-                            (len_lexed_strings + 1) as u32,
-                            "Insufficient arguments to MOV expected a 16bit value ",
-                        ));
-                    }
-                    let low_token = lexed_str_without_spaces[i + 3];
-                    let high_reg_idx = match high_reg.get_as_idx() {
-                        Ok(idx) => idx,
-                        Err(err) => {
-                            return Err(CompilationError::new(
-                                token.line_number,
-                                high_token.column_number,
-                                high_token.token_length,
-                                err,
-                            ));
-                        }
-                    };
-                    match &low_token.token_type {
-                        Assembly8086Tokens::Number16bit(number) => {
-                            compiled_bytes.push(0xB8 | high_reg_idx);
-                            compiled_bytes.push((number & 0xFF) as u8);
-                            compiled_bytes.push((number >> 8) as u8);
+        }
 
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![0xB8],
-                                token.line_number,
-                                token.column_number,
-                            ));
+        Assembly8086Tokens::Instruction(Instructions::ADD) => {
+            i = parse_add(
+                &lexed_str_without_spaces,
+                token,
+                i,
+                len_lexed_strings,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
 
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                                low_token.line_number,
-                                low_token.column_number,
-                            ));
-                            i += 3;
-                        }
-                        Assembly8086Tokens::Register16bit(low_reg) => {
-                            let low_reg_idx = match low_reg.get_as_idx() {
-                                Ok(idx) => idx,
-                                Err(err) => {
-                                    return Err(CompilationError::new(
-                                        token.line_number,
-                                        token.column_number,
-                                        token.token_length,
-                                        err,
-                                    ));
-                                }
-                            };
-                            compiled_bytes.push(0x8B);
-                            let ins = (0xC0) | (high_reg_idx / 2) << 4;
-                            let ins2 = low_reg_idx | (high_reg_idx % 2) << 3;
-                            compiled_bytes.push(ins | ins2);
-
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![0x8B],
-                                token.line_number,
-                                token.column_number,
-                            ));
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![ins2 | ins],
-                                low_token.line_number,
-                                low_token.column_number,
-                            ));
-                            i += 2;
-                        }
-                        _ => {
-                            return Err(CompilationError::new(
-                                token.line_number,
-                                high_token.column_number + high_token.token_length + 1,
-                                (len_lexed_strings
-                                    - high_token.column_number
-                                    - high_token.token_length)
-                                    as u32,
-                                &format!(
-                                    "Expected a 16bit value after MOV got {:?} insted",
-                                    &low_token.token_type
-                                ),
-                            ));
-                        }
-                    }
-                }
-
-                Assembly8086Tokens::Register8bit(high_reg) => {
-                    if i + 3 > lexed_str_without_spaces.len() - 1 {
-                        return Err(CompilationError::new(
-                            high_token.line_number,
-                            high_token.column_number,
-                            (len_lexed_strings + 1) as u32,
-                            "Insufficient arguments to MOV expected a 8bit value ",
-                        ));
-                    }
-                    let low_token = lexed_str_without_spaces[i + 3];
-                    match &low_token.token_type {
-                        Assembly8086Tokens::Number8bit(number) => {
-                            compiled_bytes.push(0xB0 | high_reg.get_as_idx());
-                            compiled_bytes.push(*number);
-
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![0xB0],
-                                token.line_number,
-                                token.column_number,
-                            ));
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![*number],
-                                low_token.line_number,
-                                low_token.column_number,
-                            ));
-                            i += 3;
-                        }
-                        Assembly8086Tokens::Register8bit(low_reg) => {
-                            compiled_bytes.push(0x8A);
-                            let ins = (0xC0) | (high_reg.get_as_idx() / 2) << 4;
-                            let ins2 = (low_reg.get_as_idx()) | (high_reg.get_as_idx() % 2) << 3;
-                            compiled_bytes.push(ins | ins2);
-
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![0x8A],
-                                token.line_number,
-                                token.column_number,
-                            ));
-
-                            compiled_bytes_ref.push(CompiledBytes::new(
-                                vec![ins],
-                                high_token.line_number,
-                                high_token.column_number,
-                            ));
-                            i += 2;
-                        }
-                        _ => {
-                            return Err(CompilationError::new(
-                                high_token.line_number,
-                                high_token.column_number + high_token.token_length + 1,
-                                (len_lexed_strings
-                                    - high_token.column_number
-                                    - high_token.token_length)
-                                    as u32,
-                                &format!(
-                                    "Expected a 8bit value after MOV got {:?} insted",
-                                    &low_token.token_type
-                                ),
-                            ));
-                        }
-                    }
-                }
-
-                _ => {
-                    return Err(CompilationError::new(
-                        high_token.line_number,
-                        high_token.column_number,
-                        high_token.token_length,
-                        &format!(
-                            "Expected a 16bit or 8bit register after MOV got {:?} insted",
-                            &high_token.token_type
-                        ),
-                    ));
-                }
+            // check if i hasn't consumed all the instructions
+            if i < lexed_str_without_spaces.len() - 1 {
+                let unparsed_tokens_start = lexed_str_without_spaces[i + 1];
+                return Err(CompilationError::new(
+                    unparsed_tokens_start.line_number,
+                    unparsed_tokens_start.column_number,
+                    (len_lexed_strings - unparsed_tokens_start.column_number) as u32,
+                    &format!("Can't compile starting with {:?} as the ADD instuction only supports 2 arguments", unparsed_tokens_start.token_type),
+                ));
             }
         }
+
         _ => panic!("Not implemented"),
     }
     Ok((compiled_bytes, compiled_bytes_ref))
