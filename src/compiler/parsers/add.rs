@@ -296,3 +296,46 @@ mod tests16bit {
         }
     );
 }
+
+
+#[cfg(test)]
+mod test8bit{
+    use crate::{test_compile, compiler::compile_str};
+
+
+    test_compile!(
+        add_al_0x12,
+        "ADD AL, 0x12",
+        | instructions: &Vec<u8> | {
+            assert_eq!(instructions, &[0x04, 0x12]);
+        }
+    );
+
+    // add bl and cl 
+    test_compile!(
+        add_bl_cl,
+        "ADD BL, CL",
+        | instructions: &Vec<u8> | {
+            assert_eq!(instructions, &[0x02, 0xD9]);
+        }
+    );
+
+    // add ah and bl
+    test_compile!(
+        add_ah_bl,
+        "ADD AH, BL",
+        | instructions: &Vec<u8> | {
+            assert_eq!(instructions, &[0x02, 0xE3]);
+        }
+    );
+
+    // add ah and 0x12
+    test_compile!(
+        add_ah_0x12,
+        "ADD AH, 0x12",
+        | instructions: &Vec<u8> | {
+            assert_eq!(instructions, &[0x82, 0xC4, 0x12]);
+        }
+    );
+
+}
