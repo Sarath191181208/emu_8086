@@ -7,7 +7,7 @@ use super::tokens::{
 
 #[derive(Debug)]
 pub(crate) struct Lexer {
-    pub tokens: Vec<Token>,
+    pub tokens: Vec<Vec<Token>>,
 }
 
 impl Lexer {
@@ -18,6 +18,7 @@ impl Lexer {
     pub fn tokenize(&mut self, source: &str) {
         for (line_number, line) in source.lines().enumerate() {
             let line_number: u32 = line_number as u32;
+            let mut temp_vec = Vec::<Token>::new();
             let mut iterating_col_num = 0;
             // convert the string into array of chars don't use line.chars()
             let line_chars: Vec<char> = line.chars().collect();
@@ -30,7 +31,7 @@ impl Lexer {
                             .skip(iterating_col_num)
                             .take_while(|c| c.is_whitespace())
                             .count();
-                        self.tokens.push(Token::new(
+                        temp_vec.push(Token::new(
                             Assembly8086Tokens::Space,
                             line_number,
                             iterating_col_num as u32,
@@ -39,7 +40,7 @@ impl Lexer {
                         iterating_col_num += num_spaces;
                     }
                     ',' => {
-                        self.tokens.push(Token::new(
+                        temp_vec.push(Token::new(
                             Assembly8086Tokens::Comma,
                             line_number,
                             iterating_col_num as u32,
@@ -48,7 +49,7 @@ impl Lexer {
                         iterating_col_num += 1;
                     }
                     ';' => {
-                        self.tokens.push(Token::new(
+                        temp_vec.push(Token::new(
                             Assembly8086Tokens::Comment,
                             line_number,
                             iterating_col_num as u32,
@@ -70,7 +71,7 @@ impl Lexer {
                             token_string_buffer.push(c);
                         }
                         let token = self.str_to_token(&token_string_buffer.to_uppercase());
-                        self.tokens.push(Token::new(
+                        temp_vec.push(Token::new(
                             match token {
                                 Some(token) => token,
                                 None => Assembly8086Tokens::Error,
@@ -83,11 +84,11 @@ impl Lexer {
                     }
                 }
             }
+            self.tokens.push(temp_vec);
         }
     }
 
     fn str_to_token(&self, token_string: &str) -> Option<Assembly8086Tokens> {
-
         if let Ok(instruction) = Instructions::from_str(token_string) {
             return Some(Assembly8086Tokens::Instruction(instruction));
         }
@@ -99,7 +100,7 @@ impl Lexer {
         if let Ok(register) = Registers8bit::from_str(token_string) {
             return Some(Assembly8086Tokens::Register8bit(register));
         }
-        
+
         if let Some(token) = self.parse_num_u8(&token_string.to_lowercase()) {
             return Some(token);
         }

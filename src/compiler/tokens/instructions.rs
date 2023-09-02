@@ -4,4 +4,5 @@ use strum_macros::EnumString;
 pub(crate) enum Instructions {
     MOV,
     ADD,
+    INC,
 }
