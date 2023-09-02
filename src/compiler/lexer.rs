@@ -152,11 +152,11 @@ impl Lexer {
         // also in the format of 011h and also in the base 10 format
         // and return the number in the base 10 format
         if token_string.starts_with("0x") {
-            if let Ok(number) = u8::from_str_radix(&token_string[2..], 10) {
+            if let Ok(number) = u8::from_str_radix(&token_string[2..], 16) {
                 return Some(Assembly8086Tokens::Number8bit(number));
             }
         } else if token_string.ends_with("h") {
-            if let Ok(number) = u8::from_str_radix(&token_string[..token_string.len() - 1], 10) {
+            if let Ok(number) = u8::from_str_radix(&token_string[..token_string.len() - 1], 16) {
                 return Some(Assembly8086Tokens::Number8bit(number));
             }
         } else {
