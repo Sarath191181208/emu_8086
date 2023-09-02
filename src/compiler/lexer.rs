@@ -1,5 +1,7 @@
-use super::tokens::{Token, Assembly8086Tokens, registers8bit::Registers8bit, registers16bit::Registers16bit, instructions::Instructions};
-
+use super::tokens::{
+    instructions::Instructions, registers16bit::Registers16bit, registers8bit::Registers8bit,
+    Assembly8086Tokens, Token,
+};
 
 #[derive(Debug)]
 pub(crate) struct Lexer {
@@ -112,15 +114,15 @@ impl Lexer {
 
         // iterate the dict and check if the token_string is in the dict
         for (token, token_string_in_dict) in tokens {
-            if let Some(token) = self.parse_num_u8(token_string) {
-                return Some(token);
-            }
-            if let Some(token) = self.parse_num_u16(token_string) {
-                return Some(token);
-            }
             if token_string == token_string_in_dict {
                 return Some(token);
             }
+        }
+        if let Some(token) = self.parse_num_u8(token_string) {
+            return Some(token);
+        }
+        if let Some(token) = self.parse_num_u16(token_string) {
+            return Some(token);
         }
         None
     }
@@ -150,11 +152,11 @@ impl Lexer {
         // also in the format of 011h and also in the base 10 format
         // and return the number in the base 10 format
         if token_string.starts_with("0x") {
-            if let Ok(number) = u8::from_str_radix(&token_string[2..], 8) {
+            if let Ok(number) = u8::from_str_radix(&token_string[2..], 10) {
                 return Some(Assembly8086Tokens::Number8bit(number));
             }
         } else if token_string.ends_with("h") {
-            if let Ok(number) = u8::from_str_radix(&token_string[..token_string.len() - 1], 8) {
+            if let Ok(number) = u8::from_str_radix(&token_string[..token_string.len() - 1], 10) {
                 return Some(Assembly8086Tokens::Number8bit(number));
             }
         } else {
@@ -164,6 +166,4 @@ impl Lexer {
         }
         None
     }
-
 }
-
