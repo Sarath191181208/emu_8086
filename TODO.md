@@ -1,0 +1,21 @@
+-[ ] Setting up a CI/CD pipeline
+-[ ] Adding more addressing modes to 
+    - [ ] MOV
+    - [ ] ADD
+    - [ ] INC
+-[ ] Adding more instructions
+    - [ ] SUB
+    - [ ] MUL
+    - [ ] DIV
+    - [ ] CMP
+    - [ ] JMP
+    - [ ] AND, OR, XOR, NOT
+    - [ ] JZ
+    - [ ] JNZ
+    - [ ] JG
+    - [ ] JL
+    - [ ] JGE
+    - [ ] JLE
+    - [ ] CALL, RET
+    - [ ] PUSH, POP
+    - [ ] INT

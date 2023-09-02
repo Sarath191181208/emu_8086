@@ -151,6 +151,9 @@ impl CPU {
             // ADD AX, 0x1234 i.e immediate addressing
             0x05 => self.add_ax_in_immediate_addressing(mem),
 
+            // INC 16bit register
+            0x40..=0x47 => self.execute_inc_word_register(opcode),
+
             // ADD 8bit register, immediate_addressing
             0x80 => self.execute_add_immediate_byte(mem),
 
@@ -164,6 +167,9 @@ impl CPU {
             // MOV 16bit register, 0x1234
             0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),
             0xB8..=0xBF => self.execute_direct_mov_word(mem, opcode),
+
+            // INC 8bit register
+            0xFE => self.execute_inc_register_byte(mem),
             _ => panic!("Invalid opcode: {:X}", opcode),
         }
     }
