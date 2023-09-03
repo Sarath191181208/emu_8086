@@ -17,7 +17,7 @@ pub(in crate::compiler) fn parse_inc(
             token.line_number,
             token.column_number + token.token_length,
             (len_lexed_strings + 1) as u32,
-            "Insufficient arguments to MOV",
+            "Insufficient arguments to INC",
         ));
     }
     let high_token = lexed_str_without_spaces[i + 1];
@@ -34,9 +34,9 @@ pub(in crate::compiler) fn parse_inc(
                     ));
                 }
             };
-            compiled_bytes.push(40 + high_reg_idx);
+            compiled_bytes.push(0x40 + high_reg_idx);
             compiled_bytes_ref.push(CompiledBytes::new(
-                vec![40+high_reg_idx],
+                vec![0x40+high_reg_idx],
                 high_token.line_number,
                 high_token.column_number,
             ));
@@ -75,7 +75,7 @@ mod test_inc_16bit{
         test_inc_ax,
         "INC AX",
         |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[40]);
+            assert_eq!(compiled_instructions, &[0x40]);
         }
     );
 
@@ -83,7 +83,7 @@ mod test_inc_16bit{
         test_inc_sp,
         "INC SP",
         |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[44]);
+            assert_eq!(compiled_instructions, &[0x44]);
         }
     );
 }
