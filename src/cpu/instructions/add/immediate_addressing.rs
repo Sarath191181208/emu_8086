@@ -1,14 +1,23 @@
-use crate::{memory::Memory, consts::{Byte, Word}, cpu::CPU};
+use crate::{
+    consts::{Byte, Word},
+    cpu::CPU,
+    memory::Memory,
+};
 
 // Immediate Addressing
-impl CPU{
-
-    pub(in crate::cpu) fn add_ax_in_immediate_addressing(&mut self, mem: &Memory){
+impl CPU {
+    pub(in crate::cpu) fn add_ax_in_immediate_addressing(&mut self, mem: &Memory) {
         let data_low = self.consume_instruction(mem);
         let data_high = self.consume_instruction(mem);
         let data = ((data_high as Word) << 8) | (data_low as Word);
-        let (result, _) = self.add_with_overflow_and_set_flags(self.ax, data);
+        let (result, _) = self.add_16bit_with_overflow_and_set_flags(self.ax, data);
         self.ax = result;
+    }
+
+    pub(in crate::cpu) fn add_al_in_immediate_addressing(&mut self, mem: &Memory){
+        let data = self.consume_instruction(mem);
+        let (result, _) = self.add_8bit_with_overflow_and_set_flags(self.ax as u8, data);
+        self.ax = (self.ax & 0xFF00) | (result as Word);
     }
 
     pub(in crate::cpu) fn execute_add_immediate_byte(&mut self, mem: &Memory) {
@@ -16,18 +25,17 @@ impl CPU{
         match instruction {
             0xC1..=0xC7 => {
                 let index = instruction & 0x07;
-                let data_high = self.consume_instruction(mem);
-                let data_low = self.consume_instruction(mem);
-                let data = ((data_high as Word) << 8) | (data_low as Word);
-                self.add_with_overflow_and_set_flags(
-                    self.get_16bit_register_by_index(index), data);
+                let data = self.consume_instruction(mem);
+                let (result, _) =
+                    self.add_8bit_with_overflow_and_set_flags(self.get_8bit_register_by_index(index), data);
+                self.set_8bit_register_by_index(index, result);
             }
             x => panic!("ADD instruction not implemented! for {}", x),
         }
     }
 
     fn get_data(&mut self, mem: &Memory, instruction: Byte) -> Word {
-        match instruction{
+        match instruction {
             0x81 => {
                 let data_low = self.consume_instruction(mem);
                 let data_high = self.consume_instruction(mem);
@@ -44,10 +52,10 @@ impl CPU{
     fn add_immediate_word(&mut self, instruction: Byte, mem: &Memory) {
         let index = self.consume_instruction(mem) & 0x07;
         let data = self.get_data(mem, instruction);
-        let (result, _) = self.add_with_overflow_and_set_flags(
-            self.get_16bit_register_by_index(index), data);
+        let (result, _) =
+            self.add_16bit_with_overflow_and_set_flags(self.get_16bit_register_by_index(index), data);
         self.set_16bit_register_by_index(index, result);
-    } 
+    }
 
     pub(in crate::cpu) fn execute_add_immediate_word(&mut self, mem: &Memory, instruction: Byte) {
         match instruction {
@@ -57,8 +65,8 @@ impl CPU{
     }
 }
 
-mod add_immediate_16bit_tests{
-    use crate::{generate_test, cpu::CPU, memory::Memory};
+mod add_immediate_16bit_tests {
+    use crate::{cpu::CPU, generate_test, memory::Memory};
 
     // test ax+ax
     generate_test!(
@@ -75,7 +83,7 @@ mod add_immediate_16bit_tests{
         })
     );
 
-    // test ax+ax overflow 
+    // test ax+ax overflow
     generate_test!(
         add_ax_ax_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
@@ -86,9 +94,8 @@ mod add_immediate_16bit_tests{
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0xFFFE);
-            assert_eq!(cpu.overflow_flag, true);
             assert_eq!(cpu.carry_flag, true);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00001101)
+            assert_eq!(cpu.get_flags_as_binary(), 0b00100101)
         })
     );
 
@@ -104,7 +111,7 @@ mod add_immediate_16bit_tests{
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0000);
             assert_eq!(cpu.zero_flag, true);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00000010);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00010010);
         })
     );
 
@@ -119,7 +126,7 @@ mod add_immediate_16bit_tests{
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0000);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00001011);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00110011);
         })
     );
 
@@ -154,13 +161,11 @@ mod add_immediate_16bit_tests{
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFFE);
-            assert_eq!(cpu.overflow_flag, true);
-            assert_eq!(cpu.carry_flag, true);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00001101);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
         })
     );
 
-    // test bx + 0xFFEE 
+    // test bx + 0xFFEE
     generate_test!(
         add_bx_0xffee,
         (|cpu: &mut CPU, mem: &mut Memory| {
@@ -176,4 +181,104 @@ mod add_immediate_16bit_tests{
             assert_eq!(cpu.carry_flag, false);
         })
     );
+}
+
+#[cfg(test)]
+mod add_immediate_8bit_tests{
+    use crate::{cpu::CPU, generate_test, memory::Memory};
+
+    // test al+0x12
+    generate_test!(
+        add_al_0x12,
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.instruction_pointer = 0xFFFB;
+            mem.write_byte(0xFFFB, 0x04);
+            mem.write_byte(0xFFFC, 0x12);
+            cpu.ax = 0x0001;
+        }),
+        (|cpu: &CPU, _: &Memory| {
+            assert_eq!(cpu.ax, 0x0013);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00000000)
+        })
+    );
+
+    // test al+0xFF overflow
+    generate_test!(
+        add_al_0x12_overflow,
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.instruction_pointer = 0xFFFB;
+            mem.write_byte(0xFFFB, 0x04);
+            mem.write_byte(0xFFFC, 0xFF);
+            cpu.ax = 0x00FE;
+        }),
+        (|cpu: &CPU, _: &Memory| {
+            assert_eq!(cpu.ax, 0x00FD);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
+        })
+    );
+
+    // add cl + 0x12
+    generate_test!(
+        add_cl_0x12,
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.instruction_pointer = 0xFFFB;
+            mem.write_byte(0xFFFB, 0x80);
+            mem.write_byte(0xFFFC, 0xC1);
+            mem.write_byte(0xFFFD, 0x12);
+            cpu.cx = 0x0001;
+        }),
+        (|cpu: &CPU, _: &Memory| {
+            assert_eq!(cpu.cx, 0x0013);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00000000);
+        })
+    );
+
+    // add cl + 0xFF overflow
+    generate_test!(
+        add_cl_0xff_overflow,
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.instruction_pointer = 0xFFFB;
+            mem.write_byte(0xFFFB, 0x80);
+            mem.write_byte(0xFFFC, 0xC1);
+            mem.write_byte(0xFFFD, 0xFF);
+            cpu.cx = 0x00FE;
+        }),
+        (|cpu: &CPU, _: &Memory| {
+            assert_eq!(cpu.cx, 0x00FD);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
+        })
+    );
+
+    // add bh + 0x12
+    generate_test!(
+        add_bh_0x12,
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.instruction_pointer = 0xFFFB;
+            mem.write_byte(0xFFFB, 0x80);
+            mem.write_byte(0xFFFC, 0xC7);
+            mem.write_byte(0xFFFD, 0x12);
+            cpu.bx = 0xFF01;
+        }),
+        (|cpu: &CPU, _: &Memory| {
+            assert_eq!(cpu.bx, 0x1101);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00110001);
+        })
+    );
+
+    // add bh + 0xFF overflow
+    generate_test!(
+        add_bh_0xff_overflow,
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.instruction_pointer = 0xFFFB;
+            mem.write_byte(0xFFFB, 0x80);
+            mem.write_byte(0xFFFC, 0xC7);
+            mem.write_byte(0xFFFD, 0xFF);
+            cpu.bx = 0x00FE;
+        }),
+        (|cpu: &CPU, _: &Memory| {
+            assert_eq!(cpu.bx, 0xFFFE);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00010100);
+        })
+    );
+
 }

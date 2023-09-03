@@ -147,10 +147,7 @@ impl CPU {
             0x03 => self.execute_add_register_word(mem),
 
             // ADD AL, 0x12 i.e immediate addressing
-            0x04 => {
-                let value = self.consume_instruction(mem);
-                self.set_ax_low(self.get_ax_low().wrapping_add(value));
-            }
+            0x04 => self.add_al_in_immediate_addressing(mem),
 
             // ADD AX, 0x1234 i.e immediate addressing
             0x05 => self.add_ax_in_immediate_addressing(mem),

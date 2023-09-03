@@ -4,20 +4,15 @@ impl CPU {
     pub(in crate::cpu) fn execute_inc_word_register(&mut self, opcode: u8) {
         let register_index = opcode & 0x07;
         let value = self.get_16bit_register_by_index(register_index);
-        let (value, overflow) = value.overflowing_add(1);
+        let (value, _) = self.add_16bit_with_overflow_and_set_flags(value, 0x0001);
         self.set_16bit_register_by_index(register_index, value);
-        self.zero_flag = value == 0;
-        self.negative_flag = value & 0x8000 != 0;
-        self.overflow_flag = overflow;
-        self.auxiliary_carry_flag = value.count_ones() % 2 == 0;
-        self.carry_flag = overflow;
     }
 
     pub(in crate::cpu) fn execute_inc_register_byte(&mut self, mem: &mut Memory) {
         let opcode = self.consume_instruction(mem);
         let register_index = opcode & 0x07;
         let value = self.get_8bit_register_by_index(register_index);
-        let (value, _) = value.overflowing_add(1);
+        let (value, _) = self.add_8bit_with_overflow_and_set_flags(value, 0x01);
         self.set_8bit_register_by_index(register_index, value);
     }
 }
@@ -34,11 +29,7 @@ mod test_16bit_inc {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0002);
-            assert_eq!(cpu.zero_flag, false);
-            assert_eq!(cpu.negative_flag, false);
-            assert_eq!(cpu.overflow_flag, false);
-            assert_eq!(cpu.auxiliary_carry_flag, false);
-            assert_eq!(cpu.carry_flag, false);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00000000);
         })
     );
 
@@ -52,10 +43,6 @@ mod test_16bit_inc {
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0x0000);
             assert_eq!(cpu.zero_flag, true);
-            assert_eq!(cpu.negative_flag, false);
-            assert_eq!(cpu.overflow_flag, true);
-            assert_eq!(cpu.auxiliary_carry_flag, true);
-            assert_eq!(cpu.carry_flag, true);
         })
     );
 
@@ -68,11 +55,7 @@ mod test_16bit_inc {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.cx, 0x8000);
-            assert_eq!(cpu.zero_flag, false);
-            assert_eq!(cpu.negative_flag, true);
-            assert_eq!(cpu.overflow_flag, false);
-            assert_eq!(cpu.auxiliary_carry_flag, false);
-            assert_eq!(cpu.carry_flag, false);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00111100);
         })
     );
 
@@ -84,11 +67,7 @@ mod test_16bit_inc {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.stack_pointer, 0x1000);
-            assert_eq!(cpu.zero_flag, false);
-            assert_eq!(cpu.negative_flag, false);
-            assert_eq!(cpu.overflow_flag, false);
-            assert_eq!(cpu.auxiliary_carry_flag, false);
-            assert_eq!(cpu.carry_flag, false);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00110000)
         })
     );
 }
@@ -106,6 +85,7 @@ mod test_8bit_inc {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0002);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00000000);
         })
     );
 
@@ -118,18 +98,20 @@ mod test_8bit_inc {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.dx, 0x0200);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00000000);
         })
     );
 
     generate_test!(
         inc_cl,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.cx = 0x0001;
+            cpu.cx = 0x0002;
             mem.write_byte(0xFFFC, 0xFE);
             mem.write_byte(0xFFFD, 0xC1);
         }),
         (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.cx, 0x0002);
+            assert_eq!(cpu.cx, 0x0003);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00010000);
         })
     );
 }
