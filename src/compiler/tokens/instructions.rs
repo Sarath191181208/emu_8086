@@ -5,4 +5,5 @@ pub(crate) enum Instructions {
     MOV,
     ADD,
     INC,
+    DEC,
 }

@@ -3,7 +3,6 @@ pub mod lexer;
 pub mod tests;
 pub mod tokens;
 
-
 mod parsers;
 
 use compilation_error::CompilationError;
@@ -11,7 +10,7 @@ use lexer::Lexer;
 use tokens::instructions::Instructions;
 
 use self::{
-    parsers::{add::parse_add, mov::parse_mov, inc::parse_inc},
+    parsers::{add::parse_add, dec::parse_dec, inc::parse_inc, mov::parse_mov},
     tokens::{Assembly8086Tokens, Token},
 };
 
@@ -31,6 +30,30 @@ impl CompiledBytes {
             column_number,
         }
     }
+}
+
+fn has_consumed_all_instructions(
+    lexed_str_without_spaces: &Vec<&Token>,
+    i: usize,
+    instruction: &str,
+    num_args: usize,
+) -> Result<(), CompilationError> {
+    if i < lexed_str_without_spaces.len() - 1 {
+        let unparsed_tokens_start = lexed_str_without_spaces[i + 1];
+        let unparsed_tokens_end = lexed_str_without_spaces.last().unwrap();
+        return Err(CompilationError::new(
+            unparsed_tokens_start.line_number,
+            unparsed_tokens_start.column_number,
+            (unparsed_tokens_start.column_number
+                + unparsed_tokens_end.column_number
+                + unparsed_tokens_end.token_length) as u32,
+            &format!(
+                "Can't compile starting with {:?} as the {} instuction only supports {} arguments",
+                unparsed_tokens_start.token_type, instruction, num_args
+            ),
+        ));
+    }
+    Ok(())
 }
 
 fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), CompilationError> {
@@ -73,17 +96,7 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
                 &mut compiled_bytes,
                 &mut compiled_bytes_ref,
             )?;
-
-            // check if i hasn't consumed all the instructions
-            if i < lexed_str_without_spaces.len() - 1 {
-                let unparsed_tokens_start = lexed_str_without_spaces[i + 1];
-                return Err(CompilationError::new(
-                    unparsed_tokens_start.line_number,
-                    unparsed_tokens_start.column_number,
-                    (len_lexed_strings - unparsed_tokens_start.column_number) as u32,
-                    &format!("Can't compile starting with {:?} as the MOV instuction only supports 2 arguments", unparsed_tokens_start.token_type),
-                ));
-            }
+            has_consumed_all_instructions(&lexed_str_without_spaces, i, "MOV", 2)?
         }
 
         Instructions::ADD => {
@@ -96,16 +109,7 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
                 &mut compiled_bytes_ref,
             )?;
 
-            // check if i hasn't consumed all the instructions
-            if i < lexed_str_without_spaces.len() - 1 {
-                let unparsed_tokens_start = lexed_str_without_spaces[i + 1];
-                return Err(CompilationError::new(
-                    unparsed_tokens_start.line_number,
-                    unparsed_tokens_start.column_number,
-                    (len_lexed_strings - unparsed_tokens_start.column_number) as u32,
-                    &format!("Can't compile starting with {:?} as the ADD instuction only supports 2 arguments", unparsed_tokens_start.token_type),
-                ));
-            }
+            has_consumed_all_instructions(&lexed_str_without_spaces, i, "ADD", 2)?;
         }
 
         Instructions::INC => {
@@ -117,6 +121,20 @@ fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), 
                 &mut compiled_bytes,
                 &mut compiled_bytes_ref,
             )?;
+            has_consumed_all_instructions(&lexed_str_without_spaces, i, "INC", 1)?;
+        }
+
+        Instructions::DEC => {
+            i = parse_dec(
+                &lexed_str_without_spaces,
+                token,
+                i,
+                len_lexed_strings,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
+
+            has_consumed_all_instructions(&lexed_str_without_spaces, i, "DEC", 1)?;
         }
     }
     Ok((compiled_bytes, compiled_bytes_ref))
@@ -178,7 +196,10 @@ impl Lexer {
     }
 }
 
-pub fn compile_lines(code: &str, debug_print: bool) -> Result<(Vec<u8>, Vec<CompiledBytes>), Vec<CompilationError>> {
+pub fn compile_lines(
+    code: &str,
+    debug_print: bool,
+) -> Result<(Vec<u8>, Vec<CompiledBytes>), Vec<CompilationError>> {
     let mut lexer = Lexer::new();
     lexer.tokenize(&code);
 
@@ -186,8 +207,8 @@ pub fn compile_lines(code: &str, debug_print: bool) -> Result<(Vec<u8>, Vec<Comp
     let mut compiled_bytes = Vec::new();
     let mut compiled_bytes_ref = Vec::<CompiledBytes>::new();
 
-    for line in &lexer.tokens{
-        match compile(&line){
+    for line in &lexer.tokens {
+        match compile(&line) {
             Ok((mut compiled_bytes_line, mut compiled_bytes_ref_line)) => {
                 compiled_bytes.append(&mut compiled_bytes_line);
                 compiled_bytes_ref.append(&mut compiled_bytes_ref_line);
