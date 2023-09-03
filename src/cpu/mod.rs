@@ -133,6 +133,10 @@ impl CPU {
         opcode
     }
 
+    fn peek_instruction(&self, mem: &Memory) -> Byte {
+        mem.read(self.instruction_pointer)
+    }
+
     pub fn execute(&mut self, mem: &mut Memory) {
         let opcode = self.consume_instruction(mem);
         match opcode {
@@ -153,6 +157,8 @@ impl CPU {
 
             // INC 16bit register
             0x40..=0x47 => self.execute_inc_word_register(opcode),
+            // DEC 16bit register 
+            0x48..=0x4F => self.execute_dec_word_register(opcode),
 
             // ADD 8bit register, immediate_addressing
             0x80 => self.execute_add_immediate_byte(mem),
@@ -169,8 +175,15 @@ impl CPU {
             0xB8..=0xBF => self.execute_direct_mov_word(mem, opcode),
 
             // INC 8bit register
-            0xFE => self.execute_inc_register_byte(mem),
-            _ => panic!("Invalid opcode: {:X}", opcode),
+            0xFE => {
+                let opcode = self.peek_instruction(mem);
+                match opcode {
+                    0xC0..=0xC7 => self.execute_inc_register_byte(mem),
+                    0xC8..=0xCF => self.execute_dec_register_byte(mem),
+                    _ => panic!("Unimplemented opcode: {:X}", opcode),
+                }
+            }
+            _ => panic!("Unimplemented opcode: {:X}", opcode),
         }
     }
 }
