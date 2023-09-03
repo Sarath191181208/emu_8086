@@ -1,4 +1,8 @@
-use crate::{consts::{Byte, Word}, cpu::CPU, memory::Memory};
+use crate::{
+    consts::{Byte, Word},
+    cpu::CPU,
+    memory::Memory,
+};
 
 // Register Addressing
 impl CPU {
@@ -41,7 +45,7 @@ impl CPU {
 
 #[cfg(test)]
 mod add_16bit_register_addressing_tests {
-    use crate::{generate_test, cpu::CPU, memory::Memory};
+    use crate::{cpu::CPU, generate_test, memory::Memory};
 
     // test ax+ax
     generate_test!(
@@ -104,19 +108,19 @@ mod add_16bit_register_addressing_tests {
 }
 
 #[cfg(test)]
-mod add_8bit_register_addressing_tests{
-    use crate::{generate_test, cpu::CPU, memory::Memory};
+mod add_8bit_register_addressing_tests {
+    use crate::{cpu::CPU, generate_test, memory::Memory};
 
     // ADD AL, BL
     generate_test!(
-        add_al_bl, 
-        (|cpu: &mut CPU, mem: &mut Memory|{
+        add_al_bl,
+        (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_ax_low(0x01);
             cpu.set_bx_low(0x01);
             mem.write_byte(0xFFFC, 0x02);
             mem.write_byte(0xFFFD, 0xC3);
         }),
-        (|cpu: &CPU, _mem: &Memory|{
+        (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_ax_low());
             assert_eq!(false, cpu.overflow_flag);
             assert_eq!(false, cpu.zero_flag);
@@ -126,14 +130,14 @@ mod add_8bit_register_addressing_tests{
 
     // ADD BL, CL zero
     generate_test!(
-        add_bl_cl, 
-        (|cpu: &mut CPU, mem: &mut Memory|{
+        add_bl_cl,
+        (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_bx_low(0x01);
             cpu.set_cx_low(0x01);
             mem.write_byte(0xFFFC, 0x02);
             mem.write_byte(0xFFFD, 0xD9);
         }),
-        (|cpu: &CPU, _mem: &Memory|{
+        (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_bx_low());
             assert_eq!(false, cpu.overflow_flag);
             assert_eq!(false, cpu.zero_flag);
@@ -141,16 +145,16 @@ mod add_8bit_register_addressing_tests{
         })
     );
 
-    // ADD CH, BL 
+    // ADD CH, BL
     generate_test!(
-        add_ch_bl, 
-        (|cpu: &mut CPU, mem: &mut Memory|{
+        add_ch_bl,
+        (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_bx_low(0x01);
             cpu.set_cx_high(0x01);
             mem.write_byte(0xFFFC, 0x02);
             mem.write_byte(0xFFFD, 0xEB);
         }),
-        (|cpu: &CPU, _mem: &Memory|{
+        (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_cx_high());
             assert_eq!(false, cpu.overflow_flag);
             assert_eq!(false, cpu.zero_flag);

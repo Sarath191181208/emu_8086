@@ -1,8 +1,4 @@
-use crate::{
-    consts::Byte,
-    cpu::CPU,
-    Memory,
-};
+use crate::{consts::Byte, cpu::CPU, Memory};
 
 impl CPU {
     fn mov_16bit_register_addressing(&mut self, instruction: Byte) {

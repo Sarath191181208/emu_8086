@@ -105,9 +105,9 @@ impl CPU {
         self.carry_flag = false;
         self.zero_flag = false;
         self.interrupt_disable_flag = false;
-        self.pairity_flag= false;
-        self.auxiliary_carry_flag= false;
-        self.direction_flag= false;
+        self.pairity_flag = false;
+        self.auxiliary_carry_flag = false;
+        self.direction_flag = false;
         self.overflow_flag = false;
         self.negative_flag = false;
 
@@ -140,7 +140,6 @@ impl CPU {
     pub fn execute(&mut self, mem: &mut Memory) {
         let opcode = self.consume_instruction(mem);
         match opcode {
-
             // ADD 8bit register, 8bit register
             0x02 => self.execute_add_register_byte(mem),
             // ADD 16bit register addressing
@@ -154,19 +153,19 @@ impl CPU {
 
             // INC 16bit register
             0x40..=0x47 => self.execute_inc_word_register(opcode),
-            // DEC 16bit register 
+            // DEC 16bit register
             0x48..=0x4F => self.execute_dec_word_register(opcode),
 
             // ADD 8bit register, immediate_addressing
             0x80 => self.execute_add_immediate_byte(mem),
 
             // ADD 16bit register, immediate_addressing
-            0x81 | 0x83 => self.execute_add_immediate_word(mem, opcode),    
-            
+            0x81 | 0x83 => self.execute_add_immediate_word(mem, opcode),
+
             // MOV 16bit register, 16bit register
             0x8A => self.execute_mov_register_byte(mem),
             0x8B => self.execute_mov_register_word(mem),
-            
+
             // MOV 16bit register, 0x1234
             0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),
             0xB8..=0xBF => self.execute_direct_mov_word(mem, opcode),

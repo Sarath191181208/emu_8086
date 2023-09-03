@@ -16,7 +16,7 @@ pub(in crate::compiler) fn parse_dec(
         return Err(CompilationError::new(
             token.line_number,
             token.column_number + token.token_length,
-            (len_lexed_strings + 1) as u32,
+            len_lexed_strings + 1,
             "Insufficient arguments to DEC",
         ));
     }
@@ -36,7 +36,7 @@ pub(in crate::compiler) fn parse_dec(
             };
             compiled_bytes.push(0x48 + high_reg_idx);
             compiled_bytes_ref.push(CompiledBytes::new(
-                vec![0x48+high_reg_idx],
+                vec![0x48 + high_reg_idx],
                 high_token.line_number,
                 high_token.column_number,
             ));
@@ -45,7 +45,7 @@ pub(in crate::compiler) fn parse_dec(
         Assembly8086Tokens::Register8bit(high_reg) => {
             compiled_bytes.push(0xFE);
             compiled_bytes.push(0xc8 + high_reg.get_as_idx());
-            
+
             compiled_bytes_ref.push(CompiledBytes::new(
                 vec![0xFE],
                 token.line_number,
@@ -60,58 +60,40 @@ pub(in crate::compiler) fn parse_dec(
             Ok(i + 2)
         }
 
-        _ => {
-            return Err(CompilationError::new(
-                high_token.line_number,
-                high_token.column_number,
-                high_token.token_length,
-                &format!(
-                    "Can't compile {:?} as the first argument to DNC",
-                    high_token.token_type
-                ),
-            ));
-        }
+        _ => Err(CompilationError::new(
+            high_token.line_number,
+            high_token.column_number,
+            high_token.token_length,
+            &format!(
+                "Can't compile {:?} as the first argument to DNC",
+                high_token.token_type
+            ),
+        )),
     }
 }
 
 #[cfg(test)]
-mod test_inc_16bit{
+mod test_inc_16bit {
     use crate::{compiler::compile_str, test_compile};
 
-    test_compile!(
-        test_dec_ax,
-        "DEC AX",
-        |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[0x48]);
-        }
-    );
+    test_compile!(test_dec_ax, "DEC AX", |compiled_instructions: &Vec<u8>| {
+        assert_eq!(compiled_instructions, &[0x48]);
+    });
 
-    test_compile!(
-        test_dec_sp,
-        "dec SP",
-        |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[0x4C]);
-        }
-    );
+    test_compile!(test_dec_sp, "dec SP", |compiled_instructions: &Vec<u8>| {
+        assert_eq!(compiled_instructions, &[0x4C]);
+    });
 }
 
 #[cfg(test)]
-mod test_dec_8bit{
+mod test_dec_8bit {
     use crate::{compiler::compile_str, test_compile};
 
-    test_compile!(
-        test_dec_al,
-        "dec AL",
-        |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[0xFE, 0xc8]);
-        }
-    );
+    test_compile!(test_dec_al, "dec AL", |compiled_instructions: &Vec<u8>| {
+        assert_eq!(compiled_instructions, &[0xFE, 0xc8]);
+    });
 
-    test_compile!(
-        test_dec_bl,
-        "dec BL",
-        |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[0xFE, 0xCB]);
-        }
-    );
+    test_compile!(test_dec_bl, "dec BL", |compiled_instructions: &Vec<u8>| {
+        assert_eq!(compiled_instructions, &[0xFE, 0xCB]);
+    });
 }

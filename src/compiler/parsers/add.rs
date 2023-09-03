@@ -27,7 +27,7 @@ pub(in crate::compiler) fn parse_add(
                 return Err(CompilationError::new(
                     high_token.line_number,
                     high_token.column_number + high_token.token_length + 1,
-                    (len_lexed_strings + 1) as u32,
+                    len_lexed_strings + 1,
                     "Insufficient arguments to ADD expected a 16bit value ",
                 ));
             }
@@ -147,8 +147,7 @@ pub(in crate::compiler) fn parse_add(
                     return Err(CompilationError::new(
                         token.line_number,
                         high_token.column_number + high_token.token_length + 1,
-                        (len_lexed_strings - high_token.column_number - high_token.token_length)
-                            as u32,
+                        len_lexed_strings - high_token.column_number - high_token.token_length,
                         &format!(
                             "Expected a 16bit value after ADD got {:?} insted",
                             &low_token.token_type
@@ -162,7 +161,7 @@ pub(in crate::compiler) fn parse_add(
                 return Err(CompilationError::new(
                     high_token.line_number,
                     high_token.column_number,
-                    (len_lexed_strings + 1) as u32,
+                    len_lexed_strings + 1,
                     "Insufficient arguments to ADD expected a 8bit value ",
                 ));
             }
@@ -235,8 +234,7 @@ pub(in crate::compiler) fn parse_add(
                     return Err(CompilationError::new(
                         token.line_number,
                         high_token.column_number + high_token.token_length + 1,
-                        (len_lexed_strings - high_token.column_number - high_token.token_length)
-                            as u32,
+                        len_lexed_strings - high_token.column_number - high_token.token_length,
                         &format!(
                             "Expected a 8bit value after ADD got {:?} insted",
                             &low_token.token_type
@@ -263,79 +261,44 @@ pub(in crate::compiler) fn parse_add(
 mod tests16bit {
     use crate::{compiler::compile_str, test_compile};
 
-    test_compile!(
-        add_ax_sp,
-        "ADD AX, SP",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x03, 0xC4]);
-        }
-    );
+    test_compile!(add_ax_sp, "ADD AX, SP", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x03, 0xC4]);
+    });
 
-    test_compile!(
-        add_ax_0x1234,
-        "ADD AX, 0x1234",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x05, 0x34, 0x12]);
-        }
-    );
+    test_compile!(add_ax_0x1234, "ADD AX, 0x1234", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x05, 0x34, 0x12]);
+    });
 
-    test_compile!(
-        add_bx_0xff00,
-        "ADD BX, 0xff12",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x83, 0xC3, 0x12]);
-        }
-    );
+    test_compile!(add_bx_0xff00, "ADD BX, 0xff12", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x83, 0xC3, 0x12]);
+    });
 
     // test cx + 0x1234
-    test_compile!(
-        add_cx_0x1234,
-        "ADD CX, 0x1234",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x81, 0xC1, 0x34, 0x12]);
-        }
-    );
+    test_compile!(add_cx_0x1234, "ADD CX, 0x1234", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x81, 0xC1, 0x34, 0x12]);
+    });
 }
 
-
 #[cfg(test)]
-mod test8bit{
-    use crate::{test_compile, compiler::compile_str};
+mod test8bit {
+    use crate::{compiler::compile_str, test_compile};
 
+    test_compile!(add_al_0x12, "ADD AL, 0x12", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x04, 0x12]);
+    });
 
-    test_compile!(
-        add_al_0x12,
-        "ADD AL, 0x12",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x04, 0x12]);
-        }
-    );
-
-    // add bl and cl 
-    test_compile!(
-        add_bl_cl,
-        "ADD BL, CL",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x02, 0xD9]);
-        }
-    );
+    // add bl and cl
+    test_compile!(add_bl_cl, "ADD BL, CL", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x02, 0xD9]);
+    });
 
     // add ah and bl
-    test_compile!(
-        add_ah_bl,
-        "ADD AH, BL",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x02, 0xE3]);
-        }
-    );
+    test_compile!(add_ah_bl, "ADD AH, BL", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x02, 0xE3]);
+    });
 
     // add ah and 0x12
-    test_compile!(
-        add_ah_0x12,
-        "ADD AH, 0x12",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &[0x82, 0xC4, 0x12]);
-        }
-    );
-
+    test_compile!(add_ah_0x12, "ADD AH, 0x12", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x82, 0xC4, 0x12]);
+    });
 }

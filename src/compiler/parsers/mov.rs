@@ -218,7 +218,7 @@ mod tests {
         }
     );
 
-    // write tests for 16 bit registers but with a instant mov value 
+    // write tests for 16 bit registers but with a instant mov value
     test_compile!(
         test_compile_str_mov_ax_0x1234,
         "MOV \t AX, 0x1234",
@@ -311,5 +311,4 @@ mod tests8bit {
             assert_eq!(compiled_instructions, &[0xb5, 0x08]);
         }
     );
-
 }

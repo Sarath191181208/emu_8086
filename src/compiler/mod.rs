@@ -44,9 +44,9 @@ fn has_consumed_all_instructions(
         return Err(CompilationError::new(
             unparsed_tokens_start.line_number,
             unparsed_tokens_start.column_number,
-            (unparsed_tokens_start.column_number
+            unparsed_tokens_start.column_number
                 + unparsed_tokens_end.column_number
-                + unparsed_tokens_end.token_length) as u32,
+                + unparsed_tokens_end.token_length,
             &format!(
                 "Can't compile starting with {:?} as the {} instuction only supports {} arguments",
                 unparsed_tokens_start.token_type, instruction, num_args
@@ -56,7 +56,7 @@ fn has_consumed_all_instructions(
     Ok(())
 }
 
-fn compile(lexed_strings: &Vec<Token>) -> Result<(Vec<u8>, Vec<CompiledBytes>), CompilationError> {
+fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), CompilationError> {
     let mut compiled_bytes = Vec::new();
     let mut compiled_bytes_ref = Vec::<CompiledBytes>::new();
     let mut i = 0;
@@ -158,7 +158,7 @@ impl Lexer {
     //     }
     // }
 
-    pub fn print_with_compiled_tokens(&self, compiled_tokens: &Vec<CompiledBytes>) {
+    pub fn print_with_compiled_tokens(&self, compiled_tokens: &[CompiledBytes]) {
         // print a formatted headding
         println!(
             "| {0: <20} | {1: <10} | {2: <10} | {3: <10} | {4: <10} |",
@@ -201,14 +201,14 @@ pub fn compile_lines(
     debug_print: bool,
 ) -> Result<(Vec<u8>, Vec<CompiledBytes>), Vec<CompilationError>> {
     let mut lexer = Lexer::new();
-    lexer.tokenize(&code);
+    lexer.tokenize(code);
 
     let mut compilation_errors = Vec::<CompilationError>::new();
     let mut compiled_bytes = Vec::new();
     let mut compiled_bytes_ref = Vec::<CompiledBytes>::new();
 
     for line in &lexer.tokens {
-        match compile(&line) {
+        match compile(line) {
             Ok((mut compiled_bytes_line, mut compiled_bytes_ref_line)) => {
                 compiled_bytes.append(&mut compiled_bytes_line);
                 compiled_bytes_ref.append(&mut compiled_bytes_ref_line);
@@ -223,10 +223,10 @@ pub fn compile_lines(
         lexer.print_with_compiled_tokens(&compiled_bytes_ref);
     }
 
-    if compilation_errors.len() > 0 {
+    if !compilation_errors.is_empty() {
         return Err(compilation_errors);
     }
-    return Ok((compiled_bytes, compiled_bytes_ref));
+    Ok((compiled_bytes, compiled_bytes_ref))
 }
 
 pub fn compile_str(
@@ -234,7 +234,7 @@ pub fn compile_str(
     debug_print: bool,
 ) -> Result<(Vec<u8>, Vec<CompiledBytes>), CompilationError> {
     let mut lexer = Lexer::new();
-    lexer.tokenize(&code);
+    lexer.tokenize(code);
 
     let (compiled_bytes, compiled_bytes_ref) = match compile(&lexer.tokens[0]) {
         Ok((compiled_bytes, compiled_bytes_ref)) => (compiled_bytes, compiled_bytes_ref),

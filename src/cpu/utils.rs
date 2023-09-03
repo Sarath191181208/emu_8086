@@ -1,4 +1,4 @@
-use crate::consts::{Word, Byte};
+use crate::consts::{Byte, Word};
 
 use super::CPU;
 
@@ -59,23 +59,23 @@ impl CPU {
         }
     }
 
-    pub(in crate::cpu) fn get_index_from_c0_ff_pattern(&self, instruction: Byte) -> (u8, u8){
-        // The pattern is as follows 
+    pub(in crate::cpu) fn get_index_from_c0_ff_pattern(&self, instruction: Byte) -> (u8, u8) {
+        // The pattern is as follows
         // C0 => (0, 0); C1 => (0, 1); C2 => (0, 2); C3 => (0, 3)
         // C4 => (0, 4); C5 => (0, 5); C6 => (0, 6); C7 => (0, 7)
 
         // C8 => (1, AX); C9 => (1, 1); CA => (1, 2); CB => (1, 3)
         // CC => (1, 4); CD => (1, 5); CE => (1, 6); CF => (1, 7)
-        // Here these indices refer to a particular pattern namely 
+        // Here these indices refer to a particular pattern namely
         // 0 => AX; 1 => CX; 2 => DX; 3 => BX; 4 => SP; 5 => BP; 6 => SI; 7 => DI
         //          (or)
         // 0 => AL; 1 => CL; 2 => DL; 3 => BL; 4 => AH; 5 => CH; 6 => DH; 7 => BH
         // The last four bits of the instruction are the source register index
         let source_idx = instruction & 0x0F; // source_idx = 0x08
-        // This masking is done because the instruction are from C0 -> FF
-        // This mask extracts the last 2 bits of the instruction which can be indexed to find the destination register
-        // ex: (0xC8 & 0b00110000) = (0b00000000) i.e in the 0th index
-        // (0x00) | 0x01 as source_idx > 7 => 0x01 i.e the `c` register 
+                                             // This masking is done because the instruction are from C0 -> FF
+                                             // This mask extracts the last 2 bits of the instruction which can be indexed to find the destination register
+                                             // ex: (0xC8 & 0b00110000) = (0b00000000) i.e in the 0th index
+                                             // (0x00) | 0x01 as source_idx > 7 => 0x01 i.e the `c` register
         let prefix = (instruction & 0b00110000) >> 3; // prefix = 0b0011 i.e the destination addr
         let write_idx = if source_idx > 7 {
             prefix | 0x01

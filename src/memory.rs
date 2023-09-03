@@ -1,14 +1,12 @@
-use crate::consts::{Word, Byte};
+use crate::consts::{Byte, Word};
 
-pub struct Memory{
+pub struct Memory {
     mem: [Byte; 0xFFFF],
 }
 
 impl Memory {
     pub fn new() -> Memory {
-        Memory{
-            mem: [0; 0xFFFF],
-        }
+        Memory { mem: [0; 0xFFFF] }
     }
 
     pub fn reset(&mut self) {

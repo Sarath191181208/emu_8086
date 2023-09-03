@@ -14,7 +14,7 @@ impl CPU {
         self.ax = result;
     }
 
-    pub(in crate::cpu) fn add_al_in_immediate_addressing(&mut self, mem: &Memory){
+    pub(in crate::cpu) fn add_al_in_immediate_addressing(&mut self, mem: &Memory) {
         let data = self.consume_instruction(mem);
         let (result, _) = self.add_8bit_with_overflow_and_set_flags(self.ax as u8, data);
         self.ax = (self.ax & 0xFF00) | (result as Word);
@@ -26,8 +26,10 @@ impl CPU {
             0xC1..=0xC7 => {
                 let index = instruction & 0x07;
                 let data = self.consume_instruction(mem);
-                let (result, _) =
-                    self.add_8bit_with_overflow_and_set_flags(self.get_8bit_register_by_index(index), data);
+                let (result, _) = self.add_8bit_with_overflow_and_set_flags(
+                    self.get_8bit_register_by_index(index),
+                    data,
+                );
                 self.set_8bit_register_by_index(index, result);
             }
             x => panic!("ADD instruction not implemented! for {}", x),
@@ -52,8 +54,8 @@ impl CPU {
     fn add_immediate_word(&mut self, instruction: Byte, mem: &Memory) {
         let index = self.consume_instruction(mem) & 0x07;
         let data = self.get_data(mem, instruction);
-        let (result, _) =
-            self.add_16bit_with_overflow_and_set_flags(self.get_16bit_register_by_index(index), data);
+        let (result, _) = self
+            .add_16bit_with_overflow_and_set_flags(self.get_16bit_register_by_index(index), data);
         self.set_16bit_register_by_index(index, result);
     }
 
@@ -184,7 +186,7 @@ mod add_immediate_16bit_tests {
 }
 
 #[cfg(test)]
-mod add_immediate_8bit_tests{
+mod add_immediate_8bit_tests {
     use crate::{cpu::CPU, generate_test, memory::Memory};
 
     // test al+0x12
@@ -280,5 +282,4 @@ mod add_immediate_8bit_tests{
             assert_eq!(cpu.get_flags_as_binary(), 0b00010100);
         })
     );
-
 }

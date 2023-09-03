@@ -1,7 +1,6 @@
+pub mod instructions;
 pub mod registers16bit;
 pub mod registers8bit;
-pub mod instructions;
-
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Assembly8086Tokens {

@@ -18,4 +18,3 @@ macro_rules! test_compile {
         }
     };
 }
-

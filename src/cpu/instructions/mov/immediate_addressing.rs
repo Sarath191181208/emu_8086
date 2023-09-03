@@ -4,14 +4,13 @@ impl CPU {
     pub(in crate::cpu) fn execute_direct_mov_byte(&mut self, mem: &mut Memory, opcode: u8) {
         // read the data to be written i.e one byte as it's for 8bit register
         let write_data: Byte = self.consume_instruction(mem);
-        // As the opcode is from 0xB0 to 0xB7, we can subtract 0xB0 from the opcode to get the 
-        // index to the register we need to write to 
+        // As the opcode is from 0xB0 to 0xB7, we can subtract 0xB0 from the opcode to get the
+        // index to the register we need to write to
         let index: u8 = opcode - 0xB0; // opcode = 0xB0 (to) 0xB7
         self.set_8bit_register_by_index(index, write_data);
     }
 
     pub(in crate::cpu) fn execute_direct_mov_word(&mut self, mem: &mut Memory, opcode: u8) {
-
         // read the data to be written i.e two bytes
         let write_byte_low: Byte = self.consume_instruction(mem);
         let write_byte_high: Byte = self.consume_instruction(mem);
@@ -90,7 +89,7 @@ mod mov_16bit_register_addressing_tests {
         (|cpu: &CPU| cpu.get_ax_high())
     );
 
-    // test for bh 
+    // test for bh
     generate_test!(
         mov_bh_0x12,
         (|mem: &mut Memory| {
@@ -101,7 +100,7 @@ mod mov_16bit_register_addressing_tests {
         (|cpu: &CPU| cpu.get_bx_high())
     );
 
-    //test for ch 
+    //test for ch
     generate_test!(
         mov_ch_0x12,
         (|mem: &mut Memory| {
@@ -207,5 +206,4 @@ mod mov_16bit_register_addressing_tests {
         0x3412,
         (|cpu: &CPU| cpu.destination_index)
     );
-
 }
