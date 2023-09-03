@@ -14,31 +14,31 @@ impl CPU {
         self.carry_flag = overflow;
         self.zero_flag = result == 0;
         self.negative_flag = result & 0x80 != 0;
-        self.auxiliary_carry_flag = ((a & 0xFF) as u16 + (b & 0xFF) as u16) > 0xFF;
+        self.auxiliary_carry_flag = (a as u16 + b as u16) > 0xFF;
         self.pairity_flag = result.count_ones() % 2 == 0;
     }
 
     pub fn add_16bit_with_overflow_and_set_flags(&mut self, a: Word, b: Word) -> (Word, bool) {
         let (result, overflow) = a.overflowing_add(b);
         self.set_16bit_flags(a, b, result, overflow);
-        return (result, overflow);
+        (result, overflow)
     }
 
     pub fn add_8bit_with_overflow_and_set_flags(&mut self, a: u8, b: u8) -> (u8, bool) {
         let (result, overflow) = a.overflowing_add(b);
         self.set_8bit_flags(a, b, result, overflow);
-        return (result, overflow);
+        (result, overflow)
     }
 
     pub fn sub_16bit_with_overflow_and_set_flags(&mut self, a: Word, b: Word) -> (Word, bool) {
         let (result, overflow) = a.overflowing_sub(b);
         self.set_16bit_flags(a, b, result, overflow);
-        return (result, overflow);
+        (result, overflow)
     }
 
     pub fn sub_8bit_with_overflow_and_set_flags(&mut self, a: u8, b: u8) -> (u8, bool) {
         let (result, overflow) = a.overflowing_sub(b);
         self.set_8bit_flags(a, b, result, overflow);
-        return (result, overflow);
+        (result, overflow)
     }
 }

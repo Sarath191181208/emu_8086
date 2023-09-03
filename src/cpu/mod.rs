@@ -3,7 +3,7 @@ use crate::{
     Memory,
 };
 pub mod instructions;
-pub mod utils;
+pub(in crate::cpu) mod utils;
 
 macro_rules! generate_byte_access_methods {
     ($register:ident) => {
@@ -65,6 +65,12 @@ impl CPU {
     generate_byte_access_methods!(dx);
 }
 
+impl Default for CPU {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CPU {
     pub fn new() -> CPU {
         CPU {
@@ -112,19 +118,6 @@ impl CPU {
         self.negative_flag = false;
 
         mem.reset();
-    }
-
-    fn get_flags_as_binary(&self) -> u8 {
-        let mut flags: u8 = 0;
-        flags |= (self.carry_flag as u8) << 0;
-        flags |= (self.zero_flag as u8) << 1;
-        flags |= (self.negative_flag as u8) << 2;
-        flags |= (self.overflow_flag as u8) << 3;
-        flags |= (self.pairity_flag as u8) << 4;
-        flags |= (self.auxiliary_carry_flag as u8) << 5;
-        flags |= (self.interrupt_disable_flag as u8) << 6;
-        flags |= (self.direction_flag as u8) << 7;
-        flags
     }
 
     fn consume_instruction(&mut self, mem: &Memory) -> Byte {

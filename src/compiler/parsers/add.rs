@@ -16,7 +16,7 @@ pub(in crate::compiler) fn parse_add(
         return Err(CompilationError::new(
             token.line_number,
             token.column_number + token.token_length,
-            (len_lexed_strings + 1) as u32,
+            len_lexed_strings + 1,
             "Insufficient arguments to ADD",
         ));
     }
@@ -109,7 +109,7 @@ pub(in crate::compiler) fn parse_add(
                         ));
                     }
 
-                    return Ok(i + 3);
+                    Ok(i + 3)
                 }
                 Assembly8086Tokens::Register16bit(low_reg) => {
                     let low_reg_idx = match low_reg.get_as_idx() {
@@ -140,20 +140,18 @@ pub(in crate::compiler) fn parse_add(
                         low_token.column_number,
                     ));
 
-                    return Ok(i + 3);
+                    Ok(i + 3)
                 }
 
-                _ => {
-                    return Err(CompilationError::new(
-                        token.line_number,
-                        high_token.column_number + high_token.token_length + 1,
-                        len_lexed_strings - high_token.column_number - high_token.token_length,
-                        &format!(
-                            "Expected a 16bit value after ADD got {:?} insted",
-                            &low_token.token_type
-                        ),
-                    ));
-                }
+                _ => Err(CompilationError::new(
+                    token.line_number,
+                    high_token.column_number + high_token.token_length + 1,
+                    len_lexed_strings - high_token.column_number - high_token.token_length,
+                    &format!(
+                        "Expected a 16bit value after ADD got {:?} insted",
+                        &low_token.token_type
+                    ),
+                )),
             }
         }
         Assembly8086Tokens::Register8bit(high_reg) => {
@@ -207,7 +205,7 @@ pub(in crate::compiler) fn parse_add(
                             low_token.column_number,
                         ));
                     }
-                    return Ok(i + 3);
+                    Ok(i + 3)
                 }
                 Assembly8086Tokens::Register8bit(low_reg) => {
                     let ins = (0xC0) | (high_reg.get_as_idx() / 2) << 4;
@@ -227,33 +225,29 @@ pub(in crate::compiler) fn parse_add(
                         low_token.column_number,
                     ));
 
-                    return Ok(i + 3);
+                    Ok(i + 3)
                 }
 
-                _ => {
-                    return Err(CompilationError::new(
-                        token.line_number,
-                        high_token.column_number + high_token.token_length + 1,
-                        len_lexed_strings - high_token.column_number - high_token.token_length,
-                        &format!(
-                            "Expected a 8bit value after ADD got {:?} insted",
-                            &low_token.token_type
-                        ),
-                    ));
-                }
+                _ => Err(CompilationError::new(
+                    token.line_number,
+                    high_token.column_number + high_token.token_length + 1,
+                    len_lexed_strings - high_token.column_number - high_token.token_length,
+                    &format!(
+                        "Expected a 8bit value after ADD got {:?} insted",
+                        &low_token.token_type
+                    ),
+                )),
             }
         }
-        _ => {
-            return Err(CompilationError::new(
-                high_token.line_number,
-                high_token.column_number,
-                high_token.token_length,
-                &format!(
-                    "Expected a 16bit or 8bit register after ADD got {:?} insted",
-                    &high_token.token_type
-                ),
-            ));
-        }
+        _ => Err(CompilationError::new(
+            high_token.line_number,
+            high_token.column_number,
+            high_token.token_length,
+            &format!(
+                "Expected a 16bit or 8bit register after ADD got {:?} insted",
+                &high_token.token_type
+            ),
+        )),
     }
 }
 

@@ -87,7 +87,7 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
     };
 
     match instruction {
-        Instructions::MOV => {
+        Instructions::Mov => {
             i = parse_mov(
                 &lexed_str_without_spaces,
                 token,
@@ -99,7 +99,7 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "MOV", 2)?
         }
 
-        Instructions::ADD => {
+        Instructions::Add => {
             i = parse_add(
                 &lexed_str_without_spaces,
                 token,
@@ -112,7 +112,7 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "ADD", 2)?;
         }
 
-        Instructions::INC => {
+        Instructions::Inc => {
             i = parse_inc(
                 &lexed_str_without_spaces,
                 token,
@@ -124,7 +124,7 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "INC", 1)?;
         }
 
-        Instructions::DEC => {
+        Instructions::Dec => {
             i = parse_dec(
                 &lexed_str_without_spaces,
                 token,

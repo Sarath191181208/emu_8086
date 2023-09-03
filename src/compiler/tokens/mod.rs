@@ -45,7 +45,7 @@ pub(crate) enum Assembly8086Tokens {
     // ex: (, ), [, ], {, }, ,, ., :, ;, ?, @, `
     Space,
     Comma,
-    Colon,
+    // Colon,
 
     // Error
     Error,
@@ -68,10 +68,10 @@ impl Token {
         token_length: u32,
     ) -> Token {
         Token {
-            token_type: token_type,
-            line_number: line_number,
-            column_number: column_number,
-            token_length: token_length,
+            token_type,
+            line_number,
+            column_number,
+            token_length,
         }
     }
 }

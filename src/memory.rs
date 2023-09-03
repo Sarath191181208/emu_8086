@@ -4,6 +4,12 @@ pub struct Memory {
     mem: [Byte; 0xFFFF],
 }
 
+impl Default for Memory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Memory {
     pub fn new() -> Memory {
         Memory { mem: [0; 0xFFFF] }

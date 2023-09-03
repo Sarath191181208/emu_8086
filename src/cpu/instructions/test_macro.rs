@@ -1,6 +1,3 @@
-use crate::cpu::CPU;
-use crate::memory::Memory;
-
 #[macro_export]
 macro_rules! generate_test {
     ($test_name:ident, $instructions:expr, $compare: expr) => {

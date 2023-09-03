@@ -70,7 +70,7 @@ impl Lexer {
                             token_length += 1;
                             token_string_buffer.push(c);
                         }
-                        let token = self.str_to_token(&token_string_buffer.to_uppercase());
+                        let token = self.str_to_token(&token_string_buffer);
                         temp_vec.push(Token::new(
                             match token {
                                 Some(token) => token,
@@ -101,10 +101,10 @@ impl Lexer {
             return Some(Assembly8086Tokens::Register8bit(register));
         }
 
-        if let Some(token) = self.parse_num_u8(&token_string.to_lowercase()) {
+        if let Some(token) = self.parse_num_u8(token_string) {
             return Some(token);
         }
-        if let Some(token) = self.parse_num_u16(&token_string.to_lowercase()) {
+        if let Some(token) = self.parse_num_u16(token_string) {
             return Some(token);
         }
         None
@@ -114,19 +114,18 @@ impl Lexer {
         // try to parse numberr that is in 0x0011 format and
         // also in the format of 011h and also in the base 10 format
         // and return the number in the base 10 format
-        if token_string.starts_with("0x") {
-            if let Ok(number) = u16::from_str_radix(&token_string[2..], 16) {
+        if let Some(stripped_token) = token_string.strip_prefix("0x") {
+            if let Ok(number) = u16::from_str_radix(stripped_token, 16) {
                 return Some(Assembly8086Tokens::Number16bit(number));
             }
-        } else if token_string.ends_with("h") {
-            if let Ok(number) = u16::from_str_radix(&token_string[..token_string.len() - 1], 16) {
+        } else if let Some(stripped_token) = token_string.strip_suffix('h') {
+            if let Ok(number) = u16::from_str_radix(stripped_token, 16) {
                 return Some(Assembly8086Tokens::Number16bit(number));
             }
-        } else {
-            if let Ok(number) = token_string.parse::<u16>() {
-                return Some(Assembly8086Tokens::Number16bit(number));
-            }
+        } else if let Ok(number) = token_string.parse::<u16>() {
+            return Some(Assembly8086Tokens::Number16bit(number));
         }
+
         None
     }
 
@@ -134,19 +133,18 @@ impl Lexer {
         // try to parse numberr that is in 0x0011 format and
         // also in the format of 011h and also in the base 10 format
         // and return the number in the base 10 format
-        if token_string.starts_with("0x") {
-            if let Ok(number) = u8::from_str_radix(&token_string[2..], 16) {
+        if let Some(stripped_token) = token_string.strip_prefix("0x") {
+            if let Ok(number) = u8::from_str_radix(stripped_token, 16) {
                 return Some(Assembly8086Tokens::Number8bit(number));
             }
-        } else if token_string.ends_with("h") {
-            if let Ok(number) = u8::from_str_radix(&token_string[..token_string.len() - 1], 16) {
+        } else if let Some(stripped_token) = token_string.strip_suffix('h') {
+            if let Ok(number) = u8::from_str_radix(stripped_token, 16) {
                 return Some(Assembly8086Tokens::Number8bit(number));
             }
-        } else {
-            if let Ok(number) = token_string.parse::<u8>() {
-                return Some(Assembly8086Tokens::Number8bit(number));
-            }
+        } else if let Ok(number) = token_string.parse::<u8>() {
+            return Some(Assembly8086Tokens::Number8bit(number));
         }
+
         None
     }
 }

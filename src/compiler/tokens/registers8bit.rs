@@ -2,13 +2,21 @@ use strum_macros::EnumString;
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumString)]
 pub(crate) enum Registers8bit {
+    #[strum(ascii_case_insensitive)]
     AH,
+    #[strum(ascii_case_insensitive)]
     AL,
+    #[strum(ascii_case_insensitive)]
     BH,
+    #[strum(ascii_case_insensitive)]
     BL,
+    #[strum(ascii_case_insensitive)]
     CH,
+    #[strum(ascii_case_insensitive)]
     CL,
+    #[strum(ascii_case_insensitive)]
     DH,
+    #[strum(ascii_case_insensitive)]
     DL,
 }
 

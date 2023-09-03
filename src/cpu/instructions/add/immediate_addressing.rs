@@ -67,6 +67,7 @@ impl CPU {
     }
 }
 
+#[cfg(test)]
 mod add_immediate_16bit_tests {
     use crate::{cpu::CPU, generate_test, memory::Memory};
 
@@ -96,7 +97,7 @@ mod add_immediate_16bit_tests {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0xFFFE);
-            assert_eq!(cpu.carry_flag, true);
+            assert!(cpu.carry_flag);
             assert_eq!(cpu.get_flags_as_binary(), 0b00100101)
         })
     );
@@ -112,7 +113,7 @@ mod add_immediate_16bit_tests {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0000);
-            assert_eq!(cpu.zero_flag, true);
+            assert!(cpu.zero_flag);
             assert_eq!(cpu.get_flags_as_binary(), 0b00010010);
         })
     );
@@ -145,8 +146,8 @@ mod add_immediate_16bit_tests {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0x1235);
-            assert_eq!(cpu.overflow_flag, false);
-            assert_eq!(cpu.carry_flag, false);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.carry_flag);
         })
     );
 
@@ -179,8 +180,8 @@ mod add_immediate_16bit_tests {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFEF);
-            assert_eq!(cpu.overflow_flag, false);
-            assert_eq!(cpu.carry_flag, false);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.carry_flag);
         })
     );
 }

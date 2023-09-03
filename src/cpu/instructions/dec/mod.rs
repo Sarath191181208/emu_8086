@@ -34,11 +34,11 @@ mod test_16bit_dec {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0000);
-            assert_eq!(cpu.zero_flag, true);
-            assert_eq!(cpu.negative_flag, false);
-            assert_eq!(cpu.overflow_flag, false);
-            assert_eq!(cpu.auxiliary_carry_flag, true);
-            assert_eq!(cpu.carry_flag, false);
+            assert!(cpu.zero_flag);
+            assert!(!cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(cpu.auxiliary_carry_flag);
+            assert!(!cpu.carry_flag);
         })
     );
 
@@ -51,11 +51,11 @@ mod test_16bit_dec {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFFE);
-            assert_eq!(cpu.zero_flag, false);
-            assert_eq!(cpu.negative_flag, true);
-            assert_eq!(cpu.overflow_flag, false);
-            assert_eq!(cpu.auxiliary_carry_flag, false);
-            assert_eq!(cpu.carry_flag, false);
+            assert!(!cpu.zero_flag);
+            assert!(cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.auxiliary_carry_flag);
+            assert!(!cpu.carry_flag);
         })
     );
 }

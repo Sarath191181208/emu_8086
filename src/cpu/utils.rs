@@ -1,6 +1,7 @@
-use crate::consts::{Byte, Word};
+#![allow(unused)]
 
 use super::CPU;
+use crate::consts::{Byte, Word};
 
 impl CPU {
     pub(in crate::cpu) fn get_16bit_register_by_index(&self, index: u8) -> Word {
@@ -83,5 +84,20 @@ impl CPU {
             prefix
         };
         (source_idx, write_idx)
+    }
+}
+
+impl CPU {
+    pub(in crate::cpu) fn get_flags_as_binary(&self) -> u8 {
+        let mut flags: u8 = 0;
+        flags |= self.carry_flag as u8;
+        flags |= (self.zero_flag as u8) << 1;
+        flags |= (self.negative_flag as u8) << 2;
+        flags |= (self.overflow_flag as u8) << 3;
+        flags |= (self.pairity_flag as u8) << 4;
+        flags |= (self.auxiliary_carry_flag as u8) << 5;
+        flags |= (self.interrupt_disable_flag as u8) << 6;
+        flags |= (self.direction_flag as u8) << 7;
+        flags
     }
 }

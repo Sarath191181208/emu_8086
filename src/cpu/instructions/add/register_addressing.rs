@@ -1,8 +1,4 @@
-use crate::{
-    consts::{Byte, Word},
-    cpu::CPU,
-    memory::Memory,
-};
+use crate::{consts::Byte, cpu::CPU, memory::Memory};
 
 // Register Addressing
 impl CPU {
@@ -57,9 +53,9 @@ mod add_16bit_register_addressing_tests {
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x0002, cpu.ax);
-            assert_eq!(false, cpu.overflow_flag);
-            assert_eq!(false, cpu.zero_flag);
-            assert_eq!(false, cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.zero_flag);
+            assert!(!cpu.negative_flag);
         })
     );
 
@@ -71,9 +67,9 @@ mod add_16bit_register_addressing_tests {
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x0000, cpu.ax);
-            assert_eq!(false, cpu.overflow_flag);
-            assert_eq!(true, cpu.zero_flag);
-            assert_eq!(false, cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(cpu.zero_flag);
+            assert!(!cpu.negative_flag);
         })
     );
 
@@ -100,9 +96,9 @@ mod add_16bit_register_addressing_tests {
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x1111, cpu.ax);
-            assert_eq!(false, cpu.overflow_flag);
-            assert_eq!(false, cpu.zero_flag);
-            assert_eq!(false, cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.zero_flag);
+            assert!(!cpu.negative_flag);
         })
     );
 }
@@ -122,9 +118,9 @@ mod add_8bit_register_addressing_tests {
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_ax_low());
-            assert_eq!(false, cpu.overflow_flag);
-            assert_eq!(false, cpu.zero_flag);
-            assert_eq!(false, cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.zero_flag);
+            assert!(!cpu.negative_flag);
         })
     );
 
@@ -139,9 +135,9 @@ mod add_8bit_register_addressing_tests {
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_bx_low());
-            assert_eq!(false, cpu.overflow_flag);
-            assert_eq!(false, cpu.zero_flag);
-            assert_eq!(false, cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.zero_flag);
+            assert!(!cpu.negative_flag);
         })
     );
 
@@ -156,9 +152,9 @@ mod add_8bit_register_addressing_tests {
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_cx_high());
-            assert_eq!(false, cpu.overflow_flag);
-            assert_eq!(false, cpu.zero_flag);
-            assert_eq!(false, cpu.negative_flag);
+            assert!(!cpu.overflow_flag);
+            assert!(!cpu.zero_flag);
+            assert!(!cpu.negative_flag);
         })
     );
 }

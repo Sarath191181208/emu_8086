@@ -42,7 +42,7 @@ mod test_16bit_inc {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0x0000);
-            assert_eq!(cpu.zero_flag, true);
+            assert!(cpu.zero_flag);
         })
     );
 
