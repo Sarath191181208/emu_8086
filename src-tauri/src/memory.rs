@@ -37,8 +37,6 @@ impl Memory {
     }
 }
 
-
-
 fn serialize<const N: usize, S, T>(t: &[T; N], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
