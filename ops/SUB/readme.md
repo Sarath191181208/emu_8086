@@ -10,8 +10,8 @@ Addressing modes for the SUB instruction are as follows:
 
 1. Register addressing mode, size of instruction is byte
 ```asm
-    SUB AL, BL ;   0x2A 0xD8
-    SUB AX, BX ;   0x2B 0xD8
+    SUB AL, BL ;   0x2A 0xC0..FF
+    SUB AX, BX ;   0x2B 0xC0..FF
 ```
 
 2. inmediate addressing mode, size of instruction is byte

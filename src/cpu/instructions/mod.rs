@@ -1,4 +1,5 @@
 pub mod add;
+pub mod sub;
 pub mod dec;
 pub mod inc;
 pub mod mov;
