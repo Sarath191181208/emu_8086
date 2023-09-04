@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 use crate::{
     consts::{Byte, Word},
     Memory,
@@ -33,6 +35,7 @@ macro_rules! generate_byte_access_methods {
     };
 }
 
+#[derive(Serialize)]
 pub struct CPU {
     // Memory
     instruction_pointer: Word,
@@ -94,6 +97,10 @@ impl CPU {
             overflow_flag: false,
             negative_flag: false,
         }
+    }
+
+    pub fn set_instruciton_pointer(&mut self) {
+        self.instruction_pointer = 0x100;
     }
 
     pub fn reset(&mut self, mem: &mut Memory) {

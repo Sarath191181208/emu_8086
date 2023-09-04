@@ -1,43 +1,88 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import "./App.css";
 import "./index.css";
 import { Editor } from "@monaco-editor/react";
 import { getHighHex, getLowHex } from "./utils";
+import { editor } from "monaco-editor";
+import { invoke } from "@tauri-apps/api/tauri";
 
 function App() {
-  let [showMemoryBottomBar, setIsMemoryShown] = useState(true);
+  const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
+  const editorRef = useRef<editor.IStandaloneCodeEditor>();
+
+  const runPressed = async () => {
+    // compile the code
+    // handle errors
+    // update the memory and registers
+    try {
+      const result = await invoke("compile_code_and_run", {
+        code: editorRef.current?.getValue(),
+      });
+      console.log(result);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
-    // create a grid view and the editor takes 2 spaces while the other things take 1 space
-    <div className="flex gap-4">
-      <div className="relative col-span-4 w-full">
-        <Editor
-          height="100%"
-          defaultLanguage="assembly"
-          theme="vs-dark"
-          options={{ minimap: { enabled: false } }}
-          defaultValue="// some comment"
-        />
-        {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
-        <MemoryBottomBar
-          showMemoryBottomBar={showMemoryBottomBar}
-          setIsMemoryShown={setIsMemoryShown}
-        />
-      </div>
-      <div className="col-span-1 pr-5">
-        <div className="grid-cols-1 gap-4">
-          {/* create a grid area */}
-          <div className=" flex flex-col ">
-            <Table />
-            <div className="w-min mt-5 flex gap-5">
-              <Table16bitRegs className="w-min" />
-              <ShowFlags className="w-min" />
+    <>
+      <Navbar runPressed={runPressed} />
+      <div className="flex gap-4">
+        <div className="relative col-span-4 w-full">
+          <Editor
+            onMount={(editor, monaco) => (editorRef.current = editor)}
+            height="100%"
+            defaultLanguage="assembly"
+            theme="vs-dark"
+            options={{ minimap: { enabled: false } }}
+            defaultValue="// some comment"
+          />
+          {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
+          <MemoryBottomBar
+            showMemoryBottomBar={showMemoryBottomBar}
+            setIsMemoryShown={setIsMemoryShown}
+          />
+        </div>
+        <div className="col-span-1 pr-5">
+          <div className="grid-cols-1 gap-4">
+            {/* create a grid area */}
+            <div className=" flex flex-col ">
+              <Table />
+              <div className="w-min mt-5 flex gap-5">
+                <Table16bitRegs className="w-min" />
+                <ShowFlags className="w-min" />
+              </div>
             </div>
+            <div></div>
           </div>
-          <div></div>
         </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+function Navbar({ className = "", runPressed }: { className?: string, runPressed: () => void }) {
+  // create a navbar with open file and save file run next and previous buttons
+  return (
+    <nav className={" " + className}>
+      <div className="bg-slate-800 dark:bg-slate-800/25 flex gap-2">
+        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+          Open
+        </button>
+        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+          Save
+        </button>
+        <button onClick={runPressed} className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+          Run
+        </button>
+        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+          Next
+        </button>
+        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+          Previous
+        </button>
+      </div>
+    </nav>
   );
 }
 
@@ -57,7 +102,7 @@ function MemoryBottomBar({
       {showMemoryBottomBar && (
         <div
           className={`absolute w-full h-52 pointer-events-auto opacity-100
-        left-0 bottom-8 border border-black/5 dark:border-white/5
+        left-0 bottom-8 border border-black/20 dark:border-white/20
         transition-all duration-500 ease-in-out
         `}
         >

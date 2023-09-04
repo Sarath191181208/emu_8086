@@ -1,3 +1,7 @@
+use serde::Serialize;
+
+
+#[derive(Serialize)]
 pub struct CompilationError {
     line_number: u32,
     column_number: u32,

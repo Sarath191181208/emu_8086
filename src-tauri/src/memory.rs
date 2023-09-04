@@ -1,6 +1,10 @@
 use crate::consts::{Byte, Word};
+use serde::ser::SerializeTuple;
+use serde::{Serialize, Serializer};
 
+#[derive(Serialize)]
 pub struct Memory {
+    #[serde(serialize_with = "serialize")]
     mem: [Byte; 0xFFFF],
 }
 
@@ -31,4 +35,18 @@ impl Memory {
         self.mem[address as usize] = (data & 0xFF) as Byte;
         self.mem[(address + 1) as usize] = ((data >> 8) & 0xFF) as Byte;
     }
+}
+
+
+
+fn serialize<const N: usize, S, T>(t: &[T; N], serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: Serialize,
+{
+    let mut ser_tuple = serializer.serialize_tuple(N)?;
+    for elem in t {
+        ser_tuple.serialize_element(elem)?;
+    }
+    ser_tuple.end()
 }

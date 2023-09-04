@@ -2650,6 +2650,7 @@ dependencies = [
  "paste",
  "serde",
  "serde_json",
+ "serde_with",
  "strum",
  "strum_macros",
  "tauri",
