@@ -10,7 +10,7 @@ use lexer::Lexer;
 use tokens::instructions::Instructions;
 
 use self::{
-    parsers::{add::parse_add, dec::parse_dec, inc::parse_inc, mov::parse_mov},
+    parsers::{add::parse_add, dec::parse_dec, inc::parse_inc, mov::parse_mov, sub::parse_sub},
     tokens::{Assembly8086Tokens, Token},
 };
 
@@ -135,6 +135,19 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
             )?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "DEC", 1)?;
+        }
+
+        Instructions::Sub => {
+            i = parse_sub(
+                &lexed_str_without_spaces,
+                token,
+                i,
+                len_lexed_strings,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
+
+            has_consumed_all_instructions(&lexed_str_without_spaces, i, "SUB", 2)?;
         }
     }
     Ok((compiled_bytes, compiled_bytes_ref))
