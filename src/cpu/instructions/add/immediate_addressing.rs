@@ -146,7 +146,7 @@ mod add_immediate_16bit_tests {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0x1235);
-            assert_eq!(cpu.get_flags_as_binary() ,0b00010000);
+            assert_eq!(cpu.get_flags_as_binary(), 0b00010000);
         })
     );
 

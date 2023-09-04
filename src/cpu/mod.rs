@@ -144,7 +144,7 @@ impl CPU {
             // ADD AX, 0x1234 i.e immediate addressing
             0x05 => self.add_ax_in_immediate_addressing(mem),
 
-            // SUB, AL, 8bit register 
+            // SUB, AL, 8bit register
             0x2A => self.execute_sub_register_byte(mem),
 
             // SUB AX, 16bit register

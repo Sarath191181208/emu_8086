@@ -39,12 +39,13 @@ impl CPU {
     }
 }
 
+#[cfg(test)]
 mod sub_16bit_register_addressing {
     use crate::{cpu::CPU, generate_test, memory::Memory};
 
     // sub ax, cx
     generate_test!(
-                test_sub_ax_cx,
+        test_sub_ax_cx,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.ax = 0x0f0f;
             cpu.cx = 0x0013;
@@ -56,7 +57,7 @@ mod sub_16bit_register_addressing {
             assert_eq!(cpu.get_flags_as_binary(), 0b00010000)
         })
     );
-    // sub bx, dx overflow 
+    // sub bx, dx overflow
     generate_test!(
         test_sub_bx_dx_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
@@ -68,9 +69,9 @@ mod sub_16bit_register_addressing {
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFED);
             assert_eq!(cpu.get_flags_as_binary(), 0b000110101)
-        })   
+        })
     );
-    // sub sp, bp 
+    // sub sp, bp
     generate_test!(
         test_sub_sp_bp,
         (|cpu: &mut CPU, mem: &mut Memory| {
@@ -82,11 +83,12 @@ mod sub_16bit_register_addressing {
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.stack_pointer, 0xEFED);
             assert_eq!(cpu.get_flags_as_binary(), 0b00110100)
-        })   
+        })
     );
 }
 
-mod sub_8bit_register_addressing{
+#[cfg(test)]
+mod sub_8bit_register_addressing {
     use crate::{cpu::CPU, generate_test, memory::Memory};
 
     // sub al, cl
@@ -118,5 +120,4 @@ mod sub_8bit_register_addressing{
             assert_eq!(cpu.get_flags_as_binary(), 0b00110100)
         })
     );
-
 }

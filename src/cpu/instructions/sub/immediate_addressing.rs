@@ -24,7 +24,7 @@ impl CPU {
         let instruction = self.consume_instruction(mem);
         match instruction {
             0xC8..=0xCF => {
-                let index = (instruction-8) & 0x07;
+                let index = (instruction - 8) & 0x07;
                 let data = self.consume_instruction(mem);
                 let (result, _) = self.sub_8bit_with_overflow_and_set_flags(
                     self.get_8bit_register_by_index(index),
@@ -52,7 +52,7 @@ impl CPU {
     }
 
     fn sub_immediate_word(&mut self, instruction: Byte, mem: &Memory) {
-        let index = (self.consume_instruction(mem)-8) & 0x07;
+        let index = (self.consume_instruction(mem) - 8) & 0x07;
         let data = self.get_data_sub(mem, instruction);
         let (result, _) = self
             .sub_16bit_with_overflow_and_set_flags(self.get_16bit_register_by_index(index), data);
@@ -87,7 +87,7 @@ mod sub_immediate_16bit_tests {
         })
     );
 
-    // test bx - dx 
+    // test bx - dx
     generate_test!(
         sub_bx_dx,
         (|cpu: &mut CPU, mem: &mut Memory| {
@@ -103,7 +103,7 @@ mod sub_immediate_16bit_tests {
         })
     );
 
-    // test sp - cx and overflow    
+    // test sp - cx and overflow
     generate_test!(
         sub_sp_cx_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
@@ -118,7 +118,6 @@ mod sub_immediate_16bit_tests {
             assert_eq!(cpu.get_flags_as_binary(), 0b00110101);
         })
     );
-
 }
 
 #[cfg(test)]
