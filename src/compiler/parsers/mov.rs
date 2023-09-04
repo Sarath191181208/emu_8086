@@ -133,7 +133,6 @@ pub(in crate::compiler) fn parse_mov(
                     Ok(i + 3)
                 }
                 Assembly8086Tokens::Register8bit(low_reg) => {
-                    
                     let ins = get_as_0xc0_0xff_pattern(high_reg.get_as_idx(), low_reg.get_as_idx());
                     compiled_bytes.push(0x8A);
                     compiled_bytes.push(ins);
