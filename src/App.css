@@ -2,3 +2,11 @@ body{
   margin: 0;
   padding: 0;
 }
+
+.gridCols17{
+  grid-template-columns: repeat(17, minmax(0, 1fr));
+}
+
+.gridRows6{
+  grid-template-rows: repeat(6, 1fr);
+}
