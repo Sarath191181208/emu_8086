@@ -33,6 +33,8 @@ impl CPU {
     pub fn sub_16bit_with_overflow_and_set_flags(&mut self, a: Word, b: Word) -> (Word, bool) {
         let (result, overflow) = a.overflowing_sub(b);
         self.set_16bit_flags(a, b, result, overflow);
+        self.overflow_flag = a & 0x8000 != b & 0x8000 && result & 0x8000 != a & 0x8000;
+        self.auxiliary_carry_flag = (a & 0x0F) < (b & 0x0F);
         (result, overflow)
     }
 
