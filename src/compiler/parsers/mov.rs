@@ -4,6 +4,8 @@ use crate::compiler::{
     CompiledBytes,
 };
 
+use super::utils::get_as_0xc0_0xff_pattern;
+
 pub(in crate::compiler) fn parse_mov(
     lexed_str_without_spaces: &Vec<&Token>,
     token: &Token,
@@ -75,9 +77,8 @@ pub(in crate::compiler) fn parse_mov(
                         }
                     };
                     compiled_bytes.push(0x8B);
-                    let ins = (0xC0) | (high_reg_idx / 2) << 4;
-                    let ins2 = low_reg_idx | (high_reg_idx % 2) << 3;
-                    compiled_bytes.push(ins | ins2);
+                    let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
+                    compiled_bytes.push(ins);
 
                     compiled_bytes_ref.push(CompiledBytes::new(
                         vec![0x8B],
@@ -85,7 +86,7 @@ pub(in crate::compiler) fn parse_mov(
                         token.column_number,
                     ));
                     compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![ins2 | ins],
+                        vec![ins],
                         low_token.line_number,
                         low_token.column_number,
                     ));
@@ -132,10 +133,10 @@ pub(in crate::compiler) fn parse_mov(
                     Ok(i + 3)
                 }
                 Assembly8086Tokens::Register8bit(low_reg) => {
+                    
+                    let ins = get_as_0xc0_0xff_pattern(high_reg.get_as_idx(), low_reg.get_as_idx());
                     compiled_bytes.push(0x8A);
-                    let ins = (0xC0) | (high_reg.get_as_idx() / 2) << 4;
-                    let ins2 = (low_reg.get_as_idx()) | (high_reg.get_as_idx() % 2) << 3;
-                    compiled_bytes.push(ins | ins2);
+                    compiled_bytes.push(ins);
 
                     compiled_bytes_ref.push(CompiledBytes::new(
                         vec![0x8A],
