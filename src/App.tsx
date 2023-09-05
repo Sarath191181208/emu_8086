@@ -31,7 +31,9 @@ function App() {
 
   const [registers, setRegisters, prevRegistersRef] =
     useStateSavePrevious<CPUData>(getDefaultRegisters());
-  const [flags, setFlags, prevFlagsRef] = useStateSavePrevious<Flags>(getDefaultFlags());
+  const [flags, setFlags, prevFlagsRef] = useStateSavePrevious<Flags>(
+    getDefaultFlags()
+  );
 
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
 
@@ -88,6 +90,12 @@ function App() {
                   registers.cx,
                   registers.dx,
                 ]}
+                prevRegisters={[
+                  prevRegistersRef.current.ax,
+                  prevRegistersRef.current.bx,
+                  prevRegistersRef.current.cx,
+                  prevRegistersRef.current.dx,
+                ]}
               />
               <div className="w-min mt-5 flex gap-5">
                 <Table16bitRegs
@@ -101,8 +109,8 @@ function App() {
                 />
                 <ShowFlags
                   flags={extractFlagsShort(flags)}
-                  previousFlags={extractFlagsShort(prevFlagsRef.current)}
-                  className="w-min" />
+                  className="w-min"
+                />
               </div>
             </div>
             <div></div>
@@ -232,12 +240,63 @@ function MemoryBottomBar({
 
 function Table({
   registers,
+  prevRegisters,
   className = "",
 }: {
   registers: [number, number, number, number];
+  prevRegisters: [number, number, number, number];
   className?: string;
 }) {
   const keys = ["ax", "bx", "cx", "dx"];
+  const changedValIdxs: boolean[][] = registers.map((val, i) => {
+    let highChange = false;
+    let lowChange = false;
+
+    if (getHighHex(val) !== getHighHex(prevRegisters[i])) {
+      highChange = true;
+    }
+    if (getLowHex(val) !== getLowHex(prevRegisters[i])) {
+      lowChange = true;
+    }
+
+    return [highChange, lowChange];
+  });
+
+  const [animateKeys, setAnimateKeys] = useState<boolean[][]>([]);
+
+  useEffect(() => {
+    setAnimateKeys(changedValIdxs);
+    let timeoutId = setTimeout(() => {
+      // this is to remove the animation class so that it can be added again
+      setAnimateKeys([]);
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  }, [registers]);
+
+  const getShouldAnimateLow = (i: number): boolean => {
+    // check if animateKeys is empty
+    if (animateKeys.length === 0) {
+      return false;
+    }
+    // check if animateKeys[i] is empty
+    if (animateKeys[i].length === 0) {
+      return false;
+    }
+    return animateKeys[i][1];
+  };
+
+  const getShouldAnimateHigh = (i: number): boolean => {
+    // check if animateKeys is empty
+    if (animateKeys.length === 0) {
+      return false;
+    }
+    // check if animateKeys[i] is empty
+    if (animateKeys[i].length === 0) {
+      return false;
+    }
+    return animateKeys[i][0];
+  };
+
   return (
     <div
       className={
@@ -268,10 +327,20 @@ function Table({
                     {regName.toUpperCase()}
                   </td>
                   {/* show the text in td but show the values in hex */}
-                  <td className="px-6 py-2 text-slate-400 dark:text-slate-200 text-center">
+                  <td
+                    className={
+                      "px-6 py-2 text-slate-400 dark:text-slate-200 text-center " +
+                      (getShouldAnimateHigh(i) ? "animate-val-change" : "")
+                    }
+                  >
                     {getHighHex(registers[i])}
                   </td>
-                  <td className="px-6 py-2 text-slate-400 dark:text-slate-200 text-center">
+                  <td
+                    className={
+                      "px-6 py-2 text-slate-400 dark:text-slate-200 text-center " +
+                      (getShouldAnimateLow(i) ? "animate-val-change" : "")
+                    }
+                  >
                     {getLowHex(registers[i])}
                   </td>
                 </tr>
@@ -365,11 +434,9 @@ function Table16bitRegs({
 
 function ShowFlags({
   flags,
-  previousFlags,
   className = "",
 }: {
   flags: FlagsShort;
-  previousFlags: FlagsShort;
   className?: string;
 }) {
   return (
@@ -384,7 +451,15 @@ function ShowFlags({
             </div>
             <div className="">
               {Object.entries(flags).map(([flagName, value]) => (
-                <div className={`bg-slate-800 py-2 text-center ${value ? "bg-green-300/40" : ""}`}> {flagName} </div>
+                <div
+                  key={flagName}
+                  className={`bg-slate-800 py-2 text-center ${
+                    value ? "bg-green-300/40" : ""
+                  }`}
+                >
+                  {" "}
+                  {flagName}{" "}
+                </div>
               ))}
             </div>
           </div>
