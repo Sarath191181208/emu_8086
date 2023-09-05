@@ -69,7 +69,7 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
         Some(token) => token,
         None => return Ok((compiled_bytes, compiled_bytes_ref)),
     };
-    if last_token.token_type == Assembly8086Tokens::Space{
+    if last_token.token_type == Assembly8086Tokens::Space {
         return Ok((compiled_bytes, compiled_bytes_ref));
     }
     let len_lexed_strings = last_token.token_length + last_token.column_number;
