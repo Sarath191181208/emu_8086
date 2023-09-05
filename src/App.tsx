@@ -22,6 +22,7 @@ import {
   getDefaultRegisters,
   getDefaultFlags,
 } from "./types/CPUData/getDefaultRegistersAndFlags";
+import { langRules, langTheme } from "./langRules";
 
 function App() {
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
@@ -36,6 +37,43 @@ function App() {
   );
 
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
+  const monacoRef = useRef<typeof import("monaco-editor")>();
+
+  const setErrorsOnEditor = (e: any) => {
+      
+      const errorList = e as CompilationError[];
+      const monaco = monacoRef.current;
+      const editor = editorRef.current;
+      const model = editor?.getModel();
+      if (!monaco || !editor || !model) {
+        return;
+      }
+
+      // the message has | text Error("str") text | in it some we should extract the str from Error()
+      const getErrorMessage = (message: string) => {
+        return message.replace(/Error\(([^)]+)\)/g, "$1");
+      };
+
+      const markers = errorList.map((err) => ({
+        startLineNumber: err.line_number + 1,
+        startColumn: err.column_number,
+        endLineNumber: err.line_number + 1,
+        endColumn: err.column_number + err.length,
+        message: getErrorMessage(err.message),
+        severity: monaco.MarkerSeverity.Error,
+      }));
+      monaco.editor.setModelMarkers(model, "owner", markers);
+  }
+
+  const clearErrorsOnEditor = () => {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    const model = editor?.getModel();
+    if (!monaco || !editor || !model) {
+      return;
+    }
+    monaco.editor.setModelMarkers(model, "owner", []);
+  }
 
   const runPressed = async () => {
     try {
@@ -48,26 +86,45 @@ function App() {
       const regs: any = result[0];
       setMemory(result[1].mem);
       setRegisters(extractCPUData(regs));
+      clearErrorsOnEditor();
       setFlags(extractFlags(regs));
-
-      console.log(result);
     } catch (e) {
-      console.log(e);
+      setErrorsOnEditor(e);
     }
   };
 
+  const tryCompile = async () => {
+    try {
+      await invoke("try_compile_code", { code: editorRef.current?.getValue() });
+      clearErrorsOnEditor();
+    } catch (e) {
+      setErrorsOnEditor(e);
+    }
+  };
+
+
   return (
     <>
-      <Navbar runPressed={runPressed} />
+      <Navbar runPressed={runPressed} className="mb-5"/>
       <div className="flex gap-4 overflow-hidden">
         <div className="relative col-span-4 w-full">
           <Editor
-            onMount={(editor, monaco) => (editorRef.current = editor)}
+            beforeMount={(monaco) => { 
+              monaco.editor.defineTheme("assembly-dark", langTheme);
+            }}
+            onMount={(editor, monaco) => {
+              editorRef.current = editor;
+              monacoRef.current = monaco;
+              monaco.languages.register({ id: "assembly" });
+              monaco.languages.setMonarchTokensProvider("assembly", langRules);
+              // monaco.editor.defineTheme("assembly-dark", langTheme);
+            }}
+            onChange={tryCompile}
             height="100%"
             defaultLanguage="assembly"
-            theme="vs-dark"
+            theme="assembly-dark"
             options={{ minimap: { enabled: false } }}
-            defaultValue={"MOV AX, BX \nMOV BX, CX \nSUB CX, AX"}
+            defaultValue={"MOV AX, BX \nMOV BX, CX \nSUB CX, AX \n \nMOV AX, 0xAF34 \nMOV BL, 0X12 \nMOV AL, 10"}
           />
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
           <MemoryBottomBar
@@ -107,10 +164,7 @@ function App() {
                   )}
                   className="w-min"
                 />
-                <ShowFlags
-                  flags={extractFlagsShort(flags)}
-                  className="w-min"
-                />
+                <ShowFlags flags={extractFlagsShort(flags)} className="w-min" />
               </div>
             </div>
             <div></div>
@@ -131,23 +185,23 @@ function Navbar({
   // create a navbar with open file and save file run next and previous buttons
   return (
     <nav className={" " + className}>
-      <div className="bg-slate-800 dark:bg-slate-800/25 flex gap-2">
-        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+      <div className="bg-slate-800 dark:bg-slate-950 flex gap-2">
+        <button className="p-2 hover:bg-white/5 transition ease-in-out ">
           Open
         </button>
-        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+        <button className="p-2 hover:bg-white/5 transition ease-in-out ">
           Save
         </button>
         <button
           onClick={runPressed}
-          className="p-2 hover:bg-slate-400/50 transition ease-in-out "
+          className="p-2 hover:bg-white/5 transition ease-in-out "
         >
           Run
         </button>
-        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+        <button className="p-2 hover:bg-white/5 transition ease-in-out ">
           Next
         </button>
-        <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+        <button className="p-2 hover:bg-white/5 transition ease-in-out ">
           Previous
         </button>
       </div>

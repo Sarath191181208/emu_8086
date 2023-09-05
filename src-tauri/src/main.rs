@@ -37,9 +37,15 @@ fn compile_code_and_run(code: String) -> Result<(CPU, Memory), Vec<CompilationEr
     Ok((cpu, mem))
 }
 
+#[tauri::command]
+fn try_compile_code(code: String) -> Result<(), Vec<CompilationError>> {
+    compile_lines(&code, false)?;
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![compile_code_and_run])
+        .invoke_handler(tauri::generate_handler![compile_code_and_run, try_compile_code])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

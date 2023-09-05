@@ -74,7 +74,7 @@ impl Lexer {
                         temp_vec.push(Token::new(
                             match token {
                                 Some(token) => token,
-                                None => Assembly8086Tokens::Error,
+                                None => Assembly8086Tokens::Error(token_string_buffer),
                             },
                             line_number,
                             iterating_col_num as u32,

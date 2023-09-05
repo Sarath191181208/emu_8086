@@ -48,7 +48,7 @@ pub(crate) enum Assembly8086Tokens {
     // Colon,
 
     // Error
-    Error,
+    Error(String),
 }
 
 #[derive(Debug, Clone)]
