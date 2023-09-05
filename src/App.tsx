@@ -1,23 +1,53 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import "./index.css";
 import { Editor } from "@monaco-editor/react";
 import { getHighHex, getLowHex } from "./utils";
 import { editor } from "monaco-editor";
 import { invoke } from "@tauri-apps/api/tauri";
+import { useStateSavePrevious } from "./hooks/useStateSavePrevious";
+import {
+  CPUData,
+  Flags,
+  FlagsShort,
+  Registers16BitNotGeneralShort,
+} from "./types/CPUData/CPUData";
+import {
+  extractCPUData,
+  extractFlags,
+  extractFlagsShort,
+  extractNonGeneral16bitRegisters,
+} from "./types/CPUData/extract";
+import {
+  getDefaultRegisters,
+  getDefaultFlags,
+} from "./types/CPUData/getDefaultRegistersAndFlags";
 
 function App() {
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
+  const [memeory, setMemory, prevMemoryRef] = useStateSavePrevious(
+    Array(0xffff).fill(0)
+  );
+
+  const [registers, setRegisters, prevRegistersRef] =
+    useStateSavePrevious<CPUData>(getDefaultRegisters());
+  const [flags, setFlags, prevFlagsRef] = useStateSavePrevious<Flags>(getDefaultFlags());
+
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
 
   const runPressed = async () => {
-    // compile the code
-    // handle errors
-    // update the memory and registers
     try {
-      const result = await invoke("compile_code_and_run", {
-        code: editorRef.current?.getValue(),
-      });
+      const result: [CPUData, { mem: Array<number> }] = await invoke(
+        "compile_code_and_run",
+        {
+          code: editorRef.current?.getValue(),
+        }
+      );
+      const regs: any = result[0];
+      setMemory(result[1].mem);
+      setRegisters(extractCPUData(regs));
+      setFlags(extractFlags(regs));
+
       console.log(result);
     } catch (e) {
       console.log(e);
@@ -27,7 +57,7 @@ function App() {
   return (
     <>
       <Navbar runPressed={runPressed} />
-      <div className="flex gap-4">
+      <div className="flex gap-4 overflow-hidden">
         <div className="relative col-span-4 w-full">
           <Editor
             onMount={(editor, monaco) => (editorRef.current = editor)}
@@ -35,10 +65,13 @@ function App() {
             defaultLanguage="assembly"
             theme="vs-dark"
             options={{ minimap: { enabled: false } }}
-            defaultValue="// some comment"
+            defaultValue={"MOV AX, BX \nMOV BX, CX \nSUB CX, AX"}
           />
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
           <MemoryBottomBar
+            key="memory-bottom-bar"
+            prevArr={prevMemoryRef.current}
+            arr={memeory}
             showMemoryBottomBar={showMemoryBottomBar}
             setIsMemoryShown={setIsMemoryShown}
           />
@@ -47,10 +80,29 @@ function App() {
           <div className="grid-cols-1 gap-4">
             {/* create a grid area */}
             <div className=" flex flex-col ">
-              <Table />
+              <Table
+                key={"reg-table"}
+                registers={[
+                  registers.ax,
+                  registers.bx,
+                  registers.cx,
+                  registers.dx,
+                ]}
+              />
               <div className="w-min mt-5 flex gap-5">
-                <Table16bitRegs className="w-min" />
-                <ShowFlags className="w-min" />
+                <Table16bitRegs
+                  nonGeneral16BitRegister={extractNonGeneral16bitRegisters(
+                    registers
+                  )}
+                  prevNonGeneral16BitRegister={extractNonGeneral16bitRegisters(
+                    prevRegistersRef.current
+                  )}
+                  className="w-min"
+                />
+                <ShowFlags
+                  flags={extractFlagsShort(flags)}
+                  previousFlags={extractFlagsShort(prevFlagsRef.current)}
+                  className="w-min" />
               </div>
             </div>
             <div></div>
@@ -61,7 +113,13 @@ function App() {
   );
 }
 
-function Navbar({ className = "", runPressed }: { className?: string, runPressed: () => void }) {
+function Navbar({
+  className = "",
+  runPressed,
+}: {
+  className?: string;
+  runPressed: () => void;
+}) {
   // create a navbar with open file and save file run next and previous buttons
   return (
     <nav className={" " + className}>
@@ -72,7 +130,10 @@ function Navbar({ className = "", runPressed }: { className?: string, runPressed
         <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
           Save
         </button>
-        <button onClick={runPressed} className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
+        <button
+          onClick={runPressed}
+          className="p-2 hover:bg-slate-400/50 transition ease-in-out "
+        >
           Run
         </button>
         <button className="p-2 hover:bg-slate-400/50 transition ease-in-out ">
@@ -85,17 +146,38 @@ function Navbar({ className = "", runPressed }: { className?: string, runPressed
     </nav>
   );
 }
-
 function MemoryBottomBar({
+  arr,
+  prevArr,
   showMemoryBottomBar,
   setIsMemoryShown,
   className = "",
 }: {
+  arr: number[];
+  prevArr: number[];
   showMemoryBottomBar: boolean;
   setIsMemoryShown: (showMemoryBottomBar: boolean) => void;
   className?: string;
 }) {
-  const arr = new Array(17 * 6).fill(0);
+  const [start, _] = useState(0x0100);
+  const [indicesToAnimate, _updateIndicesToAnimate] = useState<number[]>([]);
+  const updateIndicesToAnimate = (newVal: number[]) => {
+    console.log(newVal);
+    _updateIndicesToAnimate(newVal);
+  };
+
+  useEffect(() => {
+    const notEqIdxArr = arr
+      .map((num, i) => (num !== prevArr[i] ? i : -1))
+      .filter((num) => num !== -1);
+    updateIndicesToAnimate(notEqIdxArr);
+
+    let timeoutId = setTimeout(() => {
+      // this is to remove the animation class so that it can be added again
+      updateIndicesToAnimate([]);
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  }, [arr]);
 
   return (
     <div className={"absolute w-full" + className}>
@@ -116,14 +198,20 @@ function MemoryBottomBar({
           </div>
           <div className="h-full flex">
             <div
-              className={`grid h-full gap-2 p-5 gridCols17 gridRows6 text-xs`}
+              className={`grid h-full gap-x-3 gap-y-2 p-5 gridCols17 gridRows6 text-xs items-center justify-items-center`}
             >
-              {arr.map((_, i) => (
+              {arr.slice(start, start + 17 * 6).map((val, i) => (
                 <div
+                  // className={`border border-black/10 dark:border-white/10 rounded-md flex items-center justify-center`}
                   key={i}
-                  className="text-slate-400 dark:text-slate-200 text-center"
+                  className={
+                    "text-slate-400 dark:text-slate-200 text-center p-1 " +
+                    (indicesToAnimate.includes(start + i)
+                      ? `animate-val-change`
+                      : "")
+                  }
                 >
-                  {i.toString(16).toUpperCase().padStart(2, "0")}
+                  {val.toString(16).toUpperCase().padStart(2, "0")}
                 </div>
               ))}
             </div>
@@ -142,10 +230,14 @@ function MemoryBottomBar({
   );
 }
 
-function Table({ className = "" }) {
-  const two_col_regs = ["AX", "BX", "CX", "DX"];
-  const values = [12, 18, 20, 0x1571];
-
+function Table({
+  registers,
+  className = "",
+}: {
+  registers: [number, number, number, number];
+  className?: string;
+}) {
+  const keys = ["ax", "bx", "cx", "dx"];
   return (
     <div
       className={
@@ -170,17 +262,17 @@ function Table({ className = "" }) {
               </tr>
             </thead>
             <tbody className="bg-slate-800">
-              {two_col_regs.map((reg, i) => (
-                <tr key={reg}>
+              {keys.map((regName, i) => (
+                <tr key={regName}>
                   <td className="px-6 py-2 text-slate-400 dark:text-slate-200 text-left">
-                    {reg}
+                    {regName.toUpperCase()}
                   </td>
                   {/* show the text in td but show the values in hex */}
                   <td className="px-6 py-2 text-slate-400 dark:text-slate-200 text-center">
-                    {getHighHex(values[i])}
+                    {getHighHex(registers[i])}
                   </td>
                   <td className="px-6 py-2 text-slate-400 dark:text-slate-200 text-center">
-                    {getLowHex(values[i])}
+                    {getLowHex(registers[i])}
                   </td>
                 </tr>
               ))}
@@ -193,9 +285,34 @@ function Table({ className = "" }) {
   );
 }
 
-function Table16bitRegs({ className = "" }) {
-  const regs = ["SP", "BP", "SI", "DI", "IP", "SS", "CS", "DS", "ES"];
-  const values = [12, 18, 20, 0x1571, 0x1571, 0x1571, 0x1571, 0x1571, 0x1571];
+function Table16bitRegs({
+  nonGeneral16BitRegister,
+  prevNonGeneral16BitRegister,
+  className = "",
+}: {
+  nonGeneral16BitRegister: Registers16BitNotGeneralShort;
+  prevNonGeneral16BitRegister: Registers16BitNotGeneralShort;
+  className?: string;
+}) {
+  const changedValKeys = Object.entries(nonGeneral16BitRegister ?? {})
+    .map(([key, val]) => {
+      if (val !== prevNonGeneral16BitRegister[key]) {
+        return key;
+      }
+      return null;
+    })
+    .filter((key) => key !== null) as string[];
+
+  const [animateKeys, setAnimateKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    setAnimateKeys(changedValKeys);
+    let timeoutId = setTimeout(() => {
+      // this is to remove the animation class so that it can be added again
+      setAnimateKeys([]);
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  }, [nonGeneral16BitRegister]);
 
   return (
     <div
@@ -217,21 +334,26 @@ function Table16bitRegs({ className = "" }) {
               </tr>
             </thead>
             <tbody className="bg-slate-800">
-              {regs.map((reg, i) => (
-                <tr key={reg}>
-                  <td className="px-4 py-2 text-slate-400 dark:text-slate-200 text-left">
-                    {reg}
-                  </td>
-                  {/* show the text in td but show the values in hex */}
-                  <td
-                    colSpan={2}
-                    className="px-4 py-2 text-slate-400 dark:text-slate-200 text-center"
-                  >
-                    {"0x" +
-                      values[i].toString(16).toUpperCase().padStart(4, "0")}
-                  </td>
-                </tr>
-              ))}
+              {Object.entries(nonGeneral16BitRegister ?? {}).map(
+                ([regName, value]) => (
+                  <tr key={regName}>
+                    <td className="px-4 py-2 text-slate-400 dark:text-slate-200 text-left">
+                      {regName.toUpperCase()}
+                    </td>
+                    {/* show the text in td but show the values in hex */}
+                    <td
+                      className={
+                        "px-4 py-2 text-slate-400 dark:text-slate-200 text-center " +
+                        (animateKeys.includes(regName)
+                          ? "animate-val-change"
+                          : "")
+                      }
+                    >
+                      {value.toString(16).toUpperCase().padStart(4, "0")}
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
@@ -241,7 +363,15 @@ function Table16bitRegs({ className = "" }) {
   );
 }
 
-function ShowFlags({ className = "" }) {
+function ShowFlags({
+  flags,
+  previousFlags,
+  className = "",
+}: {
+  flags: FlagsShort;
+  previousFlags: FlagsShort;
+  className?: string;
+}) {
   return (
     <div
       className={"bg-slate-50 rounded-xl  dark:bg-slate-800/25  " + className}
@@ -253,14 +383,9 @@ function ShowFlags({ className = "" }) {
               Flags
             </div>
             <div className="">
-              <div className="bg-slate-800 py-2 text-center"> CF </div>
-              <div className="bg-slate-800 py-2 text-center"> PF </div>
-              <div className="bg-slate-800 py-2 text-center"> AF </div>
-              <div className="bg-slate-800 py-2 text-center"> ZF </div>
-              <div className="bg-slate-800 py-2 text-center"> SF </div>
-              <div className="bg-slate-800 py-2 text-center"> TF </div>
-              <div className="bg-slate-800 py-2 text-center"> IF </div>
-              <div className="bg-slate-800 py-2 text-center"> DF </div>
+              {Object.entries(flags).map(([flagName, value]) => (
+                <div className={`bg-slate-800 py-2 text-center ${value ? "bg-green-300/40" : ""}`}> {flagName} </div>
+              ))}
             </div>
           </div>
         </div>
