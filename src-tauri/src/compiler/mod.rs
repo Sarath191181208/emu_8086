@@ -63,11 +63,15 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
     let lexed_str_without_spaces = lexed_strings
         .iter()
         .filter(|token| token.token_type != Assembly8086Tokens::Space)
+        .filter(|token| token.token_type != Assembly8086Tokens::Comment)
         .collect::<Vec<&Token>>();
-    let last_token = match lexed_strings.last() {
+    let last_token = match lexed_str_without_spaces.last() {
         Some(token) => token,
         None => return Ok((compiled_bytes, compiled_bytes_ref)),
     };
+    if last_token.token_type == Assembly8086Tokens::Space{
+        return Ok((compiled_bytes, compiled_bytes_ref));
+    }
     let len_lexed_strings = last_token.token_length + last_token.column_number;
     let token = lexed_str_without_spaces[i];
     // error if the token type isn't an instruction
