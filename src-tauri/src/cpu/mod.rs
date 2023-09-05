@@ -99,6 +99,10 @@ impl CPU {
         }
     }
 
+    pub fn get_instruciton_pointer(&self) -> Word {
+        self.instruction_pointer
+    }
+
     pub fn set_instruciton_pointer(&mut self) {
         self.instruction_pointer = 0x100;
     }
@@ -128,13 +132,13 @@ impl CPU {
     }
 
     fn consume_instruction(&mut self, mem: &Memory) -> Byte {
-        let opcode = mem.read(self.instruction_pointer);
+        let opcode = mem.read(self.get_instruciton_pointer());
         self.instruction_pointer += 1;
         opcode
     }
 
     fn peek_instruction(&self, mem: &Memory) -> Byte {
-        mem.read(self.instruction_pointer)
+        mem.read(self.get_instruciton_pointer())
     }
 
     pub fn execute(&mut self, mem: &mut Memory) {
