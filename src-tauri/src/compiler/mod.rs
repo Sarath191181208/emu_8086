@@ -117,10 +117,8 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
 
         Instructions::Inc => {
             i = parse_inc(
-                &lexed_str_without_spaces,
-                token,
+                &tokenized_line,
                 i,
-                len_lexed_strings,
                 &mut compiled_bytes,
                 &mut compiled_bytes_ref,
             )?;
