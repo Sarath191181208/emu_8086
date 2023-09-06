@@ -1,10 +1,14 @@
+use std::vec;
+
+use serde_json::Number;
+
 use crate::compiler::{
     compilation_error::CompilationError,
     tokens::{Assembly8086Tokens, Token},
     CompiledBytes,
 };
 
-use super::utils::get_as_0xc0_0xff_pattern;
+use super::utils::{get_as_0xc0_0xff_pattern, get_idx_from_reg, push_instruction};
 
 pub(in crate::compiler) fn parse_mov(
     lexed_str_without_spaces: &Vec<&Token>,
@@ -34,62 +38,37 @@ pub(in crate::compiler) fn parse_mov(
                 ));
             }
             let low_token = lexed_str_without_spaces[i + 3];
-            let high_reg_idx = match high_reg.get_as_idx() {
-                Ok(idx) => idx,
-                Err(err) => {
-                    return Err(CompilationError::new(
-                        token.line_number,
-                        high_token.column_number,
-                        high_token.token_length,
-                        err,
-                    ));
+            let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
+            let changed_low_token = match low_token.token_type {
+                Assembly8086Tokens::Number8bit(num) => {
+                    let num = num as u16;
+                    Assembly8086Tokens::Number16bit(num)
                 }
+                _ => low_token.token_type.clone(),
             };
-            match &low_token.token_type {
+            match &changed_low_token {
                 Assembly8086Tokens::Number16bit(number) => {
-                    compiled_bytes.push(0xB8 | high_reg_idx);
-                    compiled_bytes.push((number & 0xFF) as u8);
-                    compiled_bytes.push((number >> 8) as u8);
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![0xB8],
-                        token.line_number,
-                        token.column_number,
-                    ));
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                        low_token.line_number,
-                        low_token.column_number,
-                    ));
+                    let ins = (number & 0xFF) as u8;
+                    let ins2 = (number >> 8) as u8;
+                    push_instruction(
+                        compiled_bytes,
+                        vec![0xB8 | high_reg_idx],
+                        token,
+                        compiled_bytes_ref,
+                    );
+                    push_instruction(
+                        compiled_bytes,
+                        vec![ins, ins2],
+                        low_token,
+                        compiled_bytes_ref,
+                    );
                     Ok(i + 3)
                 }
                 Assembly8086Tokens::Register16bit(low_reg) => {
-                    let low_reg_idx = match low_reg.get_as_idx() {
-                        Ok(idx) => idx,
-                        Err(err) => {
-                            return Err(CompilationError::new(
-                                token.line_number,
-                                token.column_number,
-                                token.token_length,
-                                err,
-                            ));
-                        }
-                    };
-                    compiled_bytes.push(0x8B);
+                    let low_reg_idx = get_idx_from_reg(low_token, low_reg)?;
                     let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
-                    compiled_bytes.push(ins);
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![0x8B],
-                        token.line_number,
-                        token.column_number,
-                    ));
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![ins],
-                        low_token.line_number,
-                        low_token.column_number,
-                    ));
+                    push_instruction(compiled_bytes, vec![0x8B], token, compiled_bytes_ref);
+                    push_instruction(compiled_bytes, vec![ins], low_token, compiled_bytes_ref);
                     Ok(i + 3)
                 }
                 _ => Err(CompilationError::new(
@@ -116,38 +95,15 @@ pub(in crate::compiler) fn parse_mov(
             let low_token = lexed_str_without_spaces[i + 3];
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(number) => {
-                    compiled_bytes.push(0xB0 | high_reg.get_as_idx());
-                    compiled_bytes.push(*number);
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![0xB0],
-                        token.line_number,
-                        token.column_number,
-                    ));
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![*number],
-                        low_token.line_number,
-                        low_token.column_number,
-                    ));
+                    push_instruction(compiled_bytes, vec![0xB0 | high_reg.get_as_idx()], token, compiled_bytes_ref);
+                    push_instruction(compiled_bytes, vec![*number], low_token, compiled_bytes_ref);
 
                     Ok(i + 3)
                 }
                 Assembly8086Tokens::Register8bit(low_reg) => {
                     let ins = get_as_0xc0_0xff_pattern(high_reg.get_as_idx(), low_reg.get_as_idx());
-                    compiled_bytes.push(0x8A);
-                    compiled_bytes.push(ins);
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![0x8A],
-                        token.line_number,
-                        token.column_number,
-                    ));
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![ins],
-                        high_token.line_number,
-                        high_token.column_number,
-                    ));
+                    push_instruction(compiled_bytes, vec![0x8A], token, compiled_bytes_ref);
+                    push_instruction(compiled_bytes, vec![ins], high_token, compiled_bytes_ref);
                     Ok(i + 3)
                 }
                 _ => Err(CompilationError::new(
