@@ -1,7 +1,6 @@
 use crate::compiler::{
-    compilation_error::CompilationError,
-    tokens::Assembly8086Tokens,
-    CompiledBytes, tokenized_line::TokenizedLine,
+    compilation_error::CompilationError, tokenized_line::TokenizedLine, tokens::Assembly8086Tokens,
+    CompiledBytes,
 };
 
 use super::utils::{
@@ -39,34 +38,23 @@ pub(in crate::compiler) fn parse_add(
                             low_token,
                             compiled_bytes_ref,
                         );
-                    } else if (number & 0xFF00) == 0xFF00 {
-                        push_instruction(compiled_bytes, vec![0x83], token, compiled_bytes_ref);
-                        push_instruction(
-                            compiled_bytes,
-                            vec![0xC0 | high_reg_idx],
-                            high_token,
-                            compiled_bytes_ref,
-                        );
-                        push_instruction(
-                            compiled_bytes,
-                            vec![(number & 0xFF) as u8],
-                            low_token,
-                            compiled_bytes_ref,
-                        );
                     } else {
-                        push_instruction(compiled_bytes, vec![0x81], token, compiled_bytes_ref);
+                        let is_num_has_high_bit_full = (number & 0xFF00) == 0xFF00;
+                        let add_ins = if is_num_has_high_bit_full { 0x83 } else { 0x81 };
+                        let data_ins = if is_num_has_high_bit_full {
+                            vec![(number & 0xFF) as u8]
+                        } else {
+                            vec![(number & 0xFF) as u8, (number >> 8) as u8]
+                        };
+
+                        push_instruction(compiled_bytes, vec![add_ins], token, compiled_bytes_ref);
                         push_instruction(
                             compiled_bytes,
                             vec![0xC0 | high_reg_idx],
                             high_token,
                             compiled_bytes_ref,
                         );
-                        push_instruction(
-                            compiled_bytes,
-                            vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                            low_token,
-                            compiled_bytes_ref,
-                        );
+                        push_instruction(compiled_bytes, data_ins, low_token, compiled_bytes_ref);
                     }
 
                     Ok(i + 3)
