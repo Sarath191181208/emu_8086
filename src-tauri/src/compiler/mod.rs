@@ -11,7 +11,10 @@ use lexer::Lexer;
 use tokens::instructions::Instructions;
 
 use self::{
-    parsers::{add::parse_add, dec::parse_dec, inc::parse_inc, mov::parse_mov, sub::parse_sub},
+    parsers::{
+        add::parse_add, dec::parse_dec, inc::parse_inc, jmp::parse_jmp, mov::parse_mov,
+        sub::parse_sub,
+    },
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},
 };
@@ -58,23 +61,72 @@ fn has_consumed_all_instructions(
     Ok(())
 }
 
-fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), CompilationError> {
-    let mut compiled_bytes = Vec::new();
-    let mut compiled_bytes_ref = Vec::<CompiledBytes>::new();
+fn check_is_label(lexed_str_without_spaces: &Vec<&Token>) -> Option<String> {
+    // return false if len < 2
+    // check if the first token is a Character
+    // check if the second token is a colon
+    if lexed_str_without_spaces.len() < 2 {
+        return None;
+    }
+    let first_token = lexed_str_without_spaces[0];
+    let second_token = lexed_str_without_spaces[1];
+
+    match &first_token.token_type {
+        Assembly8086Tokens::Character(str) => {
+            if let Assembly8086Tokens::Colon = second_token.token_type {
+                return Some(str.to_string());
+            }
+        }
+        _ => (),
+    }
+
+    None
+}
+
+struct CompiledLine {
+    compiled_bytes: Vec<u8>,
+    compiled_bytes_ref: Vec<CompiledBytes>,
+    is_label: Option<String>,
+    label_idx_map: std::collections::HashMap<String, (Token, u16)>,
+}
+
+impl CompiledLine {
+    fn new() -> Self {
+        Self {
+            compiled_bytes: Vec::new(),
+            compiled_bytes_ref: Vec::new(),
+            is_label: None,
+            label_idx_map: std::collections::HashMap::new(),
+        }
+    }
+}
+
+fn compile(lexed_strings: &[Token]) -> Result<CompiledLine, CompilationError> {
     let mut i = 0;
+    let mut compiled_line = CompiledLine::new();
+    let mut compiled_bytes = &mut compiled_line.compiled_bytes;
+    let mut compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
+
     let lexed_str_without_spaces = lexed_strings
         .iter()
         .filter(|token| token.token_type != Assembly8086Tokens::Space)
-        .filter(|token| token.token_type != Assembly8086Tokens::Comment)
+        .take_while(|token| token.token_type != Assembly8086Tokens::Comment)
         .collect::<Vec<&Token>>();
     let last_token = match lexed_str_without_spaces.last() {
         Some(token) => token,
-        None => return Ok((compiled_bytes, compiled_bytes_ref)),
+        None => return Ok(compiled_line),
     };
     if last_token.token_type == Assembly8086Tokens::Space {
-        return Ok((compiled_bytes, compiled_bytes_ref));
+        return Ok(compiled_line);
     }
     let len_lexed_strings = last_token.token_length + last_token.column_number;
+    if let Some(val) = check_is_label(&lexed_str_without_spaces) {
+        compiled_line.is_label = Some(val);
+        i += 2;
+    }
+    if i >= lexed_str_without_spaces.len() {
+        return Ok(compiled_line);
+    }
     let token = lexed_str_without_spaces[i];
     // error if the token type isn't an instruction
     let instruction = match &token.token_type {
@@ -146,8 +198,20 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "SUB", 2)?;
         }
+
+        Instructions::JMP => {
+            i = parse_jmp(
+                &tokenized_line,
+                i,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+                &mut compiled_line.label_idx_map,
+            )?;
+
+            has_consumed_all_instructions(&lexed_str_without_spaces, i, "JMP", 1)?;
+        }
     }
-    Ok((compiled_bytes, compiled_bytes_ref))
+    Ok(compiled_line)
 }
 
 impl Lexer {
@@ -215,17 +279,64 @@ pub fn compile_lines(
 
     let mut compilation_errors = Vec::<CompilationError>::new();
     let mut compiled_bytes = Vec::new();
-    let mut compiled_bytes_ref = Vec::<CompiledBytes>::new();
+    let mut compiled_bytes_ref = Vec::new();
+    let mut label_addr_map = std::collections::HashMap::<String, usize>::new();
+    let mut label_ref_map = std::collections::HashMap::<String, (Token, usize)>::new();
 
     for line in &lexer.tokens {
         match compile(line) {
-            Ok((mut compiled_bytes_line, mut compiled_bytes_ref_line)) => {
+            Ok(compiled_line) => {
+                let mut compiled_bytes_line = compiled_line.compiled_bytes;
+                let mut compiled_bytes_ref_line = compiled_line.compiled_bytes_ref;
+
+                if let Some(label_str) = compiled_line.is_label {
+                    label_addr_map.insert(label_str, compiled_bytes.len());
+                }
+
+                for (label_str, (token, idx)) in compiled_line.label_idx_map {
+                    label_ref_map.insert(label_str, (token, compiled_bytes.len() + idx as usize));
+                }
+
                 compiled_bytes.append(&mut compiled_bytes_line);
                 compiled_bytes_ref.append(&mut compiled_bytes_ref_line);
             }
             Err(err) => {
                 compilation_errors.push(err);
             }
+        }
+    }
+
+    for(lable_str, (token, mem_idx)) in label_ref_map{
+        if let Some(label_addr) = label_addr_map.get(&lable_str){
+            let label_addr = *label_addr as u16;
+            let mem_idx: u16 = mem_idx as u16;
+            if mem_idx > label_addr {
+                let ins = (0xFF - (mem_idx-label_addr)) as u8;
+                if ins < 0x80 {
+                    compilation_errors.push(CompilationError::new(
+                        token.line_number,
+                        token.column_number,
+                        token.token_length,
+                        &format!(
+                            "Can't compile starting with {:?} as the label {} is too far away this feature isn't supported yet",
+                            token.token_type, lable_str
+                        ),
+                    ));
+                }
+                compiled_bytes[mem_idx as usize] = ins;
+                compiled_bytes_ref[mem_idx as usize] = CompiledBytes::new(vec![ins], token.line_number, token.column_number);
+            }
+
+        }else{
+            compilation_errors.push(CompilationError::new(
+                token.line_number,
+                token.column_number,
+                token.token_length,
+                &format!(
+                    "Can't compile starting with {:?} as the label {} is not defined",
+                    token.token_type, lable_str
+                ),
+            ));
         }
     }
 
@@ -242,20 +353,7 @@ pub fn compile_lines(
 pub fn compile_str(
     code: &str,
     debug_print: bool,
-) -> Result<(Vec<u8>, Vec<CompiledBytes>), CompilationError> {
-    let mut lexer = Lexer::new();
-    lexer.tokenize(code);
-
-    let (compiled_bytes, compiled_bytes_ref) = match compile(&lexer.tokens[0]) {
-        Ok((compiled_bytes, compiled_bytes_ref)) => (compiled_bytes, compiled_bytes_ref),
-        Err(err) => {
-            return Err(err);
-        }
-    };
-
-    if debug_print {
-        lexer.print_with_compiled_tokens(&compiled_bytes_ref);
-    }
-
+) -> Result<(Vec<u8>, Vec<CompiledBytes>), Vec<CompilationError>> {
+    let (compiled_bytes, compiled_bytes_ref) = compile_lines(code, debug_print)?;
     Ok((compiled_bytes, compiled_bytes_ref))
 }

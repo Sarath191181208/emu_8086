@@ -3,7 +3,9 @@ import { editor, languages } from "monaco-editor/esm/vs/editor/editor.api";
 export const langRules: languages.IMonarchLanguage = {
   defaultToken: "",
   ignoreCase: true,
-  keywords: ["mov", "add", "sub", "inc", "dec"],
+  keywords: ["mov", "add", "sub", "inc", "dec", "jmp"],
+  registers16bit: ["ax", "bx", "cx", "dx", "si", "di", "sp", "bp"],
+  registers8bit: ["al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"],
   tokenizer: {
     root: [
       [
@@ -11,6 +13,8 @@ export const langRules: languages.IMonarchLanguage = {
         {
           cases: {
             "@keywords": "keyword",
+            "@registers16bit": "registers16bit",
+            "@registers8bit": "registers8bit",
             "@default": "identifier",
           },
         },
@@ -31,6 +35,8 @@ export const langTheme: editor.IStandaloneThemeData = {
   inherit: true,
   rules: [
     { token: "keyword", foreground: "#569CD6" },
+    { token: "registers16bit", foreground: "#9CDCFE" },
+    { token: "registers8bit", foreground: "#0891b2" },
     { token: "identifier", foreground: "#9CDCFE" },
     { token: "comment", foreground: "#6A9955" },
     { token: "number", foreground: "#B5CEA8" },

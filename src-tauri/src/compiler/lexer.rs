@@ -57,13 +57,22 @@ impl Lexer {
                         ));
                         iterating_col_num = line.len();
                     }
+                    ':' => {
+                        temp_vec.push(Token::new(
+                            Assembly8086Tokens::Colon,
+                            line_number,
+                            iterating_col_num as u32,
+                            1,
+                        ));
+                        iterating_col_num += 1;
+                    }
                     _ => {
                         let mut token_length = 0;
                         let mut token_string_buffer = String::new();
                         let mut i = iterating_col_num;
                         while i < line.len() {
                             let c = line_chars[i];
-                            if c.is_whitespace() || c == ',' || c == ';' {
+                            if c.is_whitespace() || c == ',' || c == ';' || c == ':' {
                                 break;
                             }
                             i += 1;
@@ -74,7 +83,7 @@ impl Lexer {
                         temp_vec.push(Token::new(
                             match token {
                                 Some(token) => token,
-                                None => Assembly8086Tokens::Error(token_string_buffer),
+                                None => Assembly8086Tokens::Character(token_string_buffer),
                             },
                             line_number,
                             iterating_col_num as u32,
@@ -101,12 +110,13 @@ impl Lexer {
             return Some(Assembly8086Tokens::Register8bit(register));
         }
 
-        if let Some(token) = self.parse_num_u8(token_string) {
+        if let Some(token) = self.parse_num_u8(&token_string.replace("X", "x")) {
             return Some(token);
         }
-        if let Some(token) = self.parse_num_u16(token_string) {
+        if let Some(token) = self.parse_num_u16(&token_string.to_lowercase()) {
             return Some(token);
         }
+
         None
     }
 

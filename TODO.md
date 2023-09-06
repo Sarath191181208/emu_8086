@@ -4,7 +4,7 @@
     - [ ] ADD
     - [ ] INC
 -[ ] Adding more instructions
-    - [ ] SUB
+    - [x] SUB
     - [ ] MUL
     - [ ] DIV
     - [ ] CMP

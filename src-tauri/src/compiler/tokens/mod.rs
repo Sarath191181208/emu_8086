@@ -45,10 +45,10 @@ pub(crate) enum Assembly8086Tokens {
     // ex: (, ), [, ], {, }, ,, ., :, ;, ?, @, `
     Space,
     Comma,
-    // Colon,
+    Colon,
 
     // Error
-    Error(String),
+    Character(String),
 }
 
 #[derive(Debug, Clone)]

@@ -12,4 +12,6 @@ pub(crate) enum Instructions {
     Dec,
     #[strum(ascii_case_insensitive)]
     Sub,
+    #[strum(ascii_case_insensitive)]
+    JMP,
 }

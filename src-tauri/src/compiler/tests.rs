@@ -9,7 +9,10 @@ macro_rules! test_compile {
             let (inst, _) = match compile_str($code, false) {
                 Ok(instructions) => instructions,
                 Err(e) => {
-                    e.print_compilation_error($code);
+                    // e.print_compilation_error($code);
+                    for err in e {
+                        err.print_compilation_error($code);
+                    }
                     assert!(false);
                     return;
                 }
