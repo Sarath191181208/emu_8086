@@ -1,42 +1,36 @@
 use crate::compiler::{
     compilation_error::CompilationError,
+    tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},
     CompiledBytes,
 };
 
-use super::utils::{get_as_0xc0_0xff_pattern, get_idx_from_reg, push_instruction};
+use super::utils::{
+    get_as_0xc0_0xff_pattern, get_idx_from_reg, if_num_8bit_to_16bit, push_instruction,
+};
 
 pub(in crate::compiler) fn parse_sub(
-    lexed_str_without_spaces: &Vec<&Token>,
-    token: &Token,
+    tokenized_line: &TokenizedLine,
     i: usize,
-    len_lexed_strings: u32,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytes>,
 ) -> Result<usize, CompilationError> {
-    if lexed_str_without_spaces.len() - 1 < i + 1 {
-        return Err(CompilationError::new(
-            token.line_number,
-            token.column_number + token.token_length,
-            len_lexed_strings + 1,
-            "Insufficient arguments to SUB",
-        ));
-    }
-
-    let high_token = lexed_str_without_spaces[i + 1];
+    let len_lexed_strings = tokenized_line.get_len_lexed_strings();
+    let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
+    let high_token = tokenized_line.get(
+        i + 1,
+        "Expected arguments after SUB got nothing".to_string(),
+    )?;
     match &high_token.token_type {
         Assembly8086Tokens::Register16bit(high_reg) => {
-            if i + 3 > lexed_str_without_spaces.len() - 1 {
-                return Err(CompilationError::new(
-                    high_token.line_number,
-                    high_token.column_number + high_token.token_length + 1,
-                    len_lexed_strings + 1,
-                    "Insufficient arguments to SUB expected a 16bit value ",
-                ));
-            }
-            let low_token = lexed_str_without_spaces[i + 3];
-            let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
-            match &low_token.token_type {
+            let low_token = tokenized_line.get(
+                i + 3,
+                format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
+            )?;
+            let high_reg_idx = get_idx_from_reg(high_token, &high_reg)?;
+            let changed_low_token = if_num_8bit_to_16bit(low_token.token_type.clone());
+
+            match changed_low_token {
                 Assembly8086Tokens::Number16bit(number) => {
                     if high_reg_idx == 0 {
                         push_instruction(compiled_bytes, vec![0x2D], token, compiled_bytes_ref);
@@ -67,7 +61,7 @@ pub(in crate::compiler) fn parse_sub(
                     Ok(i + 3)
                 }
                 Assembly8086Tokens::Register16bit(low_reg) => {
-                    let low_reg_idx = get_idx_from_reg(low_token, low_reg)?;
+                    let low_reg_idx = get_idx_from_reg(low_token, &low_reg)?;
                     let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
                     push_instruction(compiled_bytes, vec![0x2B], token, compiled_bytes_ref);
                     push_instruction(compiled_bytes, vec![ins], low_token, compiled_bytes_ref);
@@ -86,15 +80,10 @@ pub(in crate::compiler) fn parse_sub(
             }
         }
         Assembly8086Tokens::Register8bit(high_reg) => {
-            if i + 3 > lexed_str_without_spaces.len() - 1 {
-                return Err(CompilationError::new(
-                    high_token.line_number,
-                    high_token.column_number,
-                    len_lexed_strings + 1,
-                    "Insufficient arguments to ADD expected a 8bit value ",
-                ));
-            }
-            let low_token = lexed_str_without_spaces[i + 3];
+            let low_token = tokenized_line.get(
+                i + 3,
+                format!("Expected 8bit value after {:?} got nothing", high_token).to_string(),
+            )?;
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(number) => {
                     if high_reg.get_as_idx() == 0 {
