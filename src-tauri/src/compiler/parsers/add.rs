@@ -25,7 +25,7 @@ pub(in crate::compiler) fn parse_add(
                 i + 3,
                 format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
             )?;
-            let high_reg_idx = get_idx_from_reg(high_token, &high_reg)?;
+            let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
             let changed_low_token = if_num_8bit_to_16bit(low_token.token_type.clone());
 
             match changed_low_token {
