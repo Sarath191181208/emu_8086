@@ -1,51 +1,27 @@
 use std::vec;
 
-use serde_json::Number;
-
 use crate::compiler::{
     compilation_error::CompilationError,
-    tokens::{Assembly8086Tokens, Token},
-    CompiledBytes,
+    tokens::Assembly8086Tokens,
+    CompiledBytes, TokenizedLine,
 };
 
-use super::utils::{get_as_0xc0_0xff_pattern, get_idx_from_reg, push_instruction};
+use super::utils::{get_as_0xc0_0xff_pattern, get_idx_from_reg, push_instruction, if_num_8bit_to_16bit};
 
 pub(in crate::compiler) fn parse_mov(
-    lexed_str_without_spaces: &Vec<&Token>,
-    token: &Token,
+    tokenized_line: &TokenizedLine,
     i: usize,
-    len_lexed_strings: u32,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytes>,
 ) -> Result<usize, CompilationError> {
-    if lexed_str_without_spaces.len() - 1 < i + 1 {
-        return Err(CompilationError::new(
-            token.line_number,
-            token.column_number + token.token_length,
-            len_lexed_strings + 1,
-            "Insufficient arguments to MOV",
-        ));
-    }
-    let high_token = lexed_str_without_spaces[i + 1];
+    let len_lexed_strings = tokenized_line.get_len_lexed_strings();
+    let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
+    let high_token = tokenized_line.get(i+1, "Expected arguments after MOV got nothing".to_string())?;
     match &high_token.token_type {
         Assembly8086Tokens::Register16bit(high_reg) => {
-            if i + 3 > lexed_str_without_spaces.len() - 1 {
-                return Err(CompilationError::new(
-                    high_token.line_number,
-                    high_token.column_number + high_token.token_length + 1,
-                    len_lexed_strings + 1,
-                    "Insufficient arguments to MOV expected a 16bit value ",
-                ));
-            }
-            let low_token = lexed_str_without_spaces[i + 3];
+            let low_token =tokenized_line.get(i + 3, format!("Expected a 16bit value after MOV {:?} got nothing", high_reg))?;
             let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
-            let changed_low_token = match low_token.token_type {
-                Assembly8086Tokens::Number8bit(num) => {
-                    let num = num as u16;
-                    Assembly8086Tokens::Number16bit(num)
-                }
-                _ => low_token.token_type.clone(),
-            };
+            let changed_low_token = if_num_8bit_to_16bit(low_token.token_type.clone());
             match &changed_low_token {
                 Assembly8086Tokens::Number16bit(number) => {
                     let ins = (number & 0xFF) as u8;
@@ -76,7 +52,8 @@ pub(in crate::compiler) fn parse_mov(
                     high_token.column_number + high_token.token_length + 1,
                     len_lexed_strings - high_token.column_number - high_token.token_length,
                     &format!(
-                        "Expected a 16bit value after MOV got {:?} insted",
+                        "Expected a 16bit value after {:?} got {:?} insted",
+                        &high_token.token_type,
                         &low_token.token_type
                     ),
                 )),
@@ -84,15 +61,7 @@ pub(in crate::compiler) fn parse_mov(
         }
 
         Assembly8086Tokens::Register8bit(high_reg) => {
-            if i + 3 > lexed_str_without_spaces.len() - 1 {
-                return Err(CompilationError::new(
-                    high_token.line_number,
-                    high_token.column_number,
-                    len_lexed_strings + 1,
-                    "Insufficient arguments to MOV expected a 8bit value ",
-                ));
-            }
-            let low_token = lexed_str_without_spaces[i + 3];
+            let low_token = tokenized_line.get(i + 3, format!("Expected a 8bit value after MOV {:?} got nothing", high_reg))?;
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(number) => {
                     push_instruction(compiled_bytes, vec![0xB0 | high_reg.get_as_idx()], token, compiled_bytes_ref);
