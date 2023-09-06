@@ -3,7 +3,7 @@ import { editor, languages } from "monaco-editor/esm/vs/editor/editor.api";
 export const langRules: languages.IMonarchLanguage = {
   defaultToken: "",
   ignoreCase: true,
-  keywords: ["mov", "add", "sub"],
+  keywords: ["mov", "add", "sub", "inc", "dec"],
   tokenizer: {
     root: [
       [
