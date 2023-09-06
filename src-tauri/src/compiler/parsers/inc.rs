@@ -44,7 +44,7 @@ pub(in crate::compiler) fn parse_inc(
             high_token.column_number,
             high_token.token_length,
             &format!(
-                "Can't compile {:?} as the first argument to INC",
+                "Can't compile {:?} as the first argument to INC, Expected a register",
                 high_token.token_type
             ),
         )),

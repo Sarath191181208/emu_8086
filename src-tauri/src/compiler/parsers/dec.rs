@@ -44,7 +44,7 @@ pub(in crate::compiler) fn parse_dec(
             high_token.column_number,
             high_token.token_length,
             &format!(
-                "Can't compile {:?} as the first argument to DEC",
+                "Can't compile {:?} as the first argument to DEC, Expected a register",
                 high_token.token_type
             ),
         )),
