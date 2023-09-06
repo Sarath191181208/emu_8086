@@ -4,7 +4,7 @@ use crate::compiler::{
     CompiledBytes,
 };
 
-use super::utils::get_as_0xc0_0xff_pattern;
+use super::utils::{get_as_0xc0_0xff_pattern, get_idx_from_reg, push_instruction};
 
 pub(in crate::compiler) fn parse_add(
     lexed_str_without_spaces: &Vec<&Token>,
@@ -34,113 +34,61 @@ pub(in crate::compiler) fn parse_add(
                 ));
             }
             let low_token = lexed_str_without_spaces[i + 3];
-            let high_reg_idx = match high_reg.get_as_idx() {
-                Ok(idx) => idx,
-                Err(err) => {
-                    return Err(CompilationError::new(
-                        token.line_number,
-                        high_token.column_number,
-                        high_token.token_length,
-                        err,
-                    ));
+            let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
+            let changed_low_token = match low_token.token_type {
+                Assembly8086Tokens::Number8bit(num) => {
+                    let num = num as u16;
+                    Assembly8086Tokens::Number16bit(num)
                 }
+                _ => low_token.token_type.clone(),
             };
-            match &low_token.token_type {
+            match changed_low_token {
                 Assembly8086Tokens::Number16bit(number) => {
                     if high_reg_idx == 0 {
-                        // i.e AX register
-                        compiled_bytes.push(0x05);
-                        compiled_bytes.push((number & 0xFF) as u8);
-                        compiled_bytes.push((number >> 8) as u8);
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
-                            vec![0x05],
-                            token.line_number,
-                            token.column_number,
-                        ));
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
+                        push_instruction(compiled_bytes, vec![0x05], token, compiled_bytes_ref);
+                        push_instruction(
+                            compiled_bytes,
                             vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                            low_token.line_number,
-                            low_token.column_number,
-                        ));
+                            low_token,
+                            compiled_bytes_ref,
+                        );
                     } else if (number & 0xFF00) == 0xFF00 {
-                        compiled_bytes.push(0x83);
-                        compiled_bytes.push(0xC0 | high_reg_idx);
-                        compiled_bytes.push((number & 0xFF) as u8);
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
-                            vec![0x83],
-                            token.line_number,
-                            token.column_number,
-                        ));
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
+                        push_instruction(compiled_bytes, vec![0x83], token, compiled_bytes_ref);
+                        push_instruction(
+                            compiled_bytes,
                             vec![0xC0 | high_reg_idx],
-                            high_token.line_number,
-                            high_token.column_number,
-                        ));
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
+                            high_token,
+                            compiled_bytes_ref,
+                        );
+                        push_instruction(
+                            compiled_bytes,
                             vec![(number & 0xFF) as u8],
-                            low_token.line_number,
-                            low_token.column_number,
-                        ));
+                            low_token,
+                            compiled_bytes_ref,
+                        );
                     } else {
-                        compiled_bytes.push(0x81);
-                        compiled_bytes.push(0xC0 | high_reg_idx);
-                        compiled_bytes.push((number & 0xFF) as u8);
-                        compiled_bytes.push((number >> 8) as u8);
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
-                            vec![0x81],
-                            token.line_number,
-                            token.column_number,
-                        ));
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
+                        push_instruction(compiled_bytes, vec![0x81], token, compiled_bytes_ref);
+                        push_instruction(
+                            compiled_bytes,
                             vec![0xC0 | high_reg_idx],
-                            high_token.line_number,
-                            high_token.column_number,
-                        ));
-
-                        compiled_bytes_ref.push(CompiledBytes::new(
+                            high_token,
+                            compiled_bytes_ref,
+                        );
+                        push_instruction(
+                            compiled_bytes,
                             vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                            low_token.line_number,
-                            low_token.column_number,
-                        ));
+                            low_token,
+                            compiled_bytes_ref,
+                        );
                     }
 
                     Ok(i + 3)
                 }
                 Assembly8086Tokens::Register16bit(low_reg) => {
-                    let low_reg_idx = match low_reg.get_as_idx() {
-                        Ok(idx) => idx,
-                        Err(err) => {
-                            return Err(CompilationError::new(
-                                token.line_number,
-                                token.column_number,
-                                token.token_length,
-                                err,
-                            ));
-                        }
-                    };
+                    let low_reg_idx = get_idx_from_reg(low_token, &low_reg)?;
                     let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
-                    compiled_bytes.push(0x03);
-                    compiled_bytes.push(ins);
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![0x03],
-                        token.line_number,
-                        token.column_number,
-                    ));
-
-                    compiled_bytes_ref.push(CompiledBytes::new(
-                        vec![ins],
-                        low_token.line_number,
-                        low_token.column_number,
-                    ));
-
+                    push_instruction(compiled_bytes, vec![0x03], token, compiled_bytes_ref);
+                    push_instruction(compiled_bytes, vec![ins], low_token, compiled_bytes_ref);
                     Ok(i + 3)
                 }
 
