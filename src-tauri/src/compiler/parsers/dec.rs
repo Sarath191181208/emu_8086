@@ -22,7 +22,7 @@ pub(in crate::compiler) fn parse_dec(
             let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
             push_instruction(
                 compiled_bytes,
-                vec![0x40 + high_reg_idx],
+                vec![0x48 + high_reg_idx],
                 high_token,
                 compiled_bytes_ref,
             );
@@ -32,7 +32,7 @@ pub(in crate::compiler) fn parse_dec(
             push_instruction(compiled_bytes, vec![0xFE], token, compiled_bytes_ref);
             push_instruction(
                 compiled_bytes,
-                vec![0xC0 + high_reg.get_as_idx()],
+                vec![0xC8 + high_reg.get_as_idx()],
                 high_token,
                 compiled_bytes_ref,
             );
