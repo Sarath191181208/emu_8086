@@ -19,7 +19,7 @@ pub(in crate::compiler) fn parse_mov(
     let high_token = tokenized_line.get(i+1, "Expected arguments after MOV got nothing".to_string())?;
     match &high_token.token_type {
         Assembly8086Tokens::Register16bit(high_reg) => {
-            let low_token =tokenized_line.get(i + 3, format!("Expected a 16bit value after MOV {:?} got nothing", high_reg))?;
+            let low_token =tokenized_line.get(i + 3, format!("Expected a 16bit value after {:?} got nothing", high_reg))?;
             let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
             let changed_low_token = if_num_8bit_to_16bit(low_token.token_type.clone());
             match &changed_low_token {
