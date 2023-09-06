@@ -1,12 +1,12 @@
 use std::vec;
 
 use crate::compiler::{
-    compilation_error::CompilationError,
-    tokens::Assembly8086Tokens,
-    CompiledBytes, TokenizedLine,
+    compilation_error::CompilationError, tokens::Assembly8086Tokens, CompiledBytes, TokenizedLine,
 };
 
-use super::utils::{get_as_0xc0_0xff_pattern, get_idx_from_reg, push_instruction, if_num_8bit_to_16bit};
+use super::utils::{
+    get_as_0xc0_0xff_pattern, get_idx_from_reg, if_num_8bit_to_16bit, push_instruction,
+};
 
 pub(in crate::compiler) fn parse_mov(
     tokenized_line: &TokenizedLine,
@@ -16,10 +16,16 @@ pub(in crate::compiler) fn parse_mov(
 ) -> Result<usize, CompilationError> {
     let len_lexed_strings = tokenized_line.get_len_lexed_strings();
     let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
-    let high_token = tokenized_line.get(i+1, "Expected arguments after MOV got nothing".to_string())?;
+    let high_token = tokenized_line.get(
+        i + 1,
+        "Expected arguments after MOV got nothing".to_string(),
+    )?;
     match &high_token.token_type {
         Assembly8086Tokens::Register16bit(high_reg) => {
-            let low_token =tokenized_line.get(i + 3, format!("Expected a 16bit value after {:?} got nothing", high_reg))?;
+            let low_token = tokenized_line.get(
+                i + 3,
+                format!("Expected a 16bit value after {:?} got nothing", high_reg),
+            )?;
             let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
             let changed_low_token = if_num_8bit_to_16bit(low_token.token_type.clone());
             match &changed_low_token {
@@ -53,18 +59,25 @@ pub(in crate::compiler) fn parse_mov(
                     len_lexed_strings - high_token.column_number - high_token.token_length,
                     &format!(
                         "Expected a 16bit value after {:?} got {:?} insted",
-                        &high_token.token_type,
-                        &low_token.token_type
+                        &high_token.token_type, &low_token.token_type
                     ),
                 )),
             }
         }
 
         Assembly8086Tokens::Register8bit(high_reg) => {
-            let low_token = tokenized_line.get(i + 3, format!("Expected a 8bit value after MOV {:?} got nothing", high_reg))?;
+            let low_token = tokenized_line.get(
+                i + 3,
+                format!("Expected a 8bit value after MOV {:?} got nothing", high_reg),
+            )?;
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(number) => {
-                    push_instruction(compiled_bytes, vec![0xB0 | high_reg.get_as_idx()], token, compiled_bytes_ref);
+                    push_instruction(
+                        compiled_bytes,
+                        vec![0xB0 | high_reg.get_as_idx()],
+                        token,
+                        compiled_bytes_ref,
+                    );
                     push_instruction(compiled_bytes, vec![*number], low_token, compiled_bytes_ref);
 
                     Ok(i + 3)

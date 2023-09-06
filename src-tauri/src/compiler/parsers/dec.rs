@@ -1,7 +1,6 @@
 use crate::compiler::{
-    compilation_error::CompilationError,
-    tokens::Assembly8086Tokens,
-    CompiledBytes, tokenized_line::TokenizedLine,
+    compilation_error::CompilationError, tokenized_line::TokenizedLine, tokens::Assembly8086Tokens,
+    CompiledBytes,
 };
 
 use super::utils::{get_idx_from_reg, push_instruction};

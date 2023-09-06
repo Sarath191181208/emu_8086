@@ -1,7 +1,5 @@
 use crate::compiler::{
-    compilation_error::CompilationError,
-    tokenized_line::TokenizedLine,
-    tokens::Assembly8086Tokens,
+    compilation_error::CompilationError, tokenized_line::TokenizedLine, tokens::Assembly8086Tokens,
     CompiledBytes,
 };
 

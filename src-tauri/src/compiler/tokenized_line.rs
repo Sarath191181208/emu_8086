@@ -1,4 +1,4 @@
-use super::{tokens::Token, compilation_error::CompilationError};
+use super::{compilation_error::CompilationError, tokens::Token};
 
 pub struct TokenizedLine<'a> {
     tokens: &'a Vec<&'a Token>,
@@ -13,11 +13,15 @@ impl<'a> TokenizedLine<'a> {
         }
     }
 
-    pub fn get_len_lexed_strings(&self) -> u32{
-        self.len_lexed_strings 
+    pub fn get_len_lexed_strings(&self) -> u32 {
+        self.len_lexed_strings
     }
 
-    pub(crate) fn get(&self, i: usize, exception_str: String) -> Result<&'a Token, CompilationError> {
+    pub(crate) fn get(
+        &self,
+        i: usize,
+        exception_str: String,
+    ) -> Result<&'a Token, CompilationError> {
         if i > self.tokens.len() - 1 {
             let last_token = match self.tokens.last() {
                 Some(token) => token,
