@@ -3,8 +3,8 @@ pub mod lexer;
 pub mod tests;
 pub mod tokens;
 
-pub(crate) mod tokenized_line;
 mod parsers;
+pub(crate) mod tokenized_line;
 
 use compilation_error::CompilationError;
 use lexer::Lexer;
@@ -12,7 +12,8 @@ use tokens::instructions::Instructions;
 
 use self::{
     parsers::{add::parse_add, dec::parse_dec, inc::parse_inc, mov::parse_mov, sub::parse_sub},
-    tokens::{Assembly8086Tokens, Token}, tokenized_line::TokenizedLine,
+    tokenized_line::TokenizedLine,
+    tokens::{Assembly8086Tokens, Token},
 };
 
 #[derive(Debug)]
@@ -56,7 +57,6 @@ fn has_consumed_all_instructions(
     }
     Ok(())
 }
-
 
 fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), CompilationError> {
     let mut compiled_bytes = Vec::new();
@@ -127,10 +127,8 @@ fn compile(lexed_strings: &[Token]) -> Result<(Vec<u8>, Vec<CompiledBytes>), Com
 
         Instructions::Dec => {
             i = parse_dec(
-                &lexed_str_without_spaces,
-                token,
+                &tokenized_line,
                 i,
-                len_lexed_strings,
                 &mut compiled_bytes,
                 &mut compiled_bytes_ref,
             )?;

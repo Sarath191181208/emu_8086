@@ -1,61 +1,41 @@
 use crate::compiler::{
     compilation_error::CompilationError,
-    tokens::{Assembly8086Tokens, Token},
-    CompiledBytes,
+    tokens::Assembly8086Tokens,
+    CompiledBytes, tokenized_line::TokenizedLine,
 };
 
+use super::utils::{get_idx_from_reg, push_instruction};
+
 pub(in crate::compiler) fn parse_dec(
-    lexed_str_without_spaces: &Vec<&Token>,
-    token: &Token,
+    tokenized_line: &TokenizedLine,
     i: usize,
-    len_lexed_strings: u32,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytes>,
 ) -> Result<usize, CompilationError> {
-    if lexed_str_without_spaces.len() - 1 < i + 1 {
-        return Err(CompilationError::new(
-            token.line_number,
-            token.column_number + token.token_length,
-            len_lexed_strings + 1,
-            "Insufficient arguments to DEC",
-        ));
-    }
-    let high_token = lexed_str_without_spaces[i + 1];
+    let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
+    let high_token = tokenized_line.get(
+        i + 1,
+        "Expected arguments after DEC got nothing".to_string(),
+    )?;
     match &high_token.token_type {
         Assembly8086Tokens::Register16bit(high_reg) => {
-            let high_reg_idx = match high_reg.get_as_idx() {
-                Ok(idx) => idx,
-                Err(err) => {
-                    return Err(CompilationError::new(
-                        high_token.line_number,
-                        high_token.column_number,
-                        high_token.token_length,
-                        err,
-                    ));
-                }
-            };
-            compiled_bytes.push(0x48 + high_reg_idx);
-            compiled_bytes_ref.push(CompiledBytes::new(
-                vec![0x48 + high_reg_idx],
-                high_token.line_number,
-                high_token.column_number,
-            ));
+            let high_reg_idx = get_idx_from_reg(high_token, high_reg)?;
+            push_instruction(
+                compiled_bytes,
+                vec![0x40 + high_reg_idx],
+                high_token,
+                compiled_bytes_ref,
+            );
             Ok(i + 2)
         }
         Assembly8086Tokens::Register8bit(high_reg) => {
-            compiled_bytes.push(0xFE);
-            compiled_bytes.push(0xc8 + high_reg.get_as_idx());
-
-            compiled_bytes_ref.push(CompiledBytes::new(
-                vec![0xFE],
-                token.line_number,
-                token.column_number,
-            ));
-            compiled_bytes_ref.push(CompiledBytes::new(
-                vec![0xc8 + high_reg.get_as_idx()],
-                high_token.line_number,
-                high_token.column_number,
-            ));
+            push_instruction(compiled_bytes, vec![0xFE], token, compiled_bytes_ref);
+            push_instruction(
+                compiled_bytes,
+                vec![0xC0 + high_reg.get_as_idx()],
+                high_token,
+                compiled_bytes_ref,
+            );
 
             Ok(i + 2)
         }
@@ -65,7 +45,7 @@ pub(in crate::compiler) fn parse_dec(
             high_token.column_number,
             high_token.token_length,
             &format!(
-                "Can't compile {:?} as the first argument to DNC",
+                "Can't compile {:?} as the first argument to DEC",
                 high_token.token_type
             ),
         )),
