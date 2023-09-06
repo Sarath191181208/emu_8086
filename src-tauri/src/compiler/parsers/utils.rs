@@ -1,6 +1,6 @@
 use crate::compiler::{
     compilation_error::CompilationError,
-    tokens::{registers16bit::Registers16bit, Token},
+    tokens::{registers16bit::Registers16bit, Token, Assembly8086Tokens},
     CompiledBytes,
 };
 
@@ -39,4 +39,14 @@ pub(crate) fn push_instruction(
         token.line_number,
         token.column_number,
     ));
+}
+
+pub(crate) fn if_num_8bit_to_16bit(token: Assembly8086Tokens) -> Assembly8086Tokens{
+    match token {
+        Assembly8086Tokens::Number8bit(num) => {
+            let num = num as u16;
+            Assembly8086Tokens::Number16bit(num)
+        }
+        _ => token,
+    }
 }
