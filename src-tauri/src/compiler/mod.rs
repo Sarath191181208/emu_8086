@@ -1,3 +1,7 @@
+use std::string;
+
+use unicase::UniCase;
+
 pub mod compilation_error;
 pub mod lexer;
 pub mod tests;
@@ -280,7 +284,7 @@ pub fn compile_lines(
     let mut compilation_errors = Vec::<CompilationError>::new();
     let mut compiled_bytes = Vec::new();
     let mut compiled_bytes_ref = Vec::new();
-    let mut label_addr_map = std::collections::HashMap::<String, usize>::new();
+    let mut label_addr_map = std::collections::HashMap::<UniCase<String>, usize>::new();
     let mut label_ref_map = std::collections::HashMap::<String, (Token, usize)>::new();
 
     for line in &lexer.tokens {
@@ -290,7 +294,7 @@ pub fn compile_lines(
                 let mut compiled_bytes_ref_line = compiled_line.compiled_bytes_ref;
 
                 if let Some(label_str) = compiled_line.is_label {
-                    label_addr_map.insert(label_str, compiled_bytes.len());
+                    label_addr_map.insert(UniCase::new(label_str), compiled_bytes.len());
                 }
 
                 for (label_str, (token, idx)) in compiled_line.label_idx_map {
@@ -306,12 +310,12 @@ pub fn compile_lines(
         }
     }
 
-    for(lable_str, (token, mem_idx)) in label_ref_map{
-        if let Some(label_addr) = label_addr_map.get(&lable_str){
+    for (lable_str, (token, mem_idx)) in label_ref_map {
+        if let Some(label_addr) = label_addr_map.get(&UniCase::new(lable_str.clone())) {
             let label_addr = *label_addr as u16;
             let mem_idx: u16 = mem_idx as u16;
             if mem_idx > label_addr {
-                let ins = (0xFF - (mem_idx-label_addr)) as u8;
+                let ins = (0xFF - (mem_idx - label_addr)) as u8;
                 if ins < 0x80 {
                     compilation_errors.push(CompilationError::new(
                         token.line_number,
@@ -324,10 +328,10 @@ pub fn compile_lines(
                     ));
                 }
                 compiled_bytes[mem_idx as usize] = ins;
-                compiled_bytes_ref[mem_idx as usize] = CompiledBytes::new(vec![ins], token.line_number, token.column_number);
+                compiled_bytes_ref[mem_idx as usize] =
+                    CompiledBytes::new(vec![ins], token.line_number, token.column_number);
             }
-
-        }else{
+        } else {
             compilation_errors.push(CompilationError::new(
                 token.line_number,
                 token.column_number,
