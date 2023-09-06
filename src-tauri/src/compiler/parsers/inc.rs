@@ -11,7 +11,6 @@ pub(in crate::compiler) fn parse_inc(
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytes>,
 ) -> Result<usize, CompilationError> {
-    let len_lexed_strings = tokenized_line.get_len_lexed_strings();
     let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
     let high_token = tokenized_line.get(
         i + 1,
