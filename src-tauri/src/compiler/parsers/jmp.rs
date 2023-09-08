@@ -84,7 +84,7 @@ fn calc_offset(offset_bytes: u16, is_jmp_after_label: bool) -> Offset {
         if offset > 0x7F && offset_bytes < 0x100 {
             Offset::U8(offset as u8)
         } else {
-            Offset::U16(0xFFFF - offset_bytes - 1)
+            Offset::U16(0xFFFF - offset_bytes - 2)
         }
     } else {
         let offset = offset_bytes;
@@ -99,6 +99,13 @@ fn calc_offset(offset_bytes: u16, is_jmp_after_label: bool) -> Offset {
 #[cfg(test)]
 mod tests {
     use crate::{compiler::compile_str, test_compile};
+    fn generate_inc_ins(size: u16) -> String {
+        let mut ins = String::new();
+        for _ in 0..size {
+            ins.push_str("INC AX\n");
+        }
+        ins
+    }
 
     test_compile!(
         test_jmp_label,
@@ -123,6 +130,93 @@ label:
                 compiled_instructions,
                 &[0xEB, 0x04, 0x8B, 0xC3, 0x8B, 0xD9, 0x8B, 0xC3, 0x8B, 0xCA]
             );
+        }
+    );
+
+    test_compile!(
+        test_jmp_x80_bit_positive,
+        &format!(
+            "
+            label:
+                {}
+            jmp label
+            ",
+            generate_inc_ins(0x7E)
+        ),
+        |compiled_instructions: &Vec<u8>| {
+            let len_ins = compiled_instructions.len();
+            let last_ins = compiled_instructions[len_ins - 1];
+            // let before_last_ins = compiled_instructions[len_ins - 2];
+            // assert_eq!(last_ins, 0xFF);
+            assert_eq!(last_ins, 0x80)
+        }
+    );
+
+    test_compile!(
+        test_jmp_x7f_bit_negative,
+        &format!(
+            "
+            jmp label
+                {}
+            label:
+            ",
+            generate_inc_ins(0x7F)
+        ),
+        |compiled_instructions: &Vec<u8>| {
+            let ins = compiled_instructions[1];
+            // let before_last_ins = compiled_instructions[len_ins - 2];
+            // assert_eq!(last_ins, 0xFF);
+            assert_eq!(ins, 0x7F)
+        }
+    );
+}
+
+#[cfg(test)]
+mod test_16_bit_jmp_compile {
+    use crate::{compiler::compile_str, test_compile};
+    fn generate_inc_ins(size: u16) -> String {
+        let mut ins = String::new();
+        for _ in 0..size {
+            ins.push_str("INC AX\n");
+        }
+        ins
+    }
+
+
+    test_compile!(
+        test_jmp_x80_bit_negative,
+        &format!(
+            "
+            jmp label
+                {}
+            label:
+            ",
+            generate_inc_ins(0x80)
+        ),
+        |compiled_instructions: &Vec<u8>| {
+            let low_bits = compiled_instructions[1];
+            let high_bits = compiled_instructions[2];
+            assert_eq!(low_bits, 0x80);
+            assert_eq!(high_bits, 0x00);
+        }
+    );
+
+    test_compile!(
+        test_jmp_x81_bit_positive,
+        &format!(
+            "
+            label:
+                {}
+            JMP label
+            ",
+            generate_inc_ins(0x7F)
+        ),
+        |compiled_instructions: &Vec<u8>| {
+            let len_ins = compiled_instructions.len();
+            let low_bits = compiled_instructions[len_ins - 2];
+            let high_bits = compiled_instructions[len_ins - 1];
+            assert_eq!(low_bits, 0x7E);
+            assert_eq!(high_bits, 0xFF);
         }
     );
 }

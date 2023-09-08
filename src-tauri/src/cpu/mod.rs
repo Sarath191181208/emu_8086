@@ -103,8 +103,18 @@ impl CPU {
         self.instruction_pointer
     }
 
-    pub fn set_instruciton_pointer(&mut self) {
+    pub fn reset_instruction_pointer(&mut self) {
         self.instruction_pointer = 0x100;
+    }
+
+    // fn set_instruciton_pointer(&mut self, value: Word) {
+    //     self.instruction_pointer = value;
+    // }
+
+    pub fn write_instructions(&mut self, mem: &mut Memory, instructions: &[Byte]) {
+        for (i, instruction) in instructions.iter().enumerate() {
+            mem.write_byte(self.instruction_pointer + (i as u16), *instruction);
+        }
     }
 
     pub fn reset(&mut self, mem: &mut Memory) {
@@ -199,6 +209,12 @@ impl CPU {
             // MOV 16bit register, 0x1234
             0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),
             0xB8..=0xBF => self.execute_direct_mov_word(mem, opcode),
+
+            // JMP 16bit register
+            0xE9 => self.execute_jmp_16bit(mem),
+
+            // JMP 8bit register 
+            0xEB => self.execute_jmp_8bit(mem),
 
             // INC 8bit register
             0xFE => {
