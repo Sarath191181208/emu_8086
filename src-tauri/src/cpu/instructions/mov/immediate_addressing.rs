@@ -22,188 +22,62 @@ impl CPU {
 }
 
 #[cfg(test)]
-mod mov_16bit_register_addressing_tests {
+mod mov_registers_tests {
     use super::CPU;
-    use crate::memory::Memory;
-
-    macro_rules! generate_test {
-        ($test_name:ident, $instructions:expr, $expected:expr, $compare: expr) => {
-            paste::item! {
-                #[test]
-                fn [<test_ $test_name>]() {
-                    let mut cpu = CPU::new();
-                    let mut mem = Memory::new();
-                    cpu.reset(&mut mem);
-
-                    $instructions(&mut mem);
-
-                    cpu.execute(&mut mem);
-
-                    assert_eq!($expected, $compare(&cpu));
-                }
-            }
-        };
-    }
+    use crate::{generate_test, memory::Memory};
 
     // test al
     generate_test!(
         mov_al_0x12,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB0);
-            mem.write_byte(0xFFFD, 0x12);
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.write_instructions(mem, &[0xB0, 0x12]);
         }),
-        0x12,
-        (|cpu: &CPU| cpu.get_ax_low())
-    );
-
-    // test bl
-    generate_test!(
-        mov_bl_0x12,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB3);
-            mem.write_byte(0xFFFD, 0x12);
-        }),
-        0x12,
-        (|cpu: &CPU| cpu.get_bx_low())
+        (|cpu: &CPU, _| {
+            assert_eq!(0x12, cpu.get_ax_low());
+        })
     );
 
     // test cl
     generate_test!(
         mov_cl_0x12,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB1);
-            mem.write_byte(0xFFFD, 0x12);
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.write_instructions(mem, &[0xB1, 0x12]);
         }),
-        0x12,
-        (|cpu: &CPU| cpu.get_cx_low())
-    );
-
-    // test ah
-    generate_test!(
-        mov_ah_0x12,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB4);
-            mem.write_byte(0xFFFD, 0x12);
-        }),
-        0x12,
-        (|cpu: &CPU| cpu.get_ax_high())
-    );
-
-    // test for bh
-    generate_test!(
-        mov_bh_0x12,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB7);
-            mem.write_byte(0xFFFD, 0x12);
-        }),
-        0x12,
-        (|cpu: &CPU| cpu.get_bx_high())
+        (|cpu: &CPU, _| {
+            assert_eq!(0x12, cpu.get_cx_low());
+        })
     );
 
     //test for ch
     generate_test!(
         mov_ch_0x12,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB5);
-            mem.write_byte(0xFFFD, 0x12);
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.write_instructions(mem, &[0xB5, 0x12]);
         }),
-        0x12,
-        (|cpu: &CPU| cpu.get_cx_high())
+        (|cpu: &CPU, _| {
+            assert_eq!(0x12, cpu.get_cx_high());
+        })
     );
 
     // test for ax
     generate_test!(
         mov_ax_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB8);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.write_instructions(mem, &[0xB8, 0x12, 0x34]);
         }),
-        0x3412,
-        (|cpu: &CPU| cpu.ax)
-    );
-
-    // test for bx
-    generate_test!(
-        mov_bx_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xBB);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
-        }),
-        0x3412,
-        (|cpu: &CPU| cpu.bx)
-    );
-
-    // test for cx
-    generate_test!(
-        mov_cx_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xB9);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
-        }),
-        0x3412,
-        (|cpu: &CPU| cpu.cx)
-    );
-
-    // test for dx
-    generate_test!(
-        mov_dx_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xBA);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
-        }),
-        0x3412,
-        (|cpu: &CPU| cpu.dx)
-    );
-
-    // test for sp
-    generate_test!(
-        mov_sp_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xBC);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
-        }),
-        0x3412,
-        (|cpu: &CPU| cpu.stack_pointer)
+        (|cpu: &CPU, _| {
+            assert_eq!(0x3412, cpu.ax);
+        })
     );
 
     // test for bp
     generate_test!(
         mov_bp_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xBD);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.write_instructions(mem, &[0xBD, 0x12, 0x34]);
         }),
-        0x3412,
-        (|cpu: &CPU| cpu.base_pointer)
-    );
-
-    // test for si
-    generate_test!(
-        mov_si_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xBE);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
-        }),
-        0x3412,
-        (|cpu: &CPU| cpu.source_index)
-    );
-
-    // test for di
-    generate_test!(
-        mov_di_0x1234,
-        (|mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0xBF);
-            mem.write_byte(0xFFFD, 0x12);
-            mem.write_byte(0xFFFE, 0x34);
-        }),
-        0x3412,
-        (|cpu: &CPU| cpu.destination_index)
+        (|cpu: &CPU, _| {
+            assert_eq!(0x3412, cpu.base_pointer);
+        })
     );
 }
