@@ -40,30 +40,29 @@ function App() {
   const monacoRef = useRef<typeof import("monaco-editor")>();
 
   const setErrorsOnEditor = (e: any) => {
-      
-      const errorList = e as CompilationError[];
-      const monaco = monacoRef.current;
-      const editor = editorRef.current;
-      const model = editor?.getModel();
-      if (!monaco || !editor || !model) {
-        return;
-      }
+    const errorList = e as CompilationError[];
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    const model = editor?.getModel();
+    if (!monaco || !editor || !model) {
+      return;
+    }
 
-      // the message has | text Error("str") text | in it some we should extract the str from Error()
-      const getErrorMessage = (message: string) => {
-        return message.replace(/Error\(([^)]+)\)/g, "$1");
-      };
+    // the message has | text Error("str") text | in it some we should extract the str from Error()
+    const getErrorMessage = (message: string) => {
+      return message.replace(/Error\(([^)]+)\)/g, "$1");
+    };
 
-      const markers = errorList.map((err) => ({
-        startLineNumber: err.line_number + 1,
-        startColumn: err.column_number,
-        endLineNumber: err.line_number + 1,
-        endColumn: err.column_number + err.length,
-        message: getErrorMessage(err.message),
-        severity: monaco.MarkerSeverity.Error,
-      }));
-      monaco.editor.setModelMarkers(model, "owner", markers);
-  }
+    const markers = errorList.map((err) => ({
+      startLineNumber: err.line_number + 1,
+      startColumn: err.column_number + 1,
+      endLineNumber: err.line_number + 1,
+      endColumn: err.column_number + err.length,
+      message: getErrorMessage(err.message),
+      severity: monaco.MarkerSeverity.Error,
+    }));
+    monaco.editor.setModelMarkers(model, "owner", markers);
+  };
 
   const clearErrorsOnEditor = () => {
     const monaco = monacoRef.current;
@@ -73,7 +72,7 @@ function App() {
       return;
     }
     monaco.editor.setModelMarkers(model, "owner", []);
-  }
+  };
 
   const runPressed = async () => {
     try {
@@ -102,14 +101,13 @@ function App() {
     }
   };
 
-
   return (
     <>
-      <Navbar runPressed={runPressed} className="mb-5"/>
+      <Navbar runPressed={runPressed} className="mb-5" />
       <div className="flex gap-4 overflow-hidden">
         <div className="relative col-span-4 w-full">
           <Editor
-            beforeMount={(monaco) => { 
+            beforeMount={(monaco) => {
               monaco.editor.defineTheme("assembly-dark", langTheme);
             }}
             onMount={(editor, monaco) => {
@@ -124,7 +122,9 @@ function App() {
             defaultLanguage="assembly"
             theme="assembly-dark"
             options={{ minimap: { enabled: false } }}
-            defaultValue={"MOV AX, BX \nMOV BX, CX \nSUB CX, AX \n \nMOV AX, 0xAF34 \nMOV BL, 0X12 \nMOV AL, 10"}
+            defaultValue={
+              "MOV AX, BX \nMOV BX, CX\nlabel1: \nSUB CX, AX \n \nMOV AX, 0xAF34 \nMOV BL, 0X12 \nMOV AL, 10\nJMP label1"
+            }
           />
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
           <MemoryBottomBar
@@ -221,12 +221,14 @@ function MemoryBottomBar({
   setIsMemoryShown: (showMemoryBottomBar: boolean) => void;
   className?: string;
 }) {
-  const [start, _] = useState(0x0100);
+  const [start, setStart] = useState(0x0100);
   const [indicesToAnimate, _updateIndicesToAnimate] = useState<number[]>([]);
   const updateIndicesToAnimate = (newVal: number[]) => {
     console.log(newVal);
     _updateIndicesToAnimate(newVal);
   };
+
+  console.log(arr);
 
   useEffect(() => {
     const notEqIdxArr = arr
@@ -242,12 +244,12 @@ function MemoryBottomBar({
   }, [arr]);
 
   return (
-    <div className={"absolute w-full" + className}>
+    <div className={"absolute w-full " + className}>
       {showMemoryBottomBar && (
         <div
-          className={`absolute w-full h-52 pointer-events-auto opacity-100
+          className={`absolute w-full h-50 pointer-events-auto opacity-100
         left-0 bottom-8 border border-black/20 dark:border-white/20
-        transition-all duration-500 ease-in-out
+        transition-all duration-500 ease-in-out bg-slate-800
         `}
         >
           <div className="absolute right-0 top-0">
@@ -258,29 +260,68 @@ function MemoryBottomBar({
               X
             </button>
           </div>
-          <div className="h-full flex">
-            <div
-              className={`grid h-full gap-x-3 gap-y-2 p-5 gridCols17 gridRows6 text-xs items-center justify-items-center`}
-            >
-              {arr.slice(start, start + 17 * 6).map((val, i) => (
-                <div
-                  // className={`border border-black/10 dark:border-white/10 rounded-md flex items-center justify-center`}
-                  key={i}
-                  className={
-                    "text-slate-400 dark:text-slate-200 text-center p-1 " +
-                    (indicesToAnimate.includes(start + i)
-                      ? `animate-val-change`
-                      : "")
+          <div className="h-full px-5">
+            {/* create a number edit field and an increase and dcrease btns */}
+            <div className="">
+              <button
+                className="p-2 hover:bg-white/5 transition ease-in-out "
+                onClick={() => {
+                  if (start - 0x10 >= 0) {
+                    // update start
+                    setStart(start - 0x10);
                   }
-                >
-                  {val.toString(16).toUpperCase().padStart(2, "0")}
-                </div>
+                }}
+              >
+                -
+              </button>
+              <input
+                className="bg-slate-800 text-slate-400 dark:text-slate-200 w-20 text-center"
+                type="text"
+                value={`0x${start.toString(16).toUpperCase().padStart(4, "0")}`}
+                readOnly 
+              />
+              <button
+                className="p-2 hover:bg-white/5 transition ease-in-out "
+                onClick={() => {
+                  if (start + 0x10 <= 0xffff) {
+                    // update start
+                    setStart(start + 0x10);
+                  }
+                }}
+              >
+                +
+              </button>
+            </div>
+            <div
+              className={`grid h-full gap-x-3 gap-y-2 gridCols17 gridRows6 text-xs items-center justify-items-center`}
+            >
+              {arr.slice(start, start + 16 * 6).map((val, i) => (
+                // for every 16 elements create a label
+                <>
+                  {i % 16 === 0 && (
+                    <div key={`label${i}`} className="text-slate-400-dark:text-slate-200 text-center p-1">
+                      {`0x${(start + i).toString(16).toUpperCase().padStart(4, "0")}`}
+                    </div>
+                  )}
+                  <div
+                    // className={`border border-black/10 dark:border-white/10 rounded-md flex items-center justify-center`}
+                    key={i}
+                    className={
+                      "text-slate-400 dark:text-slate-200 text-center p-1 " +
+                      (indicesToAnimate.includes(start + i)
+                        ? `animate-val-change`
+                        : "")
+                    }
+                  >
+                    {val.toString(16).toUpperCase().padStart(2, "0")}
+                  </div>
+                </>
               ))}
             </div>
           </div>
         </div>
       )}
-      <div className="w-full flex absolute bottom-0 bg-black/10 pl-5 overflow-x-hidden">
+      <div className="w-full flex absolute bottom-0 bg-slate-800 pl-5 overflow-x-hidden">
         <button
           className="max-w-md text-xs p-2"
           onClick={() => setIsMemoryShown(!showMemoryBottomBar)}
