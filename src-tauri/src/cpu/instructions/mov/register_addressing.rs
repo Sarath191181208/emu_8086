@@ -49,8 +49,8 @@ mod mov_16bit_register_addressing_tests {
         // check this operation
         // MOV AX, CX
         // 0x8B 0xC1
-        mem.write_byte(0xFFFC, 0x8B);
-        mem.write_byte(0xFFFD, 0xC1);
+        cpu.write_instructions(&mut mem, &[0x8B, 0xC1]);
+
         cpu.execute(&mut mem);
         assert_eq!(cpu.ax, cpu.cx);
         assert_eq!(cpu.ax, 0xFF00);
@@ -63,12 +63,9 @@ mod mov_16bit_register_addressing_tests {
         let mut mem = Memory::new();
         cpu.reset(&mut mem);
         cpu.dx = 0xFF00;
-
         // check this operation
         // MOV AX, DX
-        // 0x8B 0xC2
-        mem.write_byte(0xFFFC, 0x8B);
-        mem.write_byte(0xFFFD, 0xC2);
+        cpu.write_instructions(&mut mem, &[0x8B, 0xC2]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.ax, cpu.dx);
         assert_eq!(cpu.ax, 0xFF00);
@@ -86,8 +83,7 @@ mod mov_16bit_register_addressing_tests {
         // MOV DX, AX
         // 0x8B 0xD0
 
-        mem.write_byte(0xFFFC, 0x8B);
-        mem.write_byte(0xFFFD, 0xD0);
+        cpu.write_instructions(&mut mem, &[0x8B, 0xD0]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.dx, cpu.ax);
         assert_eq!(cpu.dx, 0xFF00);
@@ -105,8 +101,7 @@ mod mov_16bit_register_addressing_tests {
         // MOV BX, DX
         // 0x8B 0xDA
 
-        mem.write_byte(0xFFFC, 0x8B);
-        mem.write_byte(0xFFFD, 0xDA);
+        cpu.write_instructions(&mut mem, &[0x8B, 0xDA]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.bx, cpu.dx);
         assert_eq!(cpu.bx, 0xFF00);
@@ -124,8 +119,7 @@ mod mov_16bit_register_addressing_tests {
         // MOV SP, BP
         // 0x8B 0xE5
 
-        mem.write_byte(0xFFFC, 0x8B);
-        mem.write_byte(0xFFFD, 0xE5);
+        cpu.write_instructions(&mut mem, &[0x8B, 0xE5]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.stack_pointer, cpu.base_pointer);
         assert_eq!(cpu.stack_pointer, 0xFF00);
@@ -148,8 +142,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV AL, CL
         // 0x8A 0xC1
-        mem.write_byte(0xFFFC, 0x8A);
-        mem.write_byte(0xFFFD, 0xC1);
+        cpu.write_instructions(&mut mem, &[0x8A, 0xC1]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_ax_low(), cpu.get_cx_low());
         assert_eq!(cpu.get_ax_low(), 0xFF);
@@ -166,8 +159,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV AL, DL
         // 0x8A 0xC2
-        mem.write_byte(0xFFFC, 0x8A);
-        mem.write_byte(0xFFFD, 0xC2);
+        cpu.write_instructions(&mut mem, &[0x8A, 0xC2]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_ax_low(), cpu.get_dx_low());
         assert_eq!(cpu.get_ax_low(), 0xFF);
@@ -184,8 +176,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV AL, BL
         // 0x8A 0xC3
-        mem.write_byte(0xFFFC, 0x8A);
-        mem.write_byte(0xFFFD, 0xC3);
+         cpu.write_instructions(&mut mem, &[0x8A, 0xC3]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_ax_low(), cpu.get_bx_low());
         assert_eq!(cpu.get_ax_low(), 0xFF);
@@ -202,8 +193,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV BL, DH
         // 0x8A 0xF3
-        mem.write_byte(0xFFFC, 0x8A);
-        mem.write_byte(0xFFFD, 0xDE);
+        cpu.write_instructions(&mut mem, &[0x8A, 0xDE]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_bx_low(), cpu.get_dx_high());
         assert_eq!(cpu.get_bx_low(), 0xFF);
@@ -220,8 +210,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV AH, CH
         // 0x8A 0xE1
-        mem.write_byte(0xFFFC, 0x8A);
-        mem.write_byte(0xFFFD, 0xE5);
+        cpu.write_instructions(&mut mem, &[0x8A, 0xE5]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_ax_high(), cpu.get_cx_high());
         assert_eq!(cpu.get_ax_high(), 0xFF);
@@ -239,8 +228,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV AH, DL
         // 0x8A 0xE2
-        mem.write_byte(0xFFFC, 0x8A);
-        mem.write_byte(0xFFFD, 0xE2);
+         cpu.write_instructions(&mut mem, &[0x8A, 0xE2]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_ax_high(), cpu.get_dx_low());
     }
