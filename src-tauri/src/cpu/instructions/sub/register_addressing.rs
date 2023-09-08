@@ -49,8 +49,7 @@ mod sub_16bit_register_addressing {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.ax = 0x0f0f;
             cpu.cx = 0x0013;
-            mem.write_byte(0xFFFC, 0x2B);
-            mem.write_byte(0xFFFD, 0xC1);
+            cpu.write_instructions(mem, &[0x2B, 0xC1]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0EFC);
@@ -63,8 +62,7 @@ mod sub_16bit_register_addressing {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.bx = 0x0000;
             cpu.dx = 0x0013;
-            mem.write_byte(0xFFFC, 0x2B);
-            mem.write_byte(0xFFFD, 0xDA);
+            cpu.write_instructions(mem, &[0x2B, 0xDA]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFED);
@@ -77,8 +75,7 @@ mod sub_16bit_register_addressing {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.stack_pointer = 0xF000;
             cpu.base_pointer = 0x0013;
-            mem.write_byte(0xFFFC, 0x2B);
-            mem.write_byte(0xFFFD, 0xE5);
+            cpu.write_instructions(mem, &[0x2B, 0xE5]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.stack_pointer, 0xEFED);
@@ -97,8 +94,7 @@ mod sub_8bit_register_addressing {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_ax_low(0x0f);
             cpu.set_cx_low(0x13);
-            mem.write_byte(0xFFFC, 0x2A);
-            mem.write_byte(0xFFFD, 0xC1);
+            cpu.write_instructions(mem, &[0x2A, 0xC1]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.get_ax_low(), 0xFC);
@@ -112,8 +108,7 @@ mod sub_8bit_register_addressing {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_bx_low(0xf0);
             cpu.set_dx_high(0x13);
-            mem.write_byte(0xFFFC, 0x2A);
-            mem.write_byte(0xFFFD, 0xDE);
+            cpu.write_instructions(mem, &[0x2A, 0xDE]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.get_bx_low(), 0xDD);

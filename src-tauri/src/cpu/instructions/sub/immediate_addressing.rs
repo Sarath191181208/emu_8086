@@ -76,9 +76,7 @@ mod sub_immediate_16bit_tests {
         sub_ax_0x1234,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x2D);
-            mem.write_byte(0xFFFC, 0x34);
-            mem.write_byte(0xFFFD, 0x12);
+            cpu.write_instructions(mem, &[0x2D, 0x34, 0x12]);
             cpu.ax = 0x1235;
         }),
         (|cpu: &CPU, _: &Memory| {
@@ -92,8 +90,7 @@ mod sub_immediate_16bit_tests {
         sub_bx_dx,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x2B);
-            mem.write_byte(0xFFFC, 0xDA);
+            cpu.write_instructions(mem, &[0x2B, 0xDA]);
             cpu.bx = 0x1235;
             cpu.dx = 0x1234;
         }),
@@ -108,8 +105,7 @@ mod sub_immediate_16bit_tests {
         sub_sp_cx_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x2B);
-            mem.write_byte(0xFFFC, 0xE1);
+            cpu.write_instructions(mem, &[0x2B, 0xE1]);
             cpu.stack_pointer = 0x1234;
             cpu.cx = 0x1235;
         }),
@@ -129,8 +125,7 @@ mod sub_immediate_8bit_tests {
         add_al_0x12,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x04);
-            mem.write_byte(0xFFFC, 0x12);
+            cpu.write_instructions(mem, &[0x04, 0x12]);
             cpu.ax = 0x0001;
         }),
         (|cpu: &CPU, _: &Memory| {
@@ -144,8 +139,7 @@ mod sub_immediate_8bit_tests {
         add_al_0x12_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x04);
-            mem.write_byte(0xFFFC, 0xFF);
+            cpu.write_instructions(mem, &[0x04, 0xFF]);
             cpu.ax = 0x00FE;
         }),
         (|cpu: &CPU, _: &Memory| {
@@ -159,9 +153,7 @@ mod sub_immediate_8bit_tests {
         add_cl_0x12,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x80);
-            mem.write_byte(0xFFFC, 0xC1);
-            mem.write_byte(0xFFFD, 0x12);
+            cpu.write_instructions(mem, &[0x80, 0xC1, 0x12]);
             cpu.cx = 0x0001;
         }),
         (|cpu: &CPU, _: &Memory| {
@@ -175,9 +167,7 @@ mod sub_immediate_8bit_tests {
         add_cl_0xff_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x80);
-            mem.write_byte(0xFFFC, 0xC1);
-            mem.write_byte(0xFFFD, 0xFF);
+            cpu.write_instructions(mem, &[0x80, 0xC1, 0xFF]);
             cpu.cx = 0x00FE;
         }),
         (|cpu: &CPU, _: &Memory| {
@@ -191,9 +181,7 @@ mod sub_immediate_8bit_tests {
         add_bh_0x12,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x80);
-            mem.write_byte(0xFFFC, 0xC7);
-            mem.write_byte(0xFFFD, 0x12);
+            cpu.write_instructions(mem, &[0x80, 0xC7, 0x12]);
             cpu.bx = 0xFF01;
         }),
         (|cpu: &CPU, _: &Memory| {
@@ -207,9 +195,7 @@ mod sub_immediate_8bit_tests {
         add_bh_0xff_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
-            mem.write_byte(0xFFFB, 0x80);
-            mem.write_byte(0xFFFC, 0xC7);
-            mem.write_byte(0xFFFD, 0xFF);
+            cpu.write_instructions(mem, &[0x80, 0xC7, 0xFF]);
             cpu.bx = 0x00FE;
         }),
         (|cpu: &CPU, _: &Memory| {
