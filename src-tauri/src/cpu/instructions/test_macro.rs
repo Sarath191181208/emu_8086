@@ -27,7 +27,6 @@ macro_rules! generate_test_jmp {
                 let mut cpu = CPU::new();
                 let mut mem = Memory::new();
                 cpu.reset(&mut mem);
-                cpu.reset_instruction_pointer();
                 $instructions(&mut cpu, &mut mem);
                 for _ in 0..$times {
                     cpu.execute(&mut mem);

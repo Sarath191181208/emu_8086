@@ -47,8 +47,7 @@ mod add_16bit_register_addressing_tests {
     generate_test!(
         add_ax_ax_no_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0x02);
-            mem.write_byte(0xFFFD, 0xC0);
+            cpu.write_instructions(mem, &[0x02, 0xC0]);
             cpu.ax = 0x0001;
         }),
         (|cpu: &CPU, _mem: &Memory| {
@@ -61,9 +60,8 @@ mod add_16bit_register_addressing_tests {
 
     generate_test!(
         add_ax_ax_zero,
-        (|_: &mut CPU, mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0x02);
-            mem.write_byte(0xFFFD, 0xC0);
+        (|cpu: &mut CPU, mem: &mut Memory| {
+            cpu.write_instructions(mem, &[0x02, 0xC0]);
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x0000, cpu.ax);
@@ -76,8 +74,7 @@ mod add_16bit_register_addressing_tests {
     generate_test!(
         add_ax_ax_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            mem.write_byte(0xFFFC, 0x02);
-            mem.write_byte(0xFFFD, 0xC0);
+            cpu.write_instructions(mem, &[0x02, 0xC0]);
             cpu.ax = 0xFFFF;
         }),
         (|cpu: &CPU, _mem: &Memory| {
@@ -91,8 +88,7 @@ mod add_16bit_register_addressing_tests {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.bx = 0x1100;
             cpu.ax = 0x0011;
-            mem.write_byte(0xFFFC, 0x03);
-            mem.write_byte(0xFFFD, 0xC3);
+            cpu.write_instructions(mem, &[0x03, 0xC3]);
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x1111, cpu.ax);
@@ -113,8 +109,7 @@ mod add_8bit_register_addressing_tests {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_ax_low(0x01);
             cpu.set_bx_low(0x01);
-            mem.write_byte(0xFFFC, 0x02);
-            mem.write_byte(0xFFFD, 0xC3);
+            cpu.write_instructions(mem, &[0x02, 0xC3]);
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_ax_low());
@@ -130,8 +125,7 @@ mod add_8bit_register_addressing_tests {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_bx_low(0x01);
             cpu.set_cx_low(0x01);
-            mem.write_byte(0xFFFC, 0x02);
-            mem.write_byte(0xFFFD, 0xD9);
+            cpu.write_instructions(mem, &[0x02 ,0xD9]);
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_bx_low());
@@ -147,8 +141,7 @@ mod add_8bit_register_addressing_tests {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_bx_low(0x01);
             cpu.set_cx_high(0x01);
-            mem.write_byte(0xFFFC, 0x02);
-            mem.write_byte(0xFFFD, 0xEB);
+            cpu.write_instructions(mem, &[0x02, 0xEB]);
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_cx_high());

@@ -22,7 +22,6 @@ fn compile_code_and_run(code: String) -> Result<(CPU, Memory), Vec<CompilationEr
     cpu.reset(&mut mem);
 
     // write the compiled bytes to memory
-    cpu.reset_instruction_pointer();
     for (i, byte) in compile_bytes.iter().enumerate() {
         mem.write_byte(0x100 + (i as u16), *byte);
     }
@@ -70,7 +69,6 @@ mod test {
         println!("{:?}", compile_bytes);
 
         // write the compiled bytes to memory
-        cpu.reset_instruction_pointer();
         for (i, byte) in compile_bytes.iter().enumerate() {
             mem.write_byte(0x100 + (i as u16), *byte);
         }

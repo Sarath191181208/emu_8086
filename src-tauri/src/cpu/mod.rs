@@ -103,10 +103,6 @@ impl CPU {
         self.instruction_pointer
     }
 
-    pub fn reset_instruction_pointer(&mut self) {
-        self.instruction_pointer = 0x100;
-    }
-
     // fn set_instruciton_pointer(&mut self, value: Word) {
     //     self.instruction_pointer = value;
     // }
@@ -118,7 +114,7 @@ impl CPU {
     }
 
     pub fn reset(&mut self, mem: &mut Memory) {
-        self.instruction_pointer = 0xFFFC;
+        self.instruction_pointer = 0x0100;
         self.stack_pointer = 0x0100;
         self.base_pointer = 0x0000;
         self.source_index = 0x0000;
