@@ -3,15 +3,13 @@ use super::{compilation_error::CompilationError, tokens::Token};
 pub struct TokenizedLine<'a> {
     tokens: &'a Vec<&'a Token>,
     len_lexed_strings: u32,
-    line_number: u16,
 }
 
 impl<'a> TokenizedLine<'a> {
-    pub(crate) fn new(tokens: &'a Vec<&'a Token>, len_lexed_strings: u32, line_number: u16) -> Self {
+    pub(crate) fn new(tokens: &'a Vec<&'a Token>, len_lexed_strings: u32) -> Self {
         Self {
             tokens,
             len_lexed_strings,
-            line_number,
         }
     }
 

@@ -39,7 +39,7 @@ pub(in crate::compiler) fn parse_jmp(
                     Ok(i + 2)
                 }
                 Some((offset_bytes, is_jmp_after_label)) => {
-                    match calc_offset(offset_bytes,is_jmp_after_label) {
+                    match calc_offset(offset_bytes, is_jmp_after_label) {
                         Offset::U8(offset) => {
                             push_instruction(compiled_bytes, vec![0xEB], token, compiled_bytes_ref);
                             push_instruction(
@@ -119,7 +119,10 @@ label:
     MOV AX, BX
     MOV CX, DX",
         |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[0xEB, 0x04, 0x8B, 0xC3, 0x8B, 0xD9, 0x8B, 0xC3, 0x8B, 0xCA]);
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x04, 0x8B, 0xC3, 0x8B, 0xD9, 0x8B, 0xC3, 0x8B, 0xCA]
+            );
         }
     );
 }

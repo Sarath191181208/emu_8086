@@ -110,7 +110,7 @@ impl Lexer {
             return Some(Assembly8086Tokens::Register8bit(register));
         }
 
-        if let Some(token) = self.parse_num_u8(&token_string.replace("X", "x")) {
+        if let Some(token) = self.parse_num_u8(&token_string.replace('X', "x")) {
             return Some(token);
         }
         if let Some(token) = self.parse_num_u16(&token_string.to_lowercase()) {

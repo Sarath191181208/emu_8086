@@ -13,5 +13,5 @@ pub(crate) enum Instructions {
     #[strum(ascii_case_insensitive)]
     Sub,
     #[strum(ascii_case_insensitive)]
-    JMP,
+    Jmp,
 }

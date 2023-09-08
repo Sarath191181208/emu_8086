@@ -1,5 +1,3 @@
-use std::string;
-
 use unicase::UniCase;
 
 pub mod compilation_error;
@@ -79,13 +77,10 @@ fn check_is_label(lexed_str_without_spaces: &Vec<&Token>) -> Option<String> {
     let first_token = lexed_str_without_spaces[0];
     let second_token = lexed_str_without_spaces[1];
 
-    match &first_token.token_type {
-        Assembly8086Tokens::Character(str) => {
-            if let Assembly8086Tokens::Colon = second_token.token_type {
-                return Some(str.to_string());
-            }
+    if let Assembly8086Tokens::Character(str) = &first_token.token_type {
+        if let Assembly8086Tokens::Colon = second_token.token_type {
+            return Some(str.to_string());
         }
-        _ => (),
     }
 
     None
@@ -126,7 +121,7 @@ fn strip_space_and_comments_and_iterate_labels(
 }
 
 fn get_instruction<'a>(
-    lexed_str_without_spaces: &'a Vec<&'a Token>,
+    lexed_str_without_spaces: &'a [&'a Token],
     i: usize,
 ) -> Result<&'a Instructions, CompilationError> {
     let token = lexed_str_without_spaces[i];
@@ -148,23 +143,17 @@ fn get_instruction<'a>(
     Ok(instruction)
 }
 
-fn compile(
-    lexed_strings: &[Token],
-    line_number: LineNumber,
-) -> Result<CompiledLine, CompilationError> {
+fn compile(lexed_strings: &[Token]) -> Result<CompiledLine, CompilationError> {
     let mut i = 0;
     let mut compiled_line = CompiledLine::new();
-    let mut compiled_bytes = &mut compiled_line.compiled_bytes;
-    let mut compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
+    let compiled_bytes = &mut compiled_line.compiled_bytes;
+    let compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
 
     let (lexed_str_without_spaces, offset) =
         strip_space_and_comments_and_iterate_labels(lexed_strings);
-    match offset {
-        Some(label) => {
-            compiled_line.is_label = Some(label);
-            i += 2;
-        }
-        None => (),
+    if let Some(label) = offset {
+        compiled_line.is_label = Some(label);
+        i += 2;
     }
     let last_token = match lexed_str_without_spaces.last() {
         Some(token) => token,
@@ -180,63 +169,37 @@ fn compile(
     // error if the token type isn't an instruction
     let instruction = get_instruction(&lexed_str_without_spaces, i)?;
 
-    let tokenized_line =
-        TokenizedLine::new(&lexed_str_without_spaces, len_lexed_strings, line_number);
+    let tokenized_line = TokenizedLine::new(&lexed_str_without_spaces, len_lexed_strings);
     match instruction {
         Instructions::Mov => {
-            i = parse_mov(
-                &tokenized_line,
-                i,
-                &mut compiled_bytes,
-                &mut compiled_bytes_ref,
-            )?;
+            i = parse_mov(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "MOV", 2)?
         }
 
         Instructions::Add => {
-            i = parse_add(
-                &tokenized_line,
-                i,
-                &mut compiled_bytes,
-                &mut compiled_bytes_ref,
-            )?;
+            i = parse_add(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "ADD", 2)?;
         }
 
         Instructions::Inc => {
-            i = parse_inc(
-                &tokenized_line,
-                i,
-                &mut compiled_bytes,
-                &mut compiled_bytes_ref,
-            )?;
+            i = parse_inc(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "INC", 1)?;
         }
 
         Instructions::Dec => {
-            i = parse_dec(
-                &tokenized_line,
-                i,
-                &mut compiled_bytes,
-                &mut compiled_bytes_ref,
-            )?;
+            i = parse_dec(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "DEC", 1)?;
         }
 
         Instructions::Sub => {
-            i = parse_sub(
-                &tokenized_line,
-                i,
-                &mut compiled_bytes,
-                &mut compiled_bytes_ref,
-            )?;
+            i = parse_sub(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "SUB", 2)?;
         }
 
-        Instructions::JMP => {
+        Instructions::Jmp => {
             let _compliled_line = compile_labeled_instructions(lexed_strings, None)?;
             compiled_line
                 .compiled_bytes
@@ -259,28 +222,24 @@ fn compile_labeled_instructions(
     let mut i = 0;
     let (lexed_str_without_spaces, label) =
         strip_space_and_comments_and_iterate_labels(lexed_strings);
-    if let Some(_) = label {
+    if label.is_some() {
         i += 2;
     }
     let mut compiled_line = CompiledLine::new();
-    let mut compiled_bytes = &mut compiled_line.compiled_bytes;
-    let mut compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
+    let compiled_bytes = &mut compiled_line.compiled_bytes;
+    let compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
 
     let ins = get_instruction(&lexed_str_without_spaces, i)?;
     let token = lexed_str_without_spaces[i];
-    let tokenized_line = TokenizedLine::new(
-        &lexed_str_without_spaces,
-        lexed_strings.len() as u32,
-        token.line_number as LineNumber,
-    );
+    let tokenized_line = TokenizedLine::new(&lexed_str_without_spaces, lexed_strings.len() as u32);
 
     match ins {
-        Instructions::JMP => {
+        Instructions::Jmp => {
             i = parse_jmp(
                 &tokenized_line,
                 i,
-                &mut compiled_bytes,
-                &mut compiled_bytes_ref,
+                compiled_bytes,
+                compiled_bytes_ref,
                 &mut compiled_line.label_idx_map,
                 offset_bytes_from_line_and_is_label_before_ref,
             )?;
@@ -304,24 +263,7 @@ fn compile_labeled_instructions(
 }
 
 impl Lexer {
-    // pub fn print_tokens(&self) {
-    //     // print a formatted headding
-    //     println!(
-    //         "| {0: <20} | {1: <10} | {2: <10} | {3: <10} |",
-    //         "Token", "Line", "Column", "Length"
-    //     );
-    //     for token in &self.tokens {
-    //         println!(
-    //             "| {0: <20} | {1: <10} | {2: <10} | {3: <10} |",
-    //             format!("{:?}", token.token_type),
-    //             token.line_number,
-    //             token.column_number,
-    //             token.token_length
-    //         );
-    //     }
-    // }
-
-    pub fn print_with_compiled_tokens(&self, compiled_tokens: &Vec<CompiledBytes>) {
+    pub fn print_with_compiled_tokens(&self, compiled_tokens: &[CompiledBytes]) {
         // print a formatted headding
         println!(
             "| {0: <20} | {1: <10} | {2: <10} | {3: <10} | {4: <10} |",
@@ -360,23 +302,25 @@ impl Lexer {
 }
 
 fn calc_offset(
-    compiled_bytes: &Vec<Vec<u8>>,
+    compiled_bytes: &[Vec<u8>],
     label_ref: LineNumber,
     label_addr: LineNumber,
 ) -> (u16, IsLabelBeforeRef) {
     let mut offset = 0;
-    if label_addr < label_ref { // if label is refernced after it's defined
+    if label_addr < label_ref {
+        // if label is refernced after it's defined
         for i in label_addr..label_ref {
             offset += compiled_bytes[i as usize].len();
         }
-    } else { // i.e label is refernced before it is defined
+    } else {
+        // i.e label is refernced before it is defined
         for i in (label_ref + 1)..label_addr {
             offset += compiled_bytes[i as usize].len();
         }
     }
 
     let is_label_before_ref = label_ref > label_addr;
-    return (offset as u16, is_label_before_ref);
+    (offset as u16, is_label_before_ref)
 }
 
 fn mark_labels(
@@ -393,9 +337,9 @@ fn mark_labels(
     let line_number = *line_number;
     for _ in 0..(label_ref.len() - idx) {
         let (offset_bytes, is_label_before_ref) = calc_offset(
-            &compiled_bytes,
+            compiled_bytes,
             line_number,
-            label_addr_map.get(&label).unwrap().clone(),
+            *label_addr_map.get(label).unwrap(),
         );
 
         let compiled_tokens = compile_labeled_instructions(
@@ -406,6 +350,7 @@ fn mark_labels(
         let prev_compiled_bytes_len = compiled_bytes[line_number as usize].len();
         let curr_compiled_bytes_len = compiled_tokens.compiled_bytes.len();
         compiled_bytes[line_number as usize] = compiled_tokens.compiled_bytes;
+        compiled_bytes_ref[line_number as usize] = compiled_tokens.compiled_bytes_ref;
 
         if prev_compiled_bytes_len != curr_compiled_bytes_len {
             return Ok(false);
@@ -421,7 +366,7 @@ fn mark_labels(
             return Ok(true);
         }
     }
-    return Ok(false);
+    Ok(false)
 }
 
 pub fn compile_lines(
@@ -439,8 +384,8 @@ pub fn compile_lines(
     let mut label_addr_map = std::collections::HashMap::<Label, LineNumber>::new();
     let mut label_ref: Vec<(Label, LineNumber, &Vec<Token>)> = Vec::new();
 
-    for (line_number, line) in lexer.tokens.iter().enumerate() {
-        match compile(line, line_number as u16) {
+    for line in lexer.tokens.iter() {
+        match compile(line) {
             Ok(compiled_line) => {
                 let compiled_bytes_line = compiled_line.compiled_bytes;
                 let compiled_bytes_ref_line = compiled_line.compiled_bytes_ref;
@@ -457,7 +402,7 @@ pub fn compile_lines(
                     label_ref.push((
                         label.clone(),
                         compiled_bytes_lines_vec.len() as LineNumber,
-                        &line,
+                        line,
                     ));
                 }
 
@@ -473,7 +418,7 @@ pub fn compile_lines(
     // check if all flags are defined
     let mut label_errors = false;
     for (label, line_number, line) in &label_ref {
-        if !label_addr_map.contains_key(&label) {
+        if !label_addr_map.contains_key(label) {
             label_errors = true;
             compilation_errors.push(CompilationError::new(
                 *line_number as u32,
@@ -504,8 +449,8 @@ pub fn compile_lines(
     // convert compiled bytes and ref to single vec
     let compiled_bytes = compiled_bytes_lines_vec
         .iter()
-        .map(|vec| vec.clone())
         .flatten()
+        .cloned()
         .collect::<Vec<u8>>();
 
     let mut compiled_bytes_ref = Vec::new();
