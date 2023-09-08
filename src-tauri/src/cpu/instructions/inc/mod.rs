@@ -25,7 +25,7 @@ mod test_16bit_inc {
         inc_ax,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.ax = 0x0001;
-            mem.write_byte(0xFFFC, 0x40);
+            cpu.write_instructions(mem, &[0x40]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0002);
@@ -38,7 +38,7 @@ mod test_16bit_inc {
         inc_bx_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.bx = 0xFFFF;
-            mem.write_byte(0xFFFC, 0x43);
+            cpu.write_instructions(mem, &[0x43]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0x0000);
@@ -51,7 +51,7 @@ mod test_16bit_inc {
         inc_cx_negative,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.cx = 0x7FFF;
-            mem.write_byte(0xFFFC, 0x41);
+            cpu.write_instructions(mem, &[0x41]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.cx, 0x8000);
@@ -63,7 +63,7 @@ mod test_16bit_inc {
         inc_sp_auxiliary_carry,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.stack_pointer = 0x0FFF;
-            mem.write_byte(0xFFFC, 0x44);
+            cpu.write_instructions(mem, &[0x44]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.stack_pointer, 0x1000);
@@ -80,8 +80,7 @@ mod test_8bit_inc {
         inc_al,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.ax = 0x0001;
-            mem.write_byte(0xFFFC, 0xFE);
-            mem.write_byte(0xFFFD, 0xC0);
+            cpu.write_instructions(mem, &[0xFE, 0xC0]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0002);
@@ -93,8 +92,7 @@ mod test_8bit_inc {
         inc_dh,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.dx = 0x0100;
-            mem.write_byte(0xFFFC, 0xFE);
-            mem.write_byte(0xFFFD, 0xC6);
+             cpu.write_instructions(mem, &[0xFE, 0xC6 ]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.dx, 0x0200);
@@ -106,8 +104,7 @@ mod test_8bit_inc {
         inc_cl,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.cx = 0x0002;
-            mem.write_byte(0xFFFC, 0xFE);
-            mem.write_byte(0xFFFD, 0xC1);
+            cpu.write_instructions(mem, &[0xFE, 0xC1]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.cx, 0x0003);

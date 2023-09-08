@@ -30,7 +30,7 @@ mod test_16bit_dec {
         dec_ax,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.ax = 0x0001;
-            mem.write_byte(0xFFFC, 0x48);
+            cpu.write_instructions(mem, &[0x48]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0000);
@@ -47,7 +47,7 @@ mod test_16bit_dec {
         dec_bx_overflow,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.bx = 0xFFFF;
-            mem.write_byte(0xFFFC, 0x4B);
+            cpu.write_instructions(mem, &[0x4B]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFFE);
