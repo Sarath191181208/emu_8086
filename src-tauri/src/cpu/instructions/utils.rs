@@ -44,4 +44,3 @@ impl CPU {
         (result, overflow)
     }
 }
-

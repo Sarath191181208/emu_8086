@@ -182,7 +182,6 @@ mod test_16_bit_jmp_compile {
         ins
     }
 
-
     test_compile!(
         test_jmp_x80_bit_negative,
         &format!(

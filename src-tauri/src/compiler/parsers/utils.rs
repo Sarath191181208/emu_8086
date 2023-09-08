@@ -50,4 +50,3 @@ pub(crate) fn if_num_8bit_to_16bit(token: Assembly8086Tokens) -> Assembly8086Tok
         _ => token,
     }
 }
-

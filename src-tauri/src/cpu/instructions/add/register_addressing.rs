@@ -125,7 +125,7 @@ mod add_8bit_register_addressing_tests {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.set_bx_low(0x01);
             cpu.set_cx_low(0x01);
-            cpu.write_instructions(mem, &[0x02 ,0xD9]);
+            cpu.write_instructions(mem, &[0x02, 0xD9]);
         }),
         (|cpu: &CPU, _mem: &Memory| {
             assert_eq!(0x02, cpu.get_bx_low());

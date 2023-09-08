@@ -37,4 +37,3 @@ macro_rules! generate_test_jmp {
         }
     };
 }
-

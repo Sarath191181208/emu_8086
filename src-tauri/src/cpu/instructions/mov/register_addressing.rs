@@ -176,7 +176,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV AL, BL
         // 0x8A 0xC3
-         cpu.write_instructions(&mut mem, &[0x8A, 0xC3]);
+        cpu.write_instructions(&mut mem, &[0x8A, 0xC3]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_ax_low(), cpu.get_bx_low());
         assert_eq!(cpu.get_ax_low(), 0xFF);
@@ -228,7 +228,7 @@ mod mov_8bit_register_addressing_tests {
         // check this operation
         // MOV AH, DL
         // 0x8A 0xE2
-         cpu.write_instructions(&mut mem, &[0x8A, 0xE2]);
+        cpu.write_instructions(&mut mem, &[0x8A, 0xE2]);
         cpu.execute(&mut mem);
         assert_eq!(cpu.get_ax_high(), cpu.get_dx_low());
     }

@@ -92,7 +92,7 @@ mod test_8bit_inc {
         inc_dh,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.dx = 0x0100;
-             cpu.write_instructions(mem, &[0xFE, 0xC6 ]);
+            cpu.write_instructions(mem, &[0xFE, 0xC6]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.dx, 0x0200);

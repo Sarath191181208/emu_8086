@@ -209,7 +209,7 @@ impl CPU {
             // JMP 16bit register
             0xE9 => self.execute_jmp_16bit(mem),
 
-            // JMP 8bit register 
+            // JMP 8bit register
             0xEB => self.execute_jmp_8bit(mem),
 
             // INC 8bit register

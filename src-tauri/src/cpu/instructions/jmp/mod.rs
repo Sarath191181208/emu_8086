@@ -2,7 +2,7 @@ use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
     pub(in crate::cpu) fn execute_jmp_8bit(&mut self, mem: &mut Memory) {
-        let offset = self.consume_instruction(&mem);
+        let offset = self.consume_instruction(mem);
         match offset {
             0x80..=0xFF => {
                 let offset = 0xFF - offset + 1;
@@ -15,18 +15,18 @@ impl CPU {
     }
 
     pub(in crate::cpu) fn execute_jmp_16bit(&mut self, mem: &mut Memory) {
-        let offset_low = self.consume_instruction(&mem);
-        let offset_high = self.consume_instruction(&mem);
+        let offset_low = self.consume_instruction(mem);
+        let offset_high = self.consume_instruction(mem);
 
         let offset = (offset_high as u16) << 8 | offset_low as u16;
         match offset {
             0x8000..=0xFFFF => {
                 print!("offset: {:x}", offset);
                 let offset = 0xFFFF - offset;
-                self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset as u16);
+                self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset);
             }
             0x0000..=0x7FFF => {
-                self.instruction_pointer = self.instruction_pointer.wrapping_add(offset as u16);
+                self.instruction_pointer = self.instruction_pointer.wrapping_add(offset);
             }
         }
     }
@@ -97,11 +97,15 @@ mod test_16_bit_jmp {
         jmp_16bit_positive,
         (|cpu: &mut CPU, mem: &mut Memory| {
             let (compiled_bytes, _) = compile_lines(
-            format!("
+                format!(
+                    "
             label:
                 {}
             jmp label
-            ", generate_0x80_long_ins()).as_str(),
+            ",
+                    generate_0x80_long_ins()
+                )
+                .as_str(),
                 false,
             )
             .unwrap();
@@ -118,13 +122,17 @@ mod test_16_bit_jmp {
         jmp_16bit_negative,
         (|cpu: &mut CPU, mem: &mut Memory| {
             let (compiled_bytes, _) = compile_lines(
-                format!("
+                format!(
+                    "
                 INC AX
                 JMP label
                 {}
                 label:
                 INC AX
-            ", generate_0x80_long_ins()).as_str(),
+            ",
+                    generate_0x80_long_ins()
+                )
+                .as_str(),
                 false,
             )
             .unwrap();
@@ -136,6 +144,4 @@ mod test_16_bit_jmp {
         }),
         0x3
     );
-
-
 }
