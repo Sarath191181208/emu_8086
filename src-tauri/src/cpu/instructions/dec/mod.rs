@@ -68,8 +68,7 @@ mod test_8bit_dec {
         dec_al,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.ax = 0x0001;
-            mem.write_byte(0xFFFC, 0xFE);
-            mem.write_byte(0xFFFD, 0xC8);
+            cpu.write_instructions(mem, &[0xFE, 0xC8]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0000);
@@ -80,8 +79,7 @@ mod test_8bit_dec {
         dec_dh,
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.dx = 0x0100;
-            mem.write_byte(0xFFFC, 0xFE);
-            mem.write_byte(0xFFFD, 0xCE);
+            cpu.write_instructions(mem, &[0xFE, 0xCE]);
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.dx, 0x0000);
