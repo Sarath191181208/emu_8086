@@ -9,8 +9,8 @@ pub mod memory;
 use compiler::{compilation_error::CompilationError, compile_lines};
 use cpu::CPU;
 use memory::Memory;
+use std::sync::{Arc, Mutex};
 use tauri::State;
-use std::sync::{Mutex, Arc};
 
 #[derive(Default)]
 struct MutableCpu(Arc<Mutex<CPU>>);
@@ -19,12 +19,12 @@ struct MutableCpu(Arc<Mutex<CPU>>);
 struct MutableMem(Arc<Mutex<Memory>>);
 
 #[tauri::command]
-fn next( cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem> ) -> (CPU, Memory){
+fn next(cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem>) -> (CPU, Memory) {
     let mut cpu = cpu.0.lock().unwrap();
     let mut mem = mem.0.lock().unwrap();
     cpu.execute(&mut mem);
 
-    (cpu.clone(), mem.clone())
+    (*cpu, *mem)
 }
 
 #[tauri::command]
@@ -38,7 +38,7 @@ fn compile_code(
     let mut mem = mem.0.lock().unwrap();
     cpu.reset(&mut mem);
     cpu.write_instructions(&mut mem, &compile_bytes);
-    Ok((cpu.clone(), mem.clone()))
+    Ok((*cpu, *mem))
 }
 
 #[tauri::command]
