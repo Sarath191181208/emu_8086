@@ -42,7 +42,9 @@ fn compile_code(
 }
 
 #[tauri::command]
-fn compile_code_and_run(code: String) -> Result<(CPU, Vec<CompiledBytes>, Memory), Vec<CompilationError>> {
+fn compile_code_and_run(
+    code: String,
+) -> Result<(CPU, Vec<CompiledBytes>, Memory), Vec<CompilationError>> {
     let mut mem = Memory::new();
     let mut cpu = CPU::new();
 
@@ -62,7 +64,7 @@ fn compile_code_and_run(code: String) -> Result<(CPU, Vec<CompiledBytes>, Memory
         cpu.execute(&mut mem);
     }
 
-    Ok((cpu, compiled_bytes_ref,  mem))
+    Ok((cpu, compiled_bytes_ref, mem))
 }
 
 #[tauri::command]
