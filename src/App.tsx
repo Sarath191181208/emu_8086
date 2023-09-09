@@ -286,7 +286,7 @@ function MemoryBottomBar({
     let timeoutId = setTimeout(() => {
       // this is to remove the animation class so that it can be added again
       updateIndicesToAnimate([]);
-    }, 3000);
+    }, 400);
     return () => clearTimeout(timeoutId);
   }, [arr]);
 
@@ -417,7 +417,7 @@ function Table({
     let timeoutId = setTimeout(() => {
       // this is to remove the animation class so that it can be added again
       setAnimateKeys([]);
-    }, 3000);
+    }, 400);
     return () => clearTimeout(timeoutId);
   }, [registers]);
 
@@ -527,7 +527,7 @@ function Table16bitRegs({
     let timeoutId = setTimeout(() => {
       // this is to remove the animation class so that it can be added again
       setAnimateKeys([]);
-    }, 3000);
+    }, 400);
     return () => clearTimeout(timeoutId);
   }, [nonGeneral16BitRegister]);
 
