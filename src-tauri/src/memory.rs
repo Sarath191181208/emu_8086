@@ -2,7 +2,7 @@ use crate::consts::{Byte, Word};
 use serde::ser::SerializeTuple;
 use serde::{Serialize, Serializer};
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone, Copy)]
 pub struct Memory {
     #[serde(serialize_with = "serialize")]
     mem: [Byte; 0xFFFF],

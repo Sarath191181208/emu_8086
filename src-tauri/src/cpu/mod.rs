@@ -35,7 +35,7 @@ macro_rules! generate_byte_access_methods {
     };
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone, Copy)]
 pub struct CPU {
     // Memory
     instruction_pointer: Word,

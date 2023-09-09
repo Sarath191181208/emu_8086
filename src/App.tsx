@@ -92,6 +92,40 @@ function App() {
     }
   };
 
+  const compileCode = async () => {
+    try {
+      const result: [CPUData, { mem: Array<number> }] = await invoke(
+        "compile_code",
+        {
+          code: editorRef.current?.getValue(),
+        }
+      );
+      const regs: any = result[0];
+      setMemory(result[1].mem);
+      setRegisters(extractCPUData(regs));
+      clearErrorsOnEditor();
+      setFlags(extractFlags(regs));
+    } catch (e) {
+      setErrorsOnEditor(e);
+    }
+  };
+
+  const nextPressed = async () => {
+    try {
+      const result: [CPUData, { mem: Array<number> }] = await invoke("next", {
+        code: editorRef.current?.getValue(),
+      });
+      const regs: any = result[0];
+      setMemory(result[1].mem);
+      setRegisters(extractCPUData(regs));
+      clearErrorsOnEditor();
+      setFlags(extractFlags(regs));
+    } catch (e) {
+      // setErrorsOnEditor(e);
+      // TODO: handle error
+    }
+  };
+
   const tryCompile = async () => {
     try {
       await invoke("try_compile_code", { code: editorRef.current?.getValue() });
@@ -103,7 +137,7 @@ function App() {
 
   return (
     <>
-      <Navbar runPressed={runPressed} className="mb-5" />
+      <Navbar runPressed={runPressed} compileCode={compileCode} nextPressed={nextPressed} className="mb-5" />
       <div className="flex gap-4 overflow-hidden">
         <div className="relative col-span-4 w-full">
           <Editor
@@ -178,9 +212,13 @@ function App() {
 function Navbar({
   className = "",
   runPressed,
+  compileCode,
+  nextPressed,
 }: {
   className?: string;
   runPressed: () => void;
+  compileCode: () => void;
+  nextPressed: () => void;
 }) {
   // create a navbar with open file and save file run next and previous buttons
   return (
@@ -198,7 +236,16 @@ function Navbar({
         >
           Run
         </button>
-        <button className="p-2 hover:bg-white/5 transition ease-in-out ">
+        <button
+          onClick={compileCode}
+          className="p-2 hover:bg-white/5 transition ease-in-out "
+        >
+          Compile
+        </button>
+        <button
+          onClick={nextPressed}
+          className="p-2 hover:bg-white/5 transition ease-in-out "
+        >
           Next
         </button>
         <button className="p-2 hover:bg-white/5 transition ease-in-out ">
@@ -278,7 +325,7 @@ function MemoryBottomBar({
                 className="bg-slate-800 text-slate-400 dark:text-slate-200 w-20 text-center"
                 type="text"
                 value={`0x${start.toString(16).toUpperCase().padStart(4, "0")}`}
-                readOnly 
+                readOnly
               />
               <button
                 className="p-2 hover:bg-white/5 transition ease-in-out "
@@ -299,8 +346,14 @@ function MemoryBottomBar({
                 // for every 16 elements create a label
                 <>
                   {i % 16 === 0 && (
-                    <div key={`label${i}`} className="text-slate-400-dark:text-slate-200 text-center p-1">
-                      {`0x${(start + i).toString(16).toUpperCase().padStart(4, "0")}`}
+                    <div
+                      key={`label${i}`}
+                      className="text-slate-400-dark:text-slate-200 text-center p-1"
+                    >
+                      {`0x${(start + i)
+                        .toString(16)
+                        .toUpperCase()
+                        .padStart(4, "0")}`}
                     </div>
                   )}
                   <div

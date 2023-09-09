@@ -9,8 +9,37 @@ pub mod memory;
 use compiler::{compilation_error::CompilationError, compile_lines};
 use cpu::CPU;
 use memory::Memory;
+use tauri::State;
+use std::sync::{Mutex, Arc};
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+#[derive(Default)]
+struct MutableCpu(Arc<Mutex<CPU>>);
+
+#[derive(Default)]
+struct MutableMem(Arc<Mutex<Memory>>);
+
+#[tauri::command]
+fn next( cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem> ) -> (CPU, Memory){
+    let mut cpu = cpu.0.lock().unwrap();
+    let mut mem = mem.0.lock().unwrap();
+    cpu.execute(&mut mem);
+
+    (cpu.clone(), mem.clone())
+}
+
+#[tauri::command]
+fn compile_code(
+    code: String,
+    cpu: State<'_, MutableCpu>,
+    mem: State<'_, MutableMem>,
+) -> Result<(CPU, Memory), Vec<CompilationError>> {
+    let (compile_bytes, _) = compile_lines(&code, false)?;
+    let mut cpu = cpu.0.lock().unwrap();
+    let mut mem = mem.0.lock().unwrap();
+    cpu.reset(&mut mem);
+    cpu.write_instructions(&mut mem, &compile_bytes);
+    Ok((cpu.clone(), mem.clone()))
+}
 
 #[tauri::command]
 fn compile_code_and_run(code: String) -> Result<(CPU, Memory), Vec<CompilationError>> {
@@ -44,41 +73,14 @@ fn try_compile_code(code: String) -> Result<(), Vec<CompilationError>> {
 
 fn main() {
     tauri::Builder::default()
+        .manage(MutableCpu::default())
+        .manage(MutableMem::default())
         .invoke_handler(tauri::generate_handler![
             compile_code_and_run,
-            try_compile_code
+            try_compile_code,
+            compile_code,
+            next
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-#[cfg(test)]
-mod test {
-    use crate::{compiler::compile_lines, cpu::CPU, memory::Memory};
-
-    #[test]
-    fn test_comp() {
-        let code = "MOV AX, BX \n MOV CX, DX \n \n MOV CX, AX \n MOV AX, 0x1f11";
-        let mut mem = Memory::new();
-        let mut cpu = CPU::new();
-
-        // compile the code
-        let (compile_bytes, _) = compile_lines(&code, false).unwrap();
-        cpu.reset(&mut mem);
-
-        println!("{:?}", compile_bytes);
-
-        // write the compiled bytes to memory
-        for (i, byte) in compile_bytes.iter().enumerate() {
-            mem.write_byte(0x100 + (i as u16), *byte);
-        }
-
-        // run untill you encounter 0
-        loop {
-            if mem.read(cpu.get_instruciton_pointer()) == 0 {
-                break;
-            }
-            cpu.execute(&mut mem);
-        }
-    }
 }
