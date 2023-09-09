@@ -32,12 +32,76 @@ function App() {
 
   const [registers, setRegisters, prevRegistersRef] =
     useStateSavePrevious<CPUData>(getDefaultRegisters());
+  const compiledBytesRef = useRef<Array<CompiledBytes>>();
   const [flags, setFlags, prevFlagsRef] = useStateSavePrevious<Flags>(
     getDefaultFlags()
   );
 
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
   const monacoRef = useRef<typeof import("monaco-editor")>();
+
+  const highlightLine = (lineNumber: number) => {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) {
+      return;
+    }
+    const model = editor.getModel();
+    if (!model) {
+      return;
+    }
+    const lineCount = model.getLineCount();
+    if (lineNumber >= lineCount) {
+      return;
+    }
+    // color the whole line with black color
+    // const decoration = {
+    //   range: { startLineNumber: lineNumber, startColumn: 1, endLineNumber : lineNumber, endColumn: 1},
+    //   options: {
+    //     isWholeLine: true,
+    //     className: "bg-red-500/20",
+    //   },
+    // };
+
+    editor.setSelection({
+      startLineNumber: lineNumber + 1,
+      startColumn: 1,
+      endLineNumber: lineNumber + 1,
+      endColumn: 1000,
+    });
+
+    // editor.createDecorationsCollection([decoration]);
+
+  };
+
+  useEffect(() => {
+    // caluculate the line from the line ref
+    const ins_pointer_offset = registers.instruction_pointer - 0x100;
+    const compiledBytes = compiledBytesRef.current;
+    if (!compiledBytes) {
+      return;
+    }
+    // sort compiledbytes by line number
+    const sortedCompiledBytes = compiledBytes.sort(
+      (a, b) => a.line_number - b.line_number
+    );
+    // accumulate the number of bytes and find the line number
+    let line = -1;
+    let acc = 0;
+    for (let i = 0; i < sortedCompiledBytes.length; i++) {
+      const compiledByte = sortedCompiledBytes[i];
+      acc += compiledByte.bytes.length;
+      if (acc > ins_pointer_offset) {
+        line = compiledByte.line_number;
+        break;
+      }
+    }
+    console.log("highlightLine = ", line);
+    if (line === -1) {
+      return;
+    }
+    highlightLine(line);
+  }, [registers.instruction_pointer]);
 
   const setErrorsOnEditor = (e: any) => {
     const errorList = e as CompilationError[];
@@ -94,14 +158,14 @@ function App() {
 
   const compileCode = async () => {
     try {
-      const result: [CPUData, { mem: Array<number> }] = await invoke(
-        "compile_code",
-        {
+      const result: [CPUData, CompiledBytes[], { mem: Array<number> }] =
+        await invoke("compile_code", {
           code: editorRef.current?.getValue(),
-        }
-      );
+        });
+      console.log(result);
       const regs: any = result[0];
-      setMemory(result[1].mem);
+      compiledBytesRef.current = result[1];
+      setMemory(result[2].mem);
       setRegisters(extractCPUData(regs));
       clearErrorsOnEditor();
       setFlags(extractFlags(regs));
@@ -116,8 +180,10 @@ function App() {
         code: editorRef.current?.getValue(),
       });
       const regs: any = result[0];
+      const cpu = extractCPUData(regs);
       setMemory(result[1].mem);
-      setRegisters(extractCPUData(regs));
+      setRegisters(cpu);
+
       clearErrorsOnEditor();
       setFlags(extractFlags(regs));
     } catch (e) {
@@ -137,7 +203,12 @@ function App() {
 
   return (
     <>
-      <Navbar runPressed={runPressed} compileCode={compileCode} nextPressed={nextPressed} className="mb-5" />
+      <Navbar
+        runPressed={runPressed}
+        compileCode={compileCode}
+        nextPressed={nextPressed}
+        className="mb-5"
+      />
       <div className="flex gap-4 overflow-hidden">
         <div className="relative col-span-4 w-full">
           <Editor
@@ -271,11 +342,8 @@ function MemoryBottomBar({
   const [start, setStart] = useState(0x0100);
   const [indicesToAnimate, _updateIndicesToAnimate] = useState<number[]>([]);
   const updateIndicesToAnimate = (newVal: number[]) => {
-    console.log(newVal);
     _updateIndicesToAnimate(newVal);
   };
-
-  console.log(arr);
 
   useEffect(() => {
     const notEqIdxArr = arr

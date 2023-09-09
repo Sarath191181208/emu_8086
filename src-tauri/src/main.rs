@@ -6,7 +6,7 @@ pub mod consts;
 pub mod cpu;
 pub mod memory;
 
-use compiler::{compilation_error::CompilationError, compile_lines};
+use compiler::{compilation_error::CompilationError, compile_lines, CompiledBytes};
 use cpu::CPU;
 use memory::Memory;
 use std::sync::{Arc, Mutex};
@@ -32,22 +32,22 @@ fn compile_code(
     code: String,
     cpu: State<'_, MutableCpu>,
     mem: State<'_, MutableMem>,
-) -> Result<(CPU, Memory), Vec<CompilationError>> {
-    let (compile_bytes, _) = compile_lines(&code, false)?;
+) -> Result<(CPU, Vec<CompiledBytes>, Memory), Vec<CompilationError>> {
+    let (compile_bytes, compiled_bytes_ref) = compile_lines(&code, true)?;
     let mut cpu = cpu.0.lock().unwrap();
     let mut mem = mem.0.lock().unwrap();
     cpu.reset(&mut mem);
     cpu.write_instructions(&mut mem, &compile_bytes);
-    Ok((*cpu, *mem))
+    Ok((*cpu, compiled_bytes_ref, *mem))
 }
 
 #[tauri::command]
-fn compile_code_and_run(code: String) -> Result<(CPU, Memory), Vec<CompilationError>> {
+fn compile_code_and_run(code: String) -> Result<(CPU, Vec<CompiledBytes>, Memory), Vec<CompilationError>> {
     let mut mem = Memory::new();
     let mut cpu = CPU::new();
 
     // compile the code
-    let (compile_bytes, _) = compile_lines(&code, false)?;
+    let (compile_bytes, compiled_bytes_ref) = compile_lines(&code, false)?;
     cpu.reset(&mut mem);
 
     // write the compiled bytes to memory
@@ -62,7 +62,7 @@ fn compile_code_and_run(code: String) -> Result<(CPU, Memory), Vec<CompilationEr
         cpu.execute(&mut mem);
     }
 
-    Ok((cpu, mem))
+    Ok((cpu, compiled_bytes_ref,  mem))
 }
 
 #[tauri::command]

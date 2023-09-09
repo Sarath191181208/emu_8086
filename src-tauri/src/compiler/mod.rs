@@ -1,3 +1,4 @@
+use serde::Serialize;
 use unicase::UniCase;
 
 pub mod compilation_error;
@@ -25,7 +26,7 @@ type Label = UniCase<String>;
 type LineNumber = u16;
 type IsLabelBeforeRef = bool;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct CompiledBytes {
     bytes: Vec<u8>,
 
