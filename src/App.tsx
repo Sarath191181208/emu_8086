@@ -24,6 +24,8 @@ import {
 } from "./types/CPUData/getDefaultRegistersAndFlags";
 import { langRules, langTheme } from "./langRules";
 
+"bg-[#7d90b8]";
+
 function App() {
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
   const [memeory, setMemory, prevMemoryRef] = useStateSavePrevious(
@@ -39,6 +41,19 @@ function App() {
 
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
   const monacoRef = useRef<typeof import("monaco-editor")>();
+  const debugDecorationRef = useRef<editor.IEditorDecorationsCollection>();
+  const decorateStepNext = (
+    editor: editor.IStandaloneCodeEditor,
+    decorations: editor.IModelDeltaDecoration[]
+  ) => {
+    // clear previous decorations
+    if (debugDecorationRef.current) {
+      debugDecorationRef.current.clear();
+    }
+    // add new decorations
+    let decCollections = editor.createDecorationsCollection(decorations);
+    debugDecorationRef.current = decCollections;
+  };
 
   const highlightLine = (lineNumber: number) => {
     const monaco = monacoRef.current;
@@ -54,24 +69,27 @@ function App() {
     if (lineNumber >= lineCount) {
       return;
     }
+
+    // editor.setSelection({
+    //   startLineNumber: lineNumber + 1,
+    //   startColumn: 1,
+    //   endLineNumber: lineNumber + 1,
+    //   endColumn: 1000,
+    // });
     // color the whole line with black color
-    // const decoration = {
-    //   range: { startLineNumber: lineNumber, startColumn: 1, endLineNumber : lineNumber, endColumn: 1},
-    //   options: {
-    //     isWholeLine: true,
-    //     className: "bg-red-500/20",
-    //   },
-    // };
-
-    editor.setSelection({
-      startLineNumber: lineNumber + 1,
-      startColumn: 1,
-      endLineNumber: lineNumber + 1,
-      endColumn: 1000,
-    });
-
-    // editor.createDecorationsCollection([decoration]);
-
+    const decoration = {
+      range: {
+        startLineNumber: lineNumber + 1,
+        startColumn: 1,
+        endLineNumber: lineNumber + 1,
+        endColumn: 1,
+      },
+      options: {
+        isWholeLine: true,
+        className: "bg-clr",
+      },
+    };
+    decorateStepNext(editor, [decoration]);
   };
 
   useEffect(() => {

@@ -27,3 +27,7 @@ body{
     /* background-color: #fff; */
   }
 }
+
+.bg-clr{
+  background-color: rgba(253, 223, 71, 0.2);
+}
