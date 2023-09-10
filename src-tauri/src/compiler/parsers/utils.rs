@@ -1,6 +1,9 @@
 use crate::compiler::{
     compilation_error::CompilationError,
-    tokens::{registers16bit::Registers16bit, Assembly8086Tokens, Token},
+    tokenized_line::TokenizedLine,
+    tokens::{
+        registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
+    },
     CompiledBytes,
 };
 
@@ -49,4 +52,46 @@ pub(crate) fn if_num_8bit_to_16bit(token: Assembly8086Tokens) -> Assembly8086Tok
         }
         _ => token,
     }
+}
+
+pub(crate) fn get_16bit_register(token: &Token) -> &Registers16bit {
+    match &token.token_type {
+        Assembly8086Tokens::Register16bit(reg) => reg,
+        _ => unreachable!(),
+    }
+}
+
+pub(crate) fn get_8bit_register(token: &Token) -> &Registers8bit {
+    match &token.token_type {
+        Assembly8086Tokens::Register8bit(reg) => reg,
+        _ => unreachable!(),
+    }
+}
+
+pub(crate) fn get_idx_from_token(token: &Token) -> Result<u8, CompilationError> {
+    let reg = get_16bit_register(token);
+    get_idx_from_reg(token, reg)
+}
+
+pub(crate) fn check_comma<'a>(
+    tokenized_line: &'a TokenizedLine<'a>,
+    previous_token: &'a Token,
+    i: usize,
+) -> Result<&'a Token, CompilationError> {
+    let sepertor_token = tokenized_line.get(
+        i,
+        format!("Expected , after {:?} got nothing", previous_token).to_string(),
+    )?;
+    if sepertor_token.token_type != Assembly8086Tokens::Comma {
+        return Err(CompilationError::new(
+            sepertor_token.line_number,
+            sepertor_token.column_number,
+            sepertor_token.token_length,
+            &format!(
+                "Expected , after {:?} got {:?}",
+                previous_token.token_type, sepertor_token
+            ),
+        ));
+    }
+    Ok(sepertor_token)
 }

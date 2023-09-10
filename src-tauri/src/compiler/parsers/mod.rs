@@ -6,3 +6,4 @@ pub mod mov;
 pub mod sub;
 
 pub(in crate::compiler::parsers) mod utils;
+pub(in crate::compiler::parsers) mod pattern_extractors;

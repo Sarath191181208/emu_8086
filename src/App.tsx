@@ -25,6 +25,7 @@ import {
 import { langRules, langTheme } from "./langRules";
 
 "bg-[#7d90b8]";
+"bg-green-300/40";
 
 function App() {
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
@@ -114,7 +115,6 @@ function App() {
         break;
       }
     }
-    console.log("highlightLine = ", line);
     if (line === -1) {
       return;
     }
@@ -180,7 +180,6 @@ function App() {
         await invoke("compile_code", {
           code: editorRef.current?.getValue(),
         });
-      console.log(result);
       const regs: any = result[0];
       compiledBytesRef.current = result[1];
       setMemory(result[2].mem);
@@ -201,9 +200,9 @@ function App() {
       const cpu = extractCPUData(regs);
       setMemory(result[1].mem);
       setRegisters(cpu);
-
-      clearErrorsOnEditor();
       setFlags(extractFlags(regs));
+      console.log(extractFlags(regs));
+      clearErrorsOnEditor();
     } catch (e) {
       // setErrorsOnEditor(e);
       // TODO: handle error
@@ -212,6 +211,7 @@ function App() {
 
   const tryCompile = async () => {
     try {
+      
       await invoke("try_compile_code", { code: editorRef.current?.getValue() });
       clearErrorsOnEditor();
     } catch (e) {
@@ -434,7 +434,7 @@ function MemoryBottomBar({
                   {i % 16 === 0 && (
                     <div
                       key={`label${i}`}
-                      className="text-slate-400-dark:text-slate-200 text-center p-1"
+                      className="text-slate-400 dark:text-slate-200 text-center font-semibold"
                     >
                       {`0x${(start + i)
                         .toString(16)
@@ -688,7 +688,7 @@ function ShowFlags({
                 <div
                   key={flagName}
                   className={`bg-slate-800 py-2 text-center ${
-                    value ? "bg-green-300/40" : ""
+                    value ? "bg-green-300/30" : ""
                   }`}
                 >
                   {" "}
