@@ -43,7 +43,7 @@ pub(crate) fn parse_line<'a>(
                 i + 3,
                 format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
             )?;
-            check_comma(&tokenized_line, &high_token, i + 2)?;
+            check_comma(tokenized_line, high_token, i + 2)?;
             let changed_low_token = Token::new(
                 if_num_8bit_to_16bit(low_token.token_type.clone()),
                 low_token.line_number,
@@ -77,7 +77,7 @@ pub(crate) fn parse_line<'a>(
                 i + 3,
                 format!("Expected 8bit value after {:?} got nothing", high_token).to_string(),
             )?;
-            check_comma(&tokenized_line, &high_token, i + 2)?;
+            check_comma(tokenized_line, high_token, i + 2)?;
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(_) => Ok(AddressingMode::Register8bitNumber {
                     high_token,

@@ -5,10 +5,7 @@ use crate::compiler::{
 
 use super::{
     pattern_extractors::{parse_line, AddressingMode},
-    utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, 
-        get_idx_from_token, push_instruction,
-    },
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
 pub(in crate::compiler) fn parse_add(
@@ -18,7 +15,7 @@ pub(in crate::compiler) fn parse_add(
     compiled_bytes_ref: &mut Vec<CompiledBytes>,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
-    match parse_line(tokenized_line, i, &"ADD")? {
+    match parse_line(tokenized_line, i, "ADD")? {
         AddressingMode::Registers16bit {
             high_token,
             low_token,
@@ -90,7 +87,7 @@ pub(in crate::compiler) fn parse_add(
                 _ => unreachable!(),
             };
             let is_al = high_reg.get_as_idx() == 0;
-            if is_al{
+            if is_al {
                 push_instruction(compiled_bytes, vec![0x04], token, compiled_bytes_ref);
                 push_instruction(compiled_bytes, vec![number], low_token, compiled_bytes_ref);
             } else {
