@@ -34,9 +34,9 @@ impl CPU {
 
 #[cfg(test)]
 mod test_8bit_jmp {
-    use crate::{compiler::compile_lines, cpu::CPU, generate_test_jmp, memory::Memory};
+    use crate::{compiler::compile_lines, cpu::CPU, generate_test_with_cycles, memory::Memory};
 
-    generate_test_jmp!(
+    generate_test_with_cycles!(
         jmp_8bit_positive,
         (|cpu: &mut CPU, mem: &mut Memory| {
             let (compiled_bytes, _) = compile_lines(
@@ -57,7 +57,7 @@ mod test_8bit_jmp {
         5
     );
 
-    generate_test_jmp!(
+    generate_test_with_cycles!(
         jmp_8bit_negative,
         (|cpu: &mut CPU, mem: &mut Memory| {
             let (compiled_bytes, _) = compile_lines(
@@ -83,7 +83,7 @@ mod test_8bit_jmp {
 
 #[cfg(test)]
 mod test_16_bit_jmp {
-    use crate::{compiler::compile_lines, cpu::CPU, generate_test_jmp, memory::Memory};
+    use crate::{compiler::compile_lines, cpu::CPU, generate_test_with_cycles, memory::Memory};
 
     fn generate_0x80_long_ins() -> String {
         let mut ins = String::new();
@@ -93,7 +93,7 @@ mod test_16_bit_jmp {
         ins
     }
 
-    generate_test_jmp!(
+    generate_test_with_cycles!(
         jmp_16bit_positive,
         (|cpu: &mut CPU, mem: &mut Memory| {
             let (compiled_bytes, _) = compile_lines(
@@ -118,7 +118,7 @@ mod test_16_bit_jmp {
         0x82
     );
 
-    generate_test_jmp!(
+    generate_test_with_cycles!(
         jmp_16bit_negative,
         (|cpu: &mut CPU, mem: &mut Memory| {
             let (compiled_bytes, _) = compile_lines(

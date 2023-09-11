@@ -19,7 +19,7 @@ macro_rules! generate_test {
 }
 
 #[macro_export]
-macro_rules! generate_test_jmp {
+macro_rules! generate_test_with_cycles {
     ($test_name:ident, $instructions:expr, $compare: expr, $times:expr) => {
         paste::item! {
             #[test]
