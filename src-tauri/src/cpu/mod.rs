@@ -184,7 +184,7 @@ impl CPU {
                 match opcode {
                     0xC0..=0xC7 => self.execute_add_immediate_byte(mem),
                     0xE8..=0xEF => self.execute_sub_immediate_byte(mem),
-                    _ => panic!("Unimplemented opcode: {:X}", opcode),
+                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x80", opcode),
                 }
             }
 
@@ -194,7 +194,7 @@ impl CPU {
                 match _opcode {
                     0xC0..=0xC7 => self.execute_add_immediate_word(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
-                    _ => panic!("Unimplemented opcode: {:X}", opcode),
+                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x81 | 0x83", opcode),
                 }
             }
 
@@ -212,16 +212,34 @@ impl CPU {
             // JMP 8bit register
             0xEB => self.execute_jmp_8bit(mem),
 
+            // MUL 8bit register
+            0xF6 => {
+                let opcode = self.peek_instruction(mem);
+                match opcode {
+                    0xE0..=0xE7 => self.execute_mul_8bit(mem),
+                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xF6", opcode),
+                }
+            }
+
+            // MUL 16bit register
+            0xF7 => {
+                let opcode = self.peek_instruction(mem);
+                match opcode {
+                    0xE0..=0xE7 => self.execute_mul_16bit(mem),
+                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xF7", opcode),
+                }
+            }
+
             // INC 8bit register
             0xFE => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
                     0xC0..=0xC7 => self.execute_inc_register_byte(mem),
                     0xC8..=0xCF => self.execute_dec_register_byte(mem),
-                    _ => panic!("Unimplemented opcode: {:X}", opcode),
+                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFE", opcode),
                 }
             }
-            _ => panic!("Unimplemented opcode: {:X}", opcode),
+            _ => unimplemented!("Unimplemented opcode: {:X}", opcode),
         }
     }
 }
