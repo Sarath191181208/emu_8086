@@ -16,7 +16,7 @@ use tokens::instructions::Instructions;
 use self::{
     parsers::{
         add::parse_add, dec::parse_dec, inc::parse_inc, jmp::parse_jmp, mov::parse_mov,
-        sub::parse_sub,
+        sub::parse_sub, mul::parse_mul,
     },
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},
@@ -198,6 +198,11 @@ fn compile(lexed_strings: &[Token]) -> Result<CompiledLine, CompilationError> {
             i = parse_sub(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "SUB", 2)?;
+        }
+
+        Instructions::Mul => {
+            i = parse_mul(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+            has_consumed_all_instructions(&lexed_str_without_spaces, i, "MUL", 1)?;
         }
 
         Instructions::Jmp => {
