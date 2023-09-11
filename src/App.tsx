@@ -24,8 +24,6 @@ import {
 } from "./types/CPUData/getDefaultRegistersAndFlags";
 import { langRules, langTheme } from "./langRules";
 
-"bg-[#7d90b8]";
-"bg-green-300/40";
 
 function App() {
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
@@ -687,8 +685,8 @@ function ShowFlags({
               {Object.entries(flags).map(([flagName, value]) => (
                 <div
                   key={flagName}
-                  className={`bg-slate-800 py-2 text-center ${
-                    value ? "bg-green-300/30" : ""
+                  className={`py-2 text-center ${
+                    value ? " bg-green-300/30" : "bg-slate-800"
                   }`}
                 >
                   {" "}
