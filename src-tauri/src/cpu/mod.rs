@@ -194,7 +194,10 @@ impl CPU {
                 match _opcode {
                     0xC0..=0xC7 => self.execute_add_immediate_word(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x81 | 0x83", opcode),
+                    _ => unimplemented!(
+                        "Unimplemented opcode: {:X} for operation 0x81 | 0x83",
+                        opcode
+                    ),
                 }
             }
 

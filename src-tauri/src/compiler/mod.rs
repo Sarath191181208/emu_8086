@@ -16,7 +16,7 @@ use tokens::instructions::Instructions;
 use self::{
     parsers::{
         add::parse_add, dec::parse_dec, inc::parse_inc, jmp::parse_jmp, mov::parse_mov,
-        sub::parse_sub, mul::parse_mul,
+        mul::parse_mul, sub::parse_sub,
     },
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},

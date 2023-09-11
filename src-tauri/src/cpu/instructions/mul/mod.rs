@@ -26,7 +26,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test_16bit_mul {
-    use crate::{compiler::compile_lines, cpu::CPU, memory::Memory, generate_test_with_cycles};
+    use crate::{compiler::compile_lines, cpu::CPU, generate_test_with_cycles, memory::Memory};
 
     generate_test_with_cycles!(
         mul_ax_bx,
@@ -72,8 +72,8 @@ mod test_16bit_mul {
 }
 
 #[cfg(test)]
-mod test_8bit_mul{
-    use crate::{compiler::compile_lines, cpu::CPU, memory::Memory, generate_test_with_cycles};
+mod test_8bit_mul {
+    use crate::{compiler::compile_lines, cpu::CPU, generate_test_with_cycles, memory::Memory};
 
     generate_test_with_cycles!(
         mul_ax_bl,
