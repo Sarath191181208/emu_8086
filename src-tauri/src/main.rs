@@ -52,10 +52,7 @@ fn compile_code_and_run(
     let (compile_bytes, compiled_bytes_ref) = compile_lines(&code, false)?;
     cpu.reset(&mut mem);
 
-    // write the compiled bytes to memory
-    for (i, byte) in compile_bytes.iter().enumerate() {
-        mem.write_byte(0x100 + (i as u16), *byte);
-    }
+    cpu.write_instructions(&mut mem, &compile_bytes);
 
     loop {
         if mem.read(cpu.get_instruciton_pointer()) == 0 {
