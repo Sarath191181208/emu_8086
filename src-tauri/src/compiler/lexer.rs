@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use super::tokens::{
     instructions::Instructions, registers16bit::Registers16bit, registers8bit::Registers8bit,
-    Assembly8086Tokens, Token,
+    Assembly8086Tokens, Token, assembler_directives::AssemblerDirectives,
 };
 
 #[derive(Debug)]
@@ -98,6 +98,11 @@ impl Lexer {
     }
 
     fn str_to_token(&self, token_string: &str) -> Option<Assembly8086Tokens> {
+        if let Ok(directive) = AssemblerDirectives::from_str(token_string) {
+            return Some(Assembly8086Tokens::Instruction(Instructions::AssemblerDirectives(
+                directive,
+            )));
+        }
         if let Ok(instruction) = Instructions::from_str(token_string) {
             return Some(Assembly8086Tokens::Instruction(instruction));
         }

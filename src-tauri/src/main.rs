@@ -6,7 +6,7 @@ pub mod consts;
 pub mod cpu;
 pub mod memory;
 
-use compiler::{compilation_error::CompilationError, compile_lines, CompiledBytes};
+use compiler::{compilation_error::CompilationError, compile_lines, types_structs::CompiledBytes};
 use cpu::CPU;
 use memory::Memory;
 use std::sync::{Arc, Mutex};
@@ -82,4 +82,16 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    // let mut mem = Memory::new();
+    // let mut cpu = CPU::new();
+
+    // compile the code
+    // compile_lines(" 
+    //     ORG 0x100
+    //     .data
+    //     MOV AX, bx
+    //     mov ax, 0x1234
+    //     code:
+    // ", true);
 }

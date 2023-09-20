@@ -1,5 +1,7 @@
 use strum_macros::EnumString;
 
+use super::assembler_directives::AssemblerDirectives;
+
 #[derive(Debug, Clone, PartialEq, Eq, EnumString)]
 pub(crate) enum Instructions {
     #[strum(ascii_case_insensitive)]
@@ -16,4 +18,6 @@ pub(crate) enum Instructions {
     Mul,
     #[strum(ascii_case_insensitive)]
     Jmp,
+
+    AssemblerDirectives(AssemblerDirectives),
 }
