@@ -87,7 +87,7 @@ fn main() {
     // let mut cpu = CPU::new();
 
     // compile the code
-    // compile_lines(" 
+    // compile_lines("
     //     ORG 0x100
     //     .data
     //     MOV AX, bx

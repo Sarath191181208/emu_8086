@@ -4,7 +4,7 @@ use super::{
     tokens::{assembler_directives, instructions::Instructions, Assembly8086Tokens, Token},
 };
 
-pub(crate) fn find_data_line_num(lexed_strings: &Vec<Vec<Token>>) -> u32 {
+pub(crate) fn find_data_line_num(lexed_strings: &[Vec<Token>]) -> u32 {
     // find the data directive
     let data_line_num = lexed_strings.iter().position(|line| {
         line.iter().any(|token| {
@@ -21,19 +21,21 @@ pub(crate) fn find_data_line_num(lexed_strings: &Vec<Vec<Token>>) -> u32 {
 }
 
 pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, CompilationError> {
-    let data_line_num = find_data_line_num(&lexed_strings);
+    let data_line_num = find_data_line_num(lexed_strings);
     for line in lexed_strings {
-        let (stripped_line, _) = strip_space_and_comments_and_iterate_labels(&line);
+        let (stripped_line, _) = strip_space_and_comments_and_iterate_labels(line);
         // check if index 0 is of type ORG
-        if stripped_line.len() < 1 {
+        if stripped_line.is_empty() {
             continue;
         }
-        let is_org = match stripped_line[0].token_type {
+
+        let is_org = matches!(
+            stripped_line[0].token_type,
             Assembly8086Tokens::Instruction(Instructions::AssemblerDirectives(
                 assembler_directives::AssemblerDirectives::Org,
-            )) => true,
-            _ => false,
-        };
+            ))
+        );
+
         if !is_org {
             continue;
         }
@@ -84,7 +86,7 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
     Ok(false)
 }
 
-pub(in crate) fn has_consumed_all_instructions(
+pub(crate) fn has_consumed_all_instructions(
     lexed_str_without_spaces: &Vec<&Token>,
     i: usize,
     instruction: &str,
@@ -108,7 +110,7 @@ pub(in crate) fn has_consumed_all_instructions(
     Ok(())
 }
 
-pub(in crate) fn check_is_label(lexed_str_without_spaces: &Vec<&Token>) -> Option<String> {
+pub(crate) fn check_is_label(lexed_str_without_spaces: &Vec<&Token>) -> Option<String> {
     // return false if len < 2
     // check if the first token is a Character
     // check if the second token is a colon

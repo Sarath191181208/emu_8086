@@ -1,6 +1,6 @@
+use super::Token;
 use serde::Serialize;
 use unicase::UniCase;
-use super::Token;
 
 pub type Label = UniCase<String>;
 pub type LineNumber = u16;
@@ -22,7 +22,6 @@ impl CompiledBytes {
         }
     }
 }
-
 
 pub(crate) struct CompiledLine {
     pub compiled_bytes: Vec<u8>,
