@@ -137,7 +137,7 @@ function App() {
       startLineNumber: err.line_number + 1,
       startColumn: err.column_number + 1,
       endLineNumber: err.line_number + 1,
-      endColumn: err.column_number + err.length,
+      endColumn: err.column_number + err.length + 1,
       message: getErrorMessage(err.message),
       severity: monaco.MarkerSeverity.Error,
     }));
