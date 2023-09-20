@@ -22,7 +22,7 @@ import {
   getDefaultRegisters,
   getDefaultFlags,
 } from "./types/CPUData/getDefaultRegistersAndFlags";
-import { langRules, langTheme } from "./langRules";
+import { langConfiguration, langRules, langTheme } from "./langRules";
 
 
 function App() {
@@ -236,7 +236,7 @@ function App() {
               monacoRef.current = monaco;
               monaco.languages.register({ id: "assembly" });
               monaco.languages.setMonarchTokensProvider("assembly", langRules);
-              // monaco.editor.defineTheme("assembly-dark", langTheme);
+              monaco.languages.setLanguageConfiguration("assembly", langConfiguration);
             }}
             onChange={tryCompile}
             height="100%"

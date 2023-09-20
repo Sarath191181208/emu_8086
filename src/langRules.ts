@@ -6,6 +6,9 @@ export const langRules: languages.IMonarchLanguage = {
   keywords: ["mov", "add", "sub", "inc", "dec", "mul", "jmp"],
   registers16bit: ["ax", "bx", "cx", "dx", "si", "di", "sp", "bp"],
   registers8bit: ["al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"],
+  comments: {
+    lineComment: "//",
+  },
   tokenizer: {
     root: [
       [
@@ -29,6 +32,12 @@ export const langRules: languages.IMonarchLanguage = {
     ],
   },
 };
+
+export const langConfiguration: languages.LanguageConfiguration = {
+  comments: {
+    lineComment: ";",
+  }
+}
 
 export const langTheme: editor.IStandaloneThemeData = {
   base: "vs-dark",
