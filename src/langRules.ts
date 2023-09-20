@@ -7,10 +7,21 @@ export const langRules: languages.IMonarchLanguage = {
   registers16bit: ["ax", "bx", "cx", "dx", "si", "di", "sp", "bp"],
   registers8bit: ["al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"],
   comments: {
-    lineComment: "//",
+    lineComment: ";",
   },
   tokenizer: {
     root: [
+      // white space
+      [/[ \t\r\n]+/, "white"],
+      // labels
+      [/\w+: /, "label"],
+      // support for comments
+      [/;.*/, "comment"],
+      //   write support for numbers hex numbers
+      [/0[xX][0-9a-fA-F]+/, "number.hex"],
+      [/[0-9a-fA-F]+[hH]/, "number.hex"],
+      [/\d+/, "number"],
+      // also if the last character is a h then it is a hex number
       [
         /[a-zA-Z_]\w*/,
         {
@@ -22,13 +33,6 @@ export const langRules: languages.IMonarchLanguage = {
           },
         },
       ],
-      [/[ \t\r\n]+/, "white"],
-      [/;.*/, "comment"],
-      //   write support for numbers hex numbers
-      [/0[xX][0-9a-fA-F]+/, "number.hex"],
-      [/[0-9a-fA-F]+[hH]/, "number.hex"],
-      [/\d+/, "number"],
-      // also if the last character is a h then it is a hex number
     ],
   },
 };
@@ -44,6 +48,7 @@ export const langTheme: editor.IStandaloneThemeData = {
   inherit: true,
   rules: [
     { token: "keyword", foreground: "#569CD6" },
+    { token: "label", foreground: "#6b7280" },
     { token: "registers16bit", foreground: "#9CDCFE" },
     { token: "registers8bit", foreground: "#0891b2" },
     { token: "identifier", foreground: "#9CDCFE" },
