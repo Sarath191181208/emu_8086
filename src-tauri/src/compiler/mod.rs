@@ -72,7 +72,10 @@ fn get_instruction<'a>(
     Ok(instruction)
 }
 
-fn compile(lexed_strings: &[Token]) -> Result<CompiledLine, CompilationError> {
+fn compile(
+    lexed_strings: &[Token],
+    is_org_defined: bool,
+) -> Result<CompiledLine, CompilationError> {
     let mut i = 0;
     let mut compiled_line = CompiledLine::new();
 
@@ -101,20 +104,22 @@ fn compile(lexed_strings: &[Token]) -> Result<CompiledLine, CompilationError> {
         match dir {
             AssemblerDirectives::Org => {}
             AssemblerDirectives::Data => {
-                let token = lexed_str_without_spaces[i];
-                let jmp_ins = get_jmp_code_compiled_line(token);
-                let jmp_ins = jmp_ins.iter().collect::<Vec<&Token>>();
-                let mut temp_line = CompiledLine::new();
-                let _ = parse_jmp(
-                    &TokenizedLine::new(&jmp_ins, 0),
-                    0,
-                    &mut temp_line.compiled_bytes,
-                    &mut temp_line.compiled_bytes_ref,
-                    &mut temp_line.label_idx_map,
-                    None,
-                )?;
-                compiled_line.extend(temp_line);
-                i += 1;
+                if is_org_defined {
+                    let token = lexed_str_without_spaces[i];
+                    let jmp_ins = get_jmp_code_compiled_line(token);
+                    let jmp_ins = jmp_ins.iter().collect::<Vec<&Token>>();
+                    let mut temp_line = CompiledLine::new();
+                    let _ = parse_jmp(
+                        &TokenizedLine::new(&jmp_ins, 0),
+                        0,
+                        &mut temp_line.compiled_bytes,
+                        &mut temp_line.compiled_bytes_ref,
+                        &mut temp_line.label_idx_map,
+                        None,
+                    )?;
+                    compiled_line.extend(temp_line);
+                    i += 1;
+                }
             }
             AssemblerDirectives::Code => {
                 // push code into compiled_line.labels don't change the other values already in compiled_line
@@ -123,40 +128,70 @@ fn compile(lexed_strings: &[Token]) -> Result<CompiledLine, CompilationError> {
         }
     }
 
-    let compiled_bytes = &mut compiled_line.compiled_bytes;
-    let compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
+    let mut compiled_bytes = &mut compiled_line.compiled_bytes;
+    let mut compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
 
     match instruction {
         Instructions::Mov => {
-            i = parse_mov(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+            i = parse_mov(
+                &tokenized_line,
+                i,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "MOV", 2)?
         }
 
         Instructions::Add => {
-            i = parse_add(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+            i = parse_add(
+                &tokenized_line,
+                i,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "ADD", 2)?;
         }
 
         Instructions::Inc => {
-            i = parse_inc(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+            i = parse_inc(
+                &tokenized_line,
+                i,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "INC", 1)?;
         }
 
         Instructions::Dec => {
-            i = parse_dec(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+            i = parse_dec(
+                &tokenized_line,
+                i,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "DEC", 1)?;
         }
 
         Instructions::Sub => {
-            i = parse_sub(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+            i = parse_sub(
+                &tokenized_line,
+                i,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
 
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "SUB", 2)?;
         }
 
         Instructions::Mul => {
-            i = parse_mul(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+            i = parse_mul(
+                &tokenized_line,
+                i,
+                &mut compiled_bytes,
+                &mut compiled_bytes_ref,
+            )?;
             has_consumed_all_instructions(&lexed_str_without_spaces, i, "MUL", 1)?;
         }
 
@@ -169,14 +204,12 @@ fn compile(lexed_strings: &[Token]) -> Result<CompiledLine, CompilationError> {
     Ok(compiled_line)
 }
 
-// type CompiledLineLabelRef<'a> = (&'a [Vec<u8>], LineNumber, LineNumber);
-
 struct CompiledLineLabelRef<'a> {
     compiled_bytes: &'a Vec<Vec<u8>>,
     line_num: LineNumber,
     label: &'a str,
     label_addr_map: &'a HashMap<UniCase<String>, LineNumber>,
-    // is_org_defined: bool,
+    is_org_defined: bool,
 }
 
 fn unwrap_and_find_offset(
@@ -207,34 +240,41 @@ fn compile_labeled_instructions(
     compiled_line_label_ref: Option<CompiledLineLabelRef>,
 ) -> Result<CompiledLine, CompilationError> {
     let mut i = 0;
+    // just pass the label if it's present
     let (lexed_str_without_spaces, label) =
         strip_space_and_comments_and_iterate_labels(lexed_strings);
     if label.is_some() {
         i += 2;
     }
+    // helper vars
     let mut compiled_line = CompiledLine::new();
     let ins = get_instruction(&lexed_str_without_spaces, i)?;
     let token = lexed_str_without_spaces[i];
+
     let offset_bytes_from_line_and_is_label_before_ref =
         unwrap_and_find_offset(&compiled_line_label_ref);
 
     if let Instructions::AssemblerDirectives(AssemblerDirectives::Data) = ins {
-        let jmp_ins = get_jmp_code_compiled_line(token);
-        let jmp_ins: Vec<&Token> = jmp_ins.iter().collect();
-        let mut temp_line = CompiledLine::new();
-        let offset_bytes_from_line_and_is_label_before_ref =
-            unwrap_and_find_offset(&compiled_line_label_ref);
+        if let Some(line) = compiled_line_label_ref {
+            if line.is_org_defined {
+                let jmp_ins = get_jmp_code_compiled_line(token);
+                let jmp_ins: Vec<&Token> = jmp_ins.iter().collect();
+                let mut temp_line = CompiledLine::new();
+                let offset_bytes_from_line_and_is_label_before_ref =
+                    unwrap_and_find_offset(&Some(line));
 
-        let _ = parse_jmp(
-            &TokenizedLine::new(&jmp_ins, 0),
-            0,
-            &mut temp_line.compiled_bytes,
-            &mut temp_line.compiled_bytes_ref,
-            &mut temp_line.label_idx_map,
-            offset_bytes_from_line_and_is_label_before_ref,
-        )?;
-        compiled_line.extend(temp_line);
-        i += 1;
+                let _ = parse_jmp(
+                    &TokenizedLine::new(&jmp_ins, 0),
+                    0,
+                    &mut temp_line.compiled_bytes,
+                    &mut temp_line.compiled_bytes_ref,
+                    &mut temp_line.label_idx_map,
+                    offset_bytes_from_line_and_is_label_before_ref,
+                )?;
+                compiled_line.extend(temp_line);
+                i += 1;
+            }
+        }
     }
 
     if i >= lexed_str_without_spaces.len() {
@@ -340,6 +380,7 @@ fn mark_labels(
     compiled_bytes: &mut Vec<Vec<u8>>,
     compiled_bytes_ref: &mut Vec<Vec<CompiledBytes>>,
     label_addr_map: &std::collections::HashMap<UniCase<String>, LineNumber>,
+    is_org_defined: bool,
     idx: usize,
 ) -> Result<bool, CompilationError> {
     if idx >= label_ref.len() {
@@ -361,7 +402,7 @@ fn mark_labels(
                 line_num: line_number,
                 label,
                 label_addr_map,
-                // is_org_defined: false,
+                is_org_defined,
             }),
         )?;
 
@@ -379,6 +420,7 @@ fn mark_labels(
             compiled_bytes,
             compiled_bytes_ref,
             label_addr_map,
+            is_org_defined,
             idx + 1,
         )? {
             return Ok(true);
@@ -402,7 +444,7 @@ pub fn compile_lines(
     let mut label_addr_map = std::collections::HashMap::<Label, LineNumber>::new();
     let mut label_ref: Vec<(Label, LineNumber, &Vec<Token>)> = Vec::new();
 
-    let _is_org_defined = match is_org_defined(&lexer.tokens) {
+    let is_org_defined = match is_org_defined(&lexer.tokens) {
         Ok(is_org_defined) => is_org_defined,
         Err(err) => {
             compilation_errors.push(err);
@@ -411,7 +453,7 @@ pub fn compile_lines(
     };
 
     for line in lexer.tokens.iter() {
-        match compile(line) {
+        match compile(line, is_org_defined) {
             Ok(compiled_line) => {
                 let compiled_bytes_line = compiled_line.compiled_bytes;
                 let compiled_bytes_ref_line = compiled_line.compiled_bytes_ref;
@@ -469,6 +511,7 @@ pub fn compile_lines(
         &mut compiled_bytes_lines_vec,
         &mut compiled_bytes_ref_lines_vec,
         &label_addr_map,
+        is_org_defined,
         0,
     ) {
         Ok(_) => (),

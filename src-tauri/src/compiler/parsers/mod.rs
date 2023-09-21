@@ -5,6 +5,7 @@ pub mod jmp;
 pub mod mov;
 pub mod mul;
 pub mod sub;
+pub mod directives;
 
 pub(in crate::compiler::parsers) mod pattern_extractors;
 pub(in crate::compiler::parsers) mod utils;
