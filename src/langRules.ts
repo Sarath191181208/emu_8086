@@ -14,7 +14,7 @@ export const langRules: languages.IMonarchLanguage = {
       // white space
       [/[ \t\r\n]+/, "white"],
       // labels
-      [/\w+: /, "label"],
+      [/\w+:/, "label"],
       // support for comments
       [/;.*/, "comment"],
       //   write support for numbers hex numbers
