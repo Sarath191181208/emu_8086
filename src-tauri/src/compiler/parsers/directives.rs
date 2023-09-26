@@ -16,6 +16,7 @@ mod tests_directives {
     test_compile!(
         test_data_as_jmp, 
         "
+            org 100h
             .data 
                 mov ax, bx ; 3
                 mov cx, dx ; 3
