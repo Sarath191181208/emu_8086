@@ -154,24 +154,6 @@ function App() {
     monaco.editor.setModelMarkers(model, "owner", []);
   };
 
-  const runPressed = async () => {
-    try {
-      const result: [CPUData, { mem: Array<number> }] = await invoke(
-        "compile_code_and_run",
-        {
-          code: editorRef.current?.getValue(),
-        }
-      );
-      const regs: any = result[0];
-      setMemory(result[1].mem);
-      setRegisters(extractCPUData(regs));
-      clearErrorsOnEditor();
-      setFlags(extractFlags(regs));
-    } catch (e) {
-      setErrorsOnEditor(e);
-    }
-  };
-
   const compileCode = async () => {
     try {
       const result: [CPUData, CompiledBytes[], { mem: Array<number> }] =
@@ -220,7 +202,6 @@ function App() {
   return (
     <>
       <Navbar
-        runPressed={runPressed}
         compileCode={compileCode}
         nextPressed={nextPressed}
         className="mb-5"
@@ -298,12 +279,10 @@ function App() {
 
 function Navbar({
   className = "",
-  runPressed,
   compileCode,
   nextPressed,
 }: {
   className?: string;
-  runPressed: () => void;
   compileCode: () => void;
   nextPressed: () => void;
 }) {
@@ -316,12 +295,6 @@ function Navbar({
         </button>
         <button className="p-2 hover:bg-white/5 transition ease-in-out ">
           Save
-        </button>
-        <button
-          onClick={runPressed}
-          className="p-2 hover:bg-white/5 transition ease-in-out "
-        >
-          Run
         </button>
         <button
           onClick={compileCode}
@@ -355,7 +328,7 @@ function MemoryBottomBar({
   setIsMemoryShown: (showMemoryBottomBar: boolean) => void;
   className?: string;
 }) {
-  const [start, setStart] = useState(0x0100);
+  const [start, setStart] = useState(0x1000);
   const [indicesToAnimate, _updateIndicesToAnimate] = useState<number[]>([]);
   const updateIndicesToAnimate = (newVal: number[]) => {
     _updateIndicesToAnimate(newVal);
