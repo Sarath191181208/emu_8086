@@ -1,3 +1,7 @@
+- [x] add support for addressing mode 
+- [x] add the labels into the symbol table
+- [x] add calc offset in compile itself 
+- [x] parse the data segments
 -[ ] Setting up a CI/CD pipeline
 -[ ] Adding more addressing modes to 
     - [ ] MOV
