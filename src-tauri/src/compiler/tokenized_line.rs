@@ -13,6 +13,10 @@ impl<'a> TokenizedLine<'a> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.tokens.len()
+    }
+
     pub fn get_len_lexed_strings(&self) -> u32 {
         self.len_lexed_strings
     }
