@@ -406,7 +406,7 @@ fn mark_variables(
     let mut var_addr_map = VariableAddressMap::new();
     for (var_label, (_, label_definition_line_number)) in var_addr_def_map {
         let (offset, _) = calc_offset(&compiled_bytes, 0, *label_definition_line_number);
-        let org_offset = if is_org_defined { 0x7100 } else { 0x1000 };
+        let org_offset = if is_org_defined { 0x100 } else { 0x00 };
         var_addr_map.insert(var_label.clone(), offset + org_offset);
     }
 
