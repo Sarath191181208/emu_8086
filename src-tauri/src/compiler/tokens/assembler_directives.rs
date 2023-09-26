@@ -1,6 +1,6 @@
-use strum_macros::EnumString;
+use strum_macros::{EnumString, Display};
 
-#[derive(Debug, Clone, PartialEq, Default, Eq, EnumString)]
+#[derive(Debug, Clone, PartialEq, Default, Eq, EnumString, Display)]
 pub(crate) enum AssemblerDirectives {
     #[strum(ascii_case_insensitive)]
     #[default]
