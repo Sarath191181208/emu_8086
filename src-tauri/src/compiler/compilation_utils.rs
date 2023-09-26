@@ -86,11 +86,10 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
     Ok(false)
 }
 
-pub(crate) fn has_consumed_all_instructions(
+pub(crate) fn get_full_line_error_starting_from_i(
     lexed_str_without_spaces: &Vec<&Token>,
     i: usize,
-    instruction: &str,
-    num_args: usize,
+    err_msg: &str,
 ) -> Result<(), CompilationError> {
     if i < lexed_str_without_spaces.len() - 1 {
         let unparsed_tokens_start = lexed_str_without_spaces[i + 1];
@@ -101,12 +100,26 @@ pub(crate) fn has_consumed_all_instructions(
             unparsed_tokens_start.column_number
                 + unparsed_tokens_end.column_number
                 + unparsed_tokens_end.token_length,
-            &format!(
-                "Can't compile starting with {:?} as the {} instuction only supports {} arguments",
-                unparsed_tokens_start.token_type, instruction, num_args
-            ),
+            err_msg,
         ));
     }
+    Ok(())
+}
+
+pub(crate) fn error_if_hasnt_consumed_all_ins(
+    lexed_str_without_spaces: &Vec<&Token>,
+    i: usize,
+    instruction: &str,
+    num_args: usize,
+) -> Result<(), CompilationError> {
+    get_full_line_error_starting_from_i(
+        lexed_str_without_spaces,
+        i,
+        &format!(
+            "Can't compile as the {} instuction only supports {} arguments",
+            instruction, num_args
+        ),
+    )?;
     Ok(())
 }
 
