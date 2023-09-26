@@ -1,6 +1,6 @@
 use crate::compiler::{
     compilation_error::CompilationError, tokenized_line::TokenizedLine, tokens::Assembly8086Tokens,
-    CompiledBytes,
+    CompiledBytesReference,
 };
 
 use super::utils::{get_idx_from_reg, push_instruction};
@@ -9,7 +9,7 @@ pub(in crate::compiler) fn parse_inc(
     tokenized_line: &TokenizedLine,
     i: usize,
     compiled_bytes: &mut Vec<u8>,
-    compiled_bytes_ref: &mut Vec<CompiledBytes>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
     let high_token = tokenized_line.get(
