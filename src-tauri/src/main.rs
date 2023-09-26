@@ -6,11 +6,12 @@ pub mod consts;
 pub mod cpu;
 pub mod memory;
 
-use compiler::{compilation_error::CompilationError, compile_lines, types_structs::CompiledBytes};
+use compiler::{compilation_error::CompilationError, compile_lines, types_structs::CompiledBytesReference};
 use cpu::CPU;
 use memory::Memory;
 use std::sync::{Arc, Mutex};
 use tauri::State;
+
 
 #[derive(Default)]
 struct MutableCpu(Arc<Mutex<CPU>>);
@@ -24,7 +25,7 @@ fn next(cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem>) -> (CPU, Memory)
     let mut mem = mem.0.lock().unwrap();
     cpu.execute(&mut mem);
 
-    (*cpu, *mem)
+    (*cpu, mem.clone())
 }
 
 #[tauri::command]
@@ -32,30 +33,30 @@ fn compile_code(
     code: String,
     cpu: State<'_, MutableCpu>,
     mem: State<'_, MutableMem>,
-) -> Result<(CPU, Vec<CompiledBytes>, Memory), Vec<CompilationError>> {
-    let (compile_bytes, compiled_bytes_ref) = compile_lines(&code, true)?;
+) -> Result<(CPU, Vec<CompiledBytesReference>, Memory), Vec<CompilationError>> {
+    let (compile_bytes, compiled_bytes_ref, _) = compile_lines(&code, true)?;
     let mut cpu = cpu.0.lock().unwrap();
     let mut mem = mem.0.lock().unwrap();
     cpu.reset(&mut mem);
     cpu.write_instructions(&mut mem, &compile_bytes);
-    Ok((*cpu, compiled_bytes_ref, *mem))
+    Ok((*cpu, compiled_bytes_ref, mem.clone()))
 }
 
 #[tauri::command]
 fn compile_code_and_run(
     code: String,
-) -> Result<(CPU, Vec<CompiledBytes>, Memory), Vec<CompilationError>> {
+) -> Result<(CPU, Vec<CompiledBytesReference>, Memory), Vec<CompilationError>> {
     let mut mem = Memory::new();
     let mut cpu = CPU::new();
 
     // compile the code
-    let (compile_bytes, compiled_bytes_ref) = compile_lines(&code, false)?;
+    let (compile_bytes, compiled_bytes_ref,  _) = compile_lines(&code, false)?;
     cpu.reset(&mut mem);
 
     cpu.write_instructions(&mut mem, &compile_bytes);
 
     loop {
-        if mem.read(cpu.get_instruciton_pointer()) == 0 {
+        if mem.read( cpu.get_code_segment(), cpu.get_instruciton_pointer() ) == 0 {
             break;
         }
         cpu.execute(&mut mem);

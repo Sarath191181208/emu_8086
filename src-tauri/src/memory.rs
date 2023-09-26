@@ -2,10 +2,11 @@ use crate::consts::{Byte, Word};
 use serde::ser::SerializeTuple;
 use serde::{Serialize, Serializer};
 
-#[derive(Serialize, Clone, Copy)]
+
+#[derive(Serialize, Clone)]
 pub struct Memory {
-    #[serde(serialize_with = "serialize")]
-    mem: [Byte; 0xFFFF],
+    // #[serde(serialize_with = "serialize")]
+    mem: Vec<Byte>,
 }
 
 impl Default for Memory {
@@ -16,22 +17,29 @@ impl Default for Memory {
 
 impl Memory {
     pub fn new() -> Memory {
-        Memory { mem: [0; 0xFFFF] }
+        Memory { mem: vec![0; 0xFFFFF] }
+    }
+
+    fn get_addr(&self, segment: u16, address: u16) -> usize {
+        (((segment*0x10) as u32) + (address as u32))  as usize
     }
 
     pub fn reset(&mut self) {
-        self.mem = [0; 0xFFFF];
+        self.mem = vec![0; 0xFFFFF];
     }
 
-    pub fn read(&self, address: Word) -> Byte {
+    pub fn read(&self, segment: u16, offset: u16) -> Byte {
+        let address = self.get_addr(segment, offset);
         self.mem[address as usize]
     }
 
-    pub fn write_byte(&mut self, address: Word, data: Byte) {
+    pub fn write_byte(&mut self, segment: u16, offset: u16, data: Byte) {
+        let address = self.get_addr(segment, offset);
         self.mem[address as usize] = data;
     }
 
-    pub fn write_word(&mut self, address: Word, data: Word) {
+    pub fn write_word(&mut self, segment: u16, offset: u16, data: Word) {
+        let address = self.get_addr(segment, offset);
         self.mem[address as usize] = (data & 0xFF) as Byte;
         self.mem[(address + 1) as usize] = ((data >> 8) & 0xFF) as Byte;
     }

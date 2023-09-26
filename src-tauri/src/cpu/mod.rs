@@ -44,6 +44,12 @@ pub struct CPU {
     source_index: Word,
     destination_index: Word,
 
+    // Segments
+    code_segment: Word,
+    stack_segment: Word,
+    data_segment: Word,
+    extra_segment: Word,
+
     // Registers
     ax: Word,
     bx: Word,
@@ -83,6 +89,11 @@ impl CPU {
             source_index: 0x0000,
             destination_index: 0x0000,
 
+            stack_segment: 0x0100,
+            code_segment: 0x0100,
+            data_segment: 0x0100,
+            extra_segment: 0x0100,
+
             ax: 0x0000,
             bx: 0x0000,
             cx: 0x0000,
@@ -103,18 +114,22 @@ impl CPU {
         self.instruction_pointer
     }
 
+    pub fn get_code_segment(&self) -> Word{
+        self.code_segment
+    }
+
     // fn set_instruciton_pointer(&mut self, value: Word) {
     //     self.instruction_pointer = value;
     // }
 
     pub fn write_instructions(&mut self, mem: &mut Memory, instructions: &[Byte]) {
         for (i, instruction) in instructions.iter().enumerate() {
-            mem.write_byte(self.instruction_pointer + (i as u16), *instruction);
+            mem.write_byte(self.code_segment, i as u16, *instruction);
         }
     }
 
     pub fn reset(&mut self, mem: &mut Memory) {
-        self.instruction_pointer = 0x0100;
+        self.instruction_pointer = 0x0000;
         self.stack_pointer = 0x0100;
         self.base_pointer = 0x0000;
         self.source_index = 0x0000;
@@ -134,17 +149,22 @@ impl CPU {
         self.overflow_flag = false;
         self.negative_flag = false;
 
+        self.stack_segment = 0x0100;
+        self.code_segment = 0x0100;
+        self.data_segment = 0x0100;
+        self.extra_segment = 0x0100;
+
         mem.reset();
     }
 
     fn consume_instruction(&mut self, mem: &Memory) -> Byte {
-        let opcode = mem.read(self.get_instruciton_pointer());
+        let opcode = mem.read(self.code_segment, self.instruction_pointer);
         self.instruction_pointer += 1;
         opcode
     }
 
     fn peek_instruction(&self, mem: &Memory) -> Byte {
-        mem.read(self.get_instruciton_pointer())
+        mem.read(self.code_segment, self.instruction_pointer)
     }
 
     pub fn execute(&mut self, mem: &mut Memory) {
