@@ -1,8 +1,10 @@
 use std::str::FromStr;
 
+use unicase::UniCase;
+
 use super::tokens::{
     assembler_directives::AssemblerDirectives, instructions::Instructions,
-    registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
+    registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token, data::DefineData,
 };
 
 #[derive(Debug)]
@@ -83,7 +85,9 @@ impl Lexer {
                         temp_vec.push(Token::new(
                             match token {
                                 Some(token) => token,
-                                None => Assembly8086Tokens::Character(token_string_buffer),
+                                None => Assembly8086Tokens::Character(UniCase::new(
+                                    token_string_buffer.clone(),
+                                ))
                             },
                             line_number,
                             iterating_col_num as u32,
@@ -113,6 +117,10 @@ impl Lexer {
 
         if let Ok(register) = Registers8bit::from_str(token_string) {
             return Some(Assembly8086Tokens::Register8bit(register));
+        }
+
+        if let Ok(define_data) = DefineData::from_str(token_string){
+            return Some(Assembly8086Tokens::Data(define_data))
         }
 
         if let Some(token) = self.parse_num_u8(&token_string.replace('X', "x")) {

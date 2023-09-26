@@ -1,3 +1,5 @@
+use unicase::UniCase;
+
 use super::tokens::{instructions::Instructions, Assembly8086Tokens, Token};
 
 pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Token> {
@@ -9,7 +11,7 @@ pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Toke
             token.token_length,
         ),
         Token::new(
-            Assembly8086Tokens::Character("code".to_string()),
+            Assembly8086Tokens::Character(UniCase::new("code".to_string())),
             token.line_number,
             token.column_number,
             token.token_length,

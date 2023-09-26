@@ -1,7 +1,10 @@
+use unicase::UniCase;
+
 pub mod assembler_directives;
 pub mod instructions;
 pub mod registers16bit;
 pub mod registers8bit;
+pub mod data;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Assembly8086Tokens {
@@ -48,8 +51,30 @@ pub(crate) enum Assembly8086Tokens {
     Comma,
     Colon,
 
+    // Define data 
+    Data(data::DefineData),
+
     // Error
-    Character(String),
+    Character(UniCase<String>),
+}
+
+// impl the Display trait for Assembly8086Tokens
+impl std::fmt::Display for Assembly8086Tokens {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Assembly8086Tokens::Register16bit(register) => write!(f, "{}", register),
+            Assembly8086Tokens::Register8bit(register) => write!(f, "{}", register),
+            Assembly8086Tokens::Instruction(instruction) => write!(f, "{}", instruction),
+            Assembly8086Tokens::Comment => write!(f, "Comment"),
+            Assembly8086Tokens::Number16bit(number) => write!(f, "{}", number),
+            Assembly8086Tokens::Number8bit(number) => write!(f, "{}", number),
+            Assembly8086Tokens::Space => write!(f, "Space"),
+            Assembly8086Tokens::Comma => write!(f, "Comma"),
+            Assembly8086Tokens::Colon => write!(f, "Colon"),
+            Assembly8086Tokens::Character(character) => write!(f, "{}", character),
+            Assembly8086Tokens::Data(data) => write!(f, "{}", data),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
