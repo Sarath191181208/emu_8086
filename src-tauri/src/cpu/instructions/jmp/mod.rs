@@ -39,7 +39,7 @@ mod test_8bit_jmp {
     generate_test_with_cycles!(
         jmp_8bit_positive,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 "
             label:
                 INC AX
@@ -60,7 +60,7 @@ mod test_8bit_jmp {
     generate_test_with_cycles!(
         jmp_8bit_negative,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 "
                 INC AX
                 JMP label
@@ -96,7 +96,7 @@ mod test_16_bit_jmp {
     generate_test_with_cycles!(
         jmp_16bit_positive,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 format!(
                     "
             label:
@@ -121,7 +121,7 @@ mod test_16_bit_jmp {
     generate_test_with_cycles!(
         jmp_16bit_negative,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 format!(
                     "
                 INC AX

@@ -31,7 +31,7 @@ mod test_16bit_mul {
     generate_test_with_cycles!(
         mul_ax_bx,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 "
             MOV AX, 0x1111
             MOV BX, 0x1010
@@ -52,7 +52,7 @@ mod test_16bit_mul {
     generate_test_with_cycles!(
         mul_ax_cx,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 "
             MOV AX, 0x0011
             MOV CX, 0x0010
@@ -78,7 +78,7 @@ mod test_8bit_mul {
     generate_test_with_cycles!(
         mul_ax_bl,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 "
             MOV AX, 0x11
             MOV BL, 0x10
@@ -98,7 +98,7 @@ mod test_8bit_mul {
     generate_test_with_cycles!(
         mul_ax_cl,
         (|cpu: &mut CPU, mem: &mut Memory| {
-            let (compiled_bytes, _) = compile_lines(
+            let (compiled_bytes, _, _) = compile_lines(
                 "
             MOV AX, 0x01
             MOV CL, 0x00
