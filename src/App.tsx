@@ -24,12 +24,14 @@ import {
 } from "./types/CPUData/getDefaultRegistersAndFlags";
 import { langConfiguration, langRules, langTheme } from "./langRules";
 
+type ArrayIndex = number;
+type Byte = number;
 
 function App() {
+  
+
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
-  const [memeory, setMemory, prevMemoryRef] = useStateSavePrevious(
-    Array(0xffff).fill(0)
-  );
+  const [memory, setMemory, prevMemoryRef] = useStateSavePrevious<Map<ArrayIndex, Byte>>(new Map<ArrayIndex, Byte>());
 
   const [registers, setRegisters, prevRegistersRef] =
     useStateSavePrevious<CPUData>(getDefaultRegisters());
@@ -156,13 +158,23 @@ function App() {
 
   const compileCode = async () => {
     try {
-      const result: [CPUData, CompiledBytes[], { mem: Array<number> }] =
+      const result: [CPUData, CompiledBytes[], Array<[number, number]>] =
         await invoke("compile_code", {
           code: editorRef.current?.getValue(),
         });
       const regs: any = result[0];
       compiledBytesRef.current = result[1];
-      setMemory(result[2].mem);
+      const memoryChanges = result[2];
+
+
+      let memClone = new Map<ArrayIndex, Byte>(memory);
+      // update memory
+      for (let i = 0; i < memoryChanges.length; i++) {
+        const [index, value] = memoryChanges[i];
+        memClone.set(index, value);
+      }
+      setMemory(memClone);
+
       setRegisters(extractCPUData(regs));
       clearErrorsOnEditor();
       setFlags(extractFlags(regs));
@@ -173,15 +185,23 @@ function App() {
 
   const nextPressed = async () => {
     try {
-      const result: [CPUData, { mem: Array<number> }] = await invoke("next", {
+      const result: [CPUData, Array<[number, number]>] = await invoke("next", {
         code: editorRef.current?.getValue(),
       });
       const regs: any = result[0];
       const cpu = extractCPUData(regs);
-      setMemory(result[1].mem);
+      const memoryChanges = result[1];
+
+      let memClone = new Map<ArrayIndex, Byte>(memory);
+      // update memory
+      for (let i = 0; i < memoryChanges.length; i++) {
+        const [index, value] = memoryChanges[i];
+        memClone.set(index, value);
+      }
+      setMemory(memClone);
+
       setRegisters(cpu);
       setFlags(extractFlags(regs));
-      console.log(extractFlags(regs));
       clearErrorsOnEditor();
     } catch (e) {
       // setErrorsOnEditor(e);
@@ -191,7 +211,6 @@ function App() {
 
   const tryCompile = async () => {
     try {
-      
       await invoke("try_compile_code", { code: editorRef.current?.getValue() });
       clearErrorsOnEditor();
     } catch (e) {
@@ -217,7 +236,10 @@ function App() {
               monacoRef.current = monaco;
               monaco.languages.register({ id: "assembly" });
               monaco.languages.setMonarchTokensProvider("assembly", langRules);
-              monaco.languages.setLanguageConfiguration("assembly", langConfiguration);
+              monaco.languages.setLanguageConfiguration(
+                "assembly",
+                langConfiguration
+              );
             }}
             onChange={tryCompile}
             height="100%"
@@ -225,14 +247,14 @@ function App() {
             theme="assembly-dark"
             options={{ minimap: { enabled: false } }}
             defaultValue={
-              "MOV AX, BX \nMOV BX, CX\nlabel1: \nSUB CX, AX \n \nMOV AX, 0xAF34 \nMOV BL, 0X12 \nMOV AL, 10\nJMP label1"
+              "ORG 100H\n\n .DATA \n Var dw 0x1000 \n code: MOV AX, Var"
             }
           />
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
           <MemoryBottomBar
             key="memory-bottom-bar"
-            prevArr={prevMemoryRef.current}
-            arr={memeory}
+            prevMemAddrValueMap={prevMemoryRef.current}
+            memAddrValueMap={memory}
             showMemoryBottomBar={showMemoryBottomBar}
             setIsMemoryShown={setIsMemoryShown}
           />
@@ -316,28 +338,64 @@ function Navbar({
   );
 }
 function MemoryBottomBar({
-  arr,
-  prevArr,
+  memAddrValueMap,
+  prevMemAddrValueMap,
   showMemoryBottomBar,
   setIsMemoryShown,
   className = "",
 }: {
-  arr: number[];
-  prevArr: number[];
+  memAddrValueMap: Map<ArrayIndex, Byte>;
+  prevMemAddrValueMap: Map<ArrayIndex, Byte>;
   showMemoryBottomBar: boolean;
   setIsMemoryShown: (showMemoryBottomBar: boolean) => void;
   className?: string;
 }) {
   const [start, setStart] = useState(0x1000);
+  const [inputStr, setInputStr] = useState(
+    "0x" + start.toString(16).toUpperCase().padStart(4, "0")
+  );
   const [indicesToAnimate, _updateIndicesToAnimate] = useState<number[]>([]);
   const updateIndicesToAnimate = (newVal: number[]) => {
     _updateIndicesToAnimate(newVal);
   };
 
+  const getValOrZero = (index: number): number => {
+    const val = memAddrValueMap.get(index);
+    if (val === undefined) {
+      return 0;
+    }
+    return val;
+  }
+
+  const handleMemoryViewAddressChange = (e: any) => {
+    let val: string = e.target.value;
+    // if the value is greater than 0xffff then set it to 0xffff
+    if (parseInt(val, 16) > 0xffFff) {
+      val = "0xfffff";
+    }
+
+    // pad it to 4 digits
+    // val = val.toUpperCase().padStart(4, "0");
+
+    // put the 0x if doesn't exits
+    if (!val.toLowerCase().startsWith("0x")) {
+      val = "0x" + val;
+    }
+
+    // set the value
+    setInputStr(val);
+  };
+
   useEffect(() => {
-    const notEqIdxArr = arr
-      .map((num, i) => (num !== prevArr[i] ? i : -1))
-      .filter((num) => num !== -1);
+    // find the indices that are not equal
+    const notEqIdxArr: number[] = [];
+    memAddrValueMap.forEach((val, idx) => {
+      if (val !== prevMemAddrValueMap.get(idx)) {
+        notEqIdxArr.push(idx);
+      }
+    });
+
+
     updateIndicesToAnimate(notEqIdxArr);
 
     let timeoutId = setTimeout(() => {
@@ -345,7 +403,7 @@ function MemoryBottomBar({
       updateIndicesToAnimate([]);
     }, 400);
     return () => clearTimeout(timeoutId);
-  }, [arr]);
+  }, [memAddrValueMap]);
 
   return (
     <div className={"absolute w-full " + className}>
@@ -365,7 +423,6 @@ function MemoryBottomBar({
             </button>
           </div>
           <div className="h-full px-5">
-            {/* create a number edit field and an increase and dcrease btns */}
             <div className="">
               <button
                 className="p-2 hover:bg-white/5 transition ease-in-out "
@@ -381,8 +438,19 @@ function MemoryBottomBar({
               <input
                 className="bg-slate-800 text-slate-400 dark:text-slate-200 w-20 text-center"
                 type="text"
-                value={`0x${start.toString(16).toUpperCase().padStart(4, "0")}`}
-                readOnly
+                value={inputStr}
+                onChange={handleMemoryViewAddressChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && inputStr !== "") {
+                    let newInputStr = inputStr.toUpperCase().padStart(4, "0");
+                    if (!newInputStr.toLocaleLowerCase().startsWith("0x")) {
+                      newInputStr = "0x" + newInputStr;
+                    }
+                    const newStart = parseInt(newInputStr, 16);
+                    setStart(newStart);
+                  }
+                }}
+                // readOnly
               />
               <button
                 className="p-2 hover:bg-white/5 transition ease-in-out "
@@ -398,35 +466,38 @@ function MemoryBottomBar({
             </div>
             <div
               className={`grid h-full gap-x-3 gap-y-2 gridCols17 gridRows6 text-xs items-center justify-items-center`}
+              key={`memory-view-${start}`}
             >
-              {arr.slice(start, start + 16 * 6).map((val, i) => (
-                // for every 16 elements create a label
-                <>
-                  {i % 16 === 0 && (
+              {Array(16 * 6)
+                .fill(0)
+                .map((_, i) => (
+                  // for every 16 elements create a label
+                  <>
+                    {i % 16 === 0 && (
+                      <div
+                        key={`label${start}-${i}`}
+                        className="text-slate-400 dark:text-slate-200 text-center font-semibold"
+                      >
+                        {`0x${(start + i)
+                          .toString(16)
+                          .toUpperCase()
+                          .padStart(4, "0")}`}
+                      </div>
+                    )}
                     <div
-                      key={`label${i}`}
-                      className="text-slate-400 dark:text-slate-200 text-center font-semibold"
+                      // className={`border border-black/10 dark:border-white/10 rounded-md flex items-center justify-center`}
+                      key={`${start}-${i}`}
+                      className={
+                        "text-slate-400 dark:text-slate-200 text-center p-1 " +
+                        (indicesToAnimate.includes(start + i)
+                          ? `animate-val-change`
+                          : "")
+                      }
                     >
-                      {`0x${(start + i)
-                        .toString(16)
-                        .toUpperCase()
-                        .padStart(4, "0")}`}
+                      {getValOrZero(start+i).toString(16).toUpperCase().padStart(2, "0")}
                     </div>
-                  )}
-                  <div
-                    // className={`border border-black/10 dark:border-white/10 rounded-md flex items-center justify-center`}
-                    key={i}
-                    className={
-                      "text-slate-400 dark:text-slate-200 text-center p-1 " +
-                      (indicesToAnimate.includes(start + i)
-                        ? `animate-val-change`
-                        : "")
-                    }
-                  >
-                    {val.toString(16).toUpperCase().padStart(2, "0")}
-                  </div>
-                </>
-              ))}
+                  </>
+                ))}
             </div>
           </div>
         </div>
