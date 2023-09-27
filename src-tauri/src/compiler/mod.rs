@@ -133,8 +133,6 @@ fn compile(
     let offset_bytes_from_line_and_is_label_before_ref =
         unwrap_and_find_offset(&compiled_line_label_ref);
 
-    
-
     match &token.token_type {
         Assembly8086Tokens::Character(_) => {
             i = parse_var_declaration(
@@ -176,26 +174,16 @@ fn compile(
             }
 
             Instructions::Inc => {
-                i = parse_inc(
-                    &tokenized_line,
-                    i,
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                )?;
+                i = parse_inc(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "INC", 1)?;
-                return Ok(compiled_line);
+                Ok(compiled_line)
             }
 
             Instructions::Dec => {
-                i = parse_dec(
-                    &tokenized_line,
-                    i,
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                )?;
+                i = parse_dec(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
 
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "DEC", 1)?;
-                return Ok(compiled_line);
+                Ok(compiled_line)
             }
 
             Instructions::Sub => {
@@ -213,14 +201,9 @@ fn compile(
             }
 
             Instructions::Mul => {
-                i = parse_mul(
-                    &tokenized_line,
-                    i,
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                )?;
+                i = parse_mul(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MUL", 1)?;
-                return Ok(compiled_line);
+                Ok(compiled_line)
             }
 
             Instructions::Jmp => {
@@ -252,11 +235,11 @@ fn compile(
 }
 
 struct CompiledLineLabelRef<'a> {
-    compiled_bytes: &'a Vec<Vec<u8>>,
+    compiled_bytes: &'a [Vec<u8>],
     line_num: LineNumber,
     label: &'a str,
     label_addr_map: &'a HashMap<UniCase<String>, LineNumber>,
-    is_org_defined: bool,
+    // is_org_defined: bool,
 }
 
 fn unwrap_and_find_offset(
@@ -324,14 +307,13 @@ fn calc_offset(
 ) -> (u16, IsLabelBeforeRef) {
     let mut offset = 0;
     if label_addr < label_ref {
-        // if label is refernced after it's defined
-        for i in label_addr..label_ref {
-            offset += compiled_bytes[i].len();
+        for bytes in compiled_bytes.iter().take(label_ref).skip(label_addr){
+            offset += bytes.len();
         }
     } else {
         // i.e label is refernced before it is defined
-        for i in (label_ref + 1)..label_addr {
-            offset += compiled_bytes[i].len();
+        for bytes in compiled_bytes.iter().take(label_addr).skip(label_ref + 1) {
+            offset += bytes.len();
         }
     }
 
@@ -341,8 +323,8 @@ fn calc_offset(
 
 fn mark_labels(
     label_ref: &Vec<(Label, Token, LineNumber, &Vec<Token>)>,
-    compiled_bytes: &mut Vec<Vec<u8>>,
-    compiled_bytes_ref: &mut Vec<Vec<CompiledBytesReference>>,
+    compiled_bytes: &mut [Vec<u8>],
+    compiled_bytes_ref: &mut [Vec<CompiledBytesReference>],
     label_addr_map: &LabelAddressMap,
     is_org_defined: bool,
     idx: usize,
@@ -361,7 +343,7 @@ fn mark_labels(
                 line_num: line_number,
                 label,
                 label_addr_map,
-                is_org_defined,
+                // is_org_defined,
             }),
             None,
         )?;
@@ -390,8 +372,8 @@ fn mark_labels(
 }
 
 fn mark_variables(
-    compiled_bytes: &mut Vec<Vec<u8>>,
-    compiled_bytes_ref: &mut Vec<Vec<CompiledBytesReference>>,
+    compiled_bytes: &mut [Vec<u8>],
+    compiled_bytes_ref: &mut [Vec<CompiledBytesReference>],
 
     var_ref: &Vec<(Label, VariableType, LineNumber, &Vec<Token>)>,
     var_addr_def_map: &VariableAddressDefinitionMap,
@@ -420,7 +402,7 @@ fn mark_variables(
 
 fn get_err_if_already_defined_label<T>(
     label_key: UniCase<String>,
-    line: &Vec<Token>,
+    line: &[Token],
     label_addr_map: &mut HashMap<Label, T>,
     already_defined_line_number: LineNumber,
 ) -> Option<CompilationError> {
@@ -435,8 +417,7 @@ fn get_err_if_already_defined_label<T>(
             line[idx].token_length,
             &format!(
                 "The label \"{}\" is already defined in line {}, Please use a different name.",
-                label_key,
-                already_defined_line_number
+                label_key, already_defined_line_number
             ),
         ));
     }

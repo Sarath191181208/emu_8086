@@ -113,15 +113,6 @@ pub(super) fn get_token_as_label(token: &Token) -> &Label {
     }
 }
 
-pub(super) fn invalid_path_error(token: &Token) -> Result<usize, CompilationError> {
-    Err(CompilationError::new(
-        token.line_number,
-        token.column_number,
-        token.token_length,
-        "This is an invalid path, This shouldn't happen, Please report this!",
-    ))
-}
-
 pub(super) fn is_variable_defined_as_16bit(map: &Option<&VariableAddressMap>, label: &Label) -> bool {
     match map {
         None => false,

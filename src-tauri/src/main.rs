@@ -14,6 +14,9 @@ use memory::Memory;
 use std::sync::{Arc, Mutex};
 use tauri::State;
 
+type CompilationErrors = Vec<CompilationError>;
+type CompiledBytesReferences = Vec<CompiledBytesReference>;
+type MemoryChanges = Vec<(usize, Byte)>;
 
 #[derive(Default)]
 struct MutableCpu(Arc<Mutex<CPU>>);
@@ -22,7 +25,7 @@ struct MutableCpu(Arc<Mutex<CPU>>);
 struct MutableMem(Arc<Mutex<Memory>>);
 
 #[tauri::command]
-fn next(cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem>) -> (CPU, Vec<(usize, Byte)>) {
+fn next(cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem>) -> (CPU, MemoryChanges) {
     let mut cpu = cpu.0.lock().unwrap();
     let mut mem = mem.0.lock().unwrap();
     cpu.execute(&mut mem);
@@ -35,7 +38,7 @@ fn compile_code(
     code: String,
     cpu: State<'_, MutableCpu>,
     mem: State<'_, MutableMem>,
-) -> Result<(CPU, Vec<CompiledBytesReference>, Vec<(usize, Byte)>), Vec<CompilationError>> {
+) -> Result<(CPU, CompiledBytesReferences, MemoryChanges), CompilationErrors> {
     let (compile_bytes, compiled_bytes_ref, is_org_defined) = compile_lines(&code, true)?;
     let mut cpu = cpu.0.lock().unwrap();
     let mut mem = mem.0.lock().unwrap();
