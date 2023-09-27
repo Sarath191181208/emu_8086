@@ -108,7 +108,7 @@ pub(in crate::compiler) fn parse_mov(
 
             Ok(i + 3)
         }
-        AddressingMode::Register16bitAndVariable {
+        AddressingMode::Register16bitAndAddress {
             high_token,
             low_token,
             address_bytes,
@@ -139,7 +139,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
-        AddressingMode::VariableAnd16bitRegister {
+        AddressingMode::AddressAnd16bitRegister {
             high_token,
             low_token,
             address_bytes,
@@ -171,7 +171,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
-        AddressingMode::VariableAnd16bitNumber {
+        AddressingMode::AddressAnd16bitNumber {
             high_token,
             low_token,
             address_bytes,
@@ -188,7 +188,7 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(i + 3)
         }
-        AddressingMode::Register8bitAndVariable {
+        AddressingMode::Register8bitAndAddress {
             high_token,
             low_token,
             address_bytes,
@@ -219,7 +219,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
-        AddressingMode::VariableAnd8bitRegister {
+        AddressingMode::AddressAnd8bitRegister {
             high_token,
             low_token,
             address_bytes,
@@ -250,7 +250,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
-        AddressingMode::VariableAnd8bitNumber {
+        AddressingMode::AddressAnd8bitNumber {
             high_token,
             low_token,
             address_bytes,

@@ -29,37 +29,37 @@ pub(crate) enum AddressingMode<'a> {
         num: u8
     },
 
-    Register16bitAndVariable {
+    Register16bitAndAddress {
         high_token: &'a Token,
         low_token: Token,
         address_bytes: [u8; 2],
         register_type: Registers16bit,
     },
-    VariableAnd16bitRegister {
+    AddressAnd16bitRegister {
         high_token: &'a Token,
         low_token: Token,
         address_bytes: [u8; 2],
         register_type: Registers16bit,
     },
-    VariableAnd16bitNumber {
+    AddressAnd16bitNumber {
         high_token: &'a Token,
         low_token: Token,
         address_bytes: [u8; 2],
         num: u16,
     },
-    Register8bitAndVariable {
+    Register8bitAndAddress {
         high_token: &'a Token,
         low_token: &'a Token,
         address_bytes: [u8; 2],
         register_type: Registers8bit,
     },
-    VariableAnd8bitRegister {
+    AddressAnd8bitRegister {
         high_token: &'a Token,
         low_token: &'a Token,
         address_bytes: [u8; 2],
         register_type: Registers8bit,
     },
-    VariableAnd8bitNumber {
+    AddressAnd8bitNumber {
         high_token: &'a Token,
         low_token: &'a Token,
         address_bytes: [u8; 2],
@@ -127,7 +127,7 @@ pub(crate) fn parse_line<'a>(
                     low_token: changed_low_token.clone(),
                 }),
                 Assembly8086Tokens::Character(label) => {
-                    Ok(AddressingMode::Register16bitAndVariable {
+                    Ok(AddressingMode::Register16bitAndAddress {
                         high_token,
                         low_token: changed_low_token.clone(),
                         address_bytes: get_label_address_or_push_into_ref(
@@ -166,7 +166,7 @@ pub(crate) fn parse_line<'a>(
             //     low_token.token_length,
             // );
             match &low_token.token_type {
-                Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::VariableAnd16bitNumber {
+                Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::AddressAnd16bitNumber {
                     high_token,
                     low_token: low_token.clone(),
                     address_bytes: get_label_address_or_push_into_ref(
@@ -179,7 +179,7 @@ pub(crate) fn parse_line<'a>(
                     num: *num,
                 }),
                 Assembly8086Tokens::Register16bit(low_token_register_type) => {
-                    Ok(AddressingMode::VariableAnd16bitRegister {
+                    Ok(AddressingMode::AddressAnd16bitRegister {
                         high_token,
                         low_token: low_token.clone(),
                         address_bytes: get_label_address_or_push_into_ref(
@@ -192,7 +192,7 @@ pub(crate) fn parse_line<'a>(
                         register_type: low_token_register_type.clone()
                     })
                 }
-                Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::VariableAnd8bitNumber {
+                Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::AddressAnd8bitNumber {
                     high_token,
                     low_token,
                     address_bytes: get_label_address_or_push_into_ref(
@@ -205,7 +205,7 @@ pub(crate) fn parse_line<'a>(
                     num: *num,
                 }),
                 Assembly8086Tokens::Register8bit(low_token_reg_type) => {
-                    Ok(AddressingMode::VariableAnd8bitRegister {
+                    Ok(AddressingMode::AddressAnd8bitRegister {
                         high_token,
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
@@ -247,7 +247,7 @@ pub(crate) fn parse_line<'a>(
                     low_token,
                 }),
                 Assembly8086Tokens::Character(label) => {
-                    Ok(AddressingMode::Register8bitAndVariable {
+                    Ok(AddressingMode::Register8bitAndAddress {
                         high_token,
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
