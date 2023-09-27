@@ -77,11 +77,11 @@ pub(in crate::compiler) fn parse_add(
             } else {
                 let number = num.get_as_u16();
                 let add_ins = match num {
-                    Either::Right(x) => 0x81,
-                    Either::Left(x) => 0x83,
+                    Either::Right(_) => 0x81,
+                    Either::Left(_) => 0x83,
                 };
                 let data_ins = match num {
-                    Either::Right(x) => vec![(number & 0xFF) as u8, (number >> 8) as u8],
+                    Either::Right(_) => vec![(number & 0xFF) as u8, (number >> 8) as u8],
                     Either::Left(x) => vec![x],
                 };
 
@@ -223,7 +223,7 @@ pub(in crate::compiler) fn parse_add(
                 0x81
             };
 
-            let is_token_defined_as_16bit = convert_and_push_instructions!(
+            convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
@@ -249,13 +249,13 @@ mod tests16bit {
         assert_eq!(instructions, &[0x05, 0x34, 0x12]);
     });
 
-    test_compile!(add_bx_0xff00, "ADD BX, 0xff12", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x83, 0xC3, 0x12]);
+    test_compile!(add_bx_0xff12, "ADD BX, 0xff12", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x81, 0xC3, 0x12, 0xff]);
     });
 
     // test cx + 0x1234
-    test_compile!(add_cx_0x1234, "ADD CX, 0x1234", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x81, 0xC1, 0x34, 0x12]);
+    test_compile!(add_cx_0x12, "ADD CX, 0x12", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x83, 0xC1, 0x12]);
     });
 
     // test bx + var
@@ -308,6 +308,24 @@ mod tests16bit {
             );
         }
     );
+
+    // test var + 0x10
+    test_compile!(
+        add_var_0x10,
+        "
+    org 100h
+    .data
+    var dw 0x12
+    code:
+    ADD var, 0x10",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0xEB, 0x02, 0x12, 0x00, 0x83, 0x06, 0x02, 0x01, 0x10]
+            );
+        }
+    );
+
 }
 
 #[cfg(test)]
