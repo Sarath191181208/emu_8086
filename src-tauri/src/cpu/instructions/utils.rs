@@ -41,6 +41,8 @@ impl CPU {
     pub fn sub_8bit_with_overflow_and_set_flags(&mut self, a: u8, b: u8) -> (u8, bool) {
         let (result, overflow) = a.overflowing_sub(b);
         self.set_8bit_flags(a, b, result, overflow);
+        self.overflow_flag = a & 0x80 != b & 0x80 && result & 0x80 != a & 0x80;
+        self.auxiliary_carry_flag = (a & 0x0F) < (b & 0x0F);
         (result, overflow)
     }
 }
