@@ -22,7 +22,7 @@ impl Default for Memory {
 impl Memory {
     pub fn new() -> Memory {
         Memory {
-            mem: vec![0; 0xFFFFF],
+            mem: vec![0x90; 0xFFFFF],
             history: vec![],
         }
     }
@@ -32,7 +32,7 @@ impl Memory {
     }
 
     pub fn reset(&mut self) {
-        self.mem = vec![0; 0xFFFFF];
+        self.mem = vec![0x90; 0xFFFFF];
     }
 
     pub fn get_recent_new_bytes(&self) -> Vec<(usize, Byte)> {
