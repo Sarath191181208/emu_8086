@@ -78,7 +78,7 @@ pub(in crate::compiler) fn parse_mov(
             num,
         } => {
             let high_reg_idx = get_idx_from_token(high_token)?;
-
+            let num = num.get_as_u16();
             let ins = (num & 0xFF) as u8;
             let ins2 = (num >> 8) as u8;
             convert_and_push_instructions!(

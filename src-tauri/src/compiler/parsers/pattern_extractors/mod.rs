@@ -1,18 +1,18 @@
-use crate::compiler::{
+use crate::{compiler::{
     compilation_error::CompilationError,
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token, registers16bit::Registers16bit, registers8bit::Registers8bit},
     types_structs::{
         ArrayIndex, Label, VariableReferenceMap, VariableAddressMap, VariableType,
     },
-};
+}, utils::Either};
 
-use super::utils::{check_comma, if_num_8bit_to_16bit};
+use super::utils::check_comma;
 
 pub(crate) enum AddressingMode<'a> {
     Registers16bit {
         high_token: &'a Token,
-        low_token: Token,
+        low_token: &'a Token,
     },
     Registers8bit {
         high_token: &'a Token,
@@ -20,8 +20,8 @@ pub(crate) enum AddressingMode<'a> {
     },
     Registers16bitNumber {
         high_token: &'a Token,
-        low_token: Token,
-        num: u16,
+        low_token: &'a Token,
+        num: Either<u8, u16>
     },
     Register8bitNumber {
         high_token: &'a Token,
@@ -31,7 +31,7 @@ pub(crate) enum AddressingMode<'a> {
 
     Register16bitAndAddress {
         high_token: &'a Token,
-        low_token: Token,
+        low_token: &'a Token,
         address_bytes: [u8; 2],
         register_type: Registers16bit,
     },
@@ -76,7 +76,7 @@ fn get_label_address_or_push_into_ref(
 ) -> [u8; 2] {
 
     match variable_abs_offset_bytes_map.get(label) {
-        Some(abs_addr) => {
+        Some((_, abs_addr)) => {
             let ins = (abs_addr & 0xFF) as u8;
             let ins2 = (abs_addr >> 8) as u8;
             [ins, ins2]
@@ -110,26 +110,20 @@ pub(crate) fn parse_line<'a>(
                 i + 3,
                 format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
             )?;
-            let changed_low_token = Token::new(
-                if_num_8bit_to_16bit(low_token.token_type.clone()),
-                low_token.line_number,
-                low_token.column_number,
-                low_token.token_length,
-            );
-            match &changed_low_token.token_type {
+            match &low_token.token_type {
                 Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::Registers16bitNumber {
                     high_token,
-                    low_token: changed_low_token.clone(),
-                    num: *num
+                    low_token,
+                    num: Either::Right(*num)
                 }),
                 Assembly8086Tokens::Register16bit(_) => Ok(AddressingMode::Registers16bit {
                     high_token,
-                    low_token: changed_low_token.clone(),
+                    low_token: low_token,
                 }),
                 Assembly8086Tokens::Character(label) => {
                     Ok(AddressingMode::Register16bitAndAddress {
                         high_token,
-                        low_token: changed_low_token.clone(),
+                        low_token: low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 3,
                             label,
