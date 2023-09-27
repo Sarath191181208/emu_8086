@@ -126,20 +126,22 @@ fn compile(
     }
 
     let token = &lexed_str_without_spaces[i];
-    let mut compiled_bytes = &mut compiled_line.compiled_bytes;
-    let mut compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
-    let mut label_ref_map = &mut compiled_line.label_reference_map;
+    let compiled_bytes = &mut compiled_line.compiled_bytes;
+    let compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
+    let label_ref_map = &mut compiled_line.label_reference_map;
 
     let offset_bytes_from_line_and_is_label_before_ref =
         unwrap_and_find_offset(&compiled_line_label_ref);
 
-    let compiled_line = match &token.token_type {
+    
+
+    match &token.token_type {
         Assembly8086Tokens::Character(_) => {
             i = parse_var_declaration(
                 &tokenized_line,
                 i,
-                &mut compiled_bytes,
-                &mut compiled_bytes_ref,
+                compiled_bytes,
+                compiled_bytes_ref,
                 &mut compiled_line.label_abs_address_map,
             )?;
             get_full_line_error_starting_from_i(&lexed_str_without_spaces, i, "VAR")?;
@@ -150,9 +152,9 @@ fn compile(
                 i = parse_mov(
                     &tokenized_line,
                     i,
-                    &mut compiled_bytes,
-                    &mut compiled_bytes_ref,
-                    &mut label_ref_map,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    label_ref_map,
                     variable_address_map,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MOV", 2)?;
@@ -163,9 +165,9 @@ fn compile(
                 i = parse_add(
                     &tokenized_line,
                     i,
-                    &mut compiled_bytes,
-                    &mut compiled_bytes_ref,
-                    &mut label_ref_map,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    label_ref_map,
                     variable_address_map,
                 )?;
 
@@ -177,8 +179,8 @@ fn compile(
                 i = parse_inc(
                     &tokenized_line,
                     i,
-                    &mut compiled_bytes,
-                    &mut compiled_bytes_ref,
+                    compiled_bytes,
+                    compiled_bytes_ref,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "INC", 1)?;
                 return Ok(compiled_line);
@@ -188,8 +190,8 @@ fn compile(
                 i = parse_dec(
                     &tokenized_line,
                     i,
-                    &mut compiled_bytes,
-                    &mut compiled_bytes_ref,
+                    compiled_bytes,
+                    compiled_bytes_ref,
                 )?;
 
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "DEC", 1)?;
@@ -200,9 +202,9 @@ fn compile(
                 i = parse_sub(
                     &tokenized_line,
                     i,
-                    &mut compiled_bytes,
-                    &mut compiled_bytes_ref,
-                    &mut label_ref_map,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    label_ref_map,
                     variable_address_map,
                 )?;
 
@@ -214,8 +216,8 @@ fn compile(
                 i = parse_mul(
                     &tokenized_line,
                     i,
-                    &mut compiled_bytes,
-                    &mut compiled_bytes_ref,
+                    compiled_bytes,
+                    compiled_bytes_ref,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MUL", 1)?;
                 return Ok(compiled_line);
@@ -225,8 +227,8 @@ fn compile(
                 let i = parse_jmp(
                     &tokenized_line,
                     i,
-                    &mut compiled_bytes,
-                    &mut compiled_bytes_ref,
+                    compiled_bytes,
+                    compiled_bytes_ref,
                     &mut compiled_line.label_idx_map,
                     offset_bytes_from_line_and_is_label_before_ref,
                 )?;
@@ -246,9 +248,7 @@ fn compile(
                 token.token_type
             ),
         )),
-    };
-
-    compiled_line
+    }
 }
 
 struct CompiledLineLabelRef<'a> {
@@ -326,12 +326,12 @@ fn calc_offset(
     if label_addr < label_ref {
         // if label is refernced after it's defined
         for i in label_addr..label_ref {
-            offset += compiled_bytes[i as usize].len();
+            offset += compiled_bytes[i].len();
         }
     } else {
         // i.e label is refernced before it is defined
         for i in (label_ref + 1)..label_addr {
-            offset += compiled_bytes[i as usize].len();
+            offset += compiled_bytes[i].len();
         }
     }
 
@@ -366,11 +366,11 @@ fn mark_labels(
             None,
         )?;
 
-        compiled_bytes[line_number as usize] = compiled_tokens.compiled_bytes;
-        compiled_bytes_ref[line_number as usize] = compiled_tokens.compiled_bytes_ref;
+        compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
+        compiled_bytes_ref[line_number] = compiled_tokens.compiled_bytes_ref;
 
-        let prev_compiled_bytes_len = compiled_bytes[line_number as usize].len();
-        let curr_compiled_bytes_len = compiled_bytes[line_number as usize].len();
+        let prev_compiled_bytes_len = compiled_bytes[line_number].len();
+        let curr_compiled_bytes_len = compiled_bytes[line_number].len();
         if prev_compiled_bytes_len != curr_compiled_bytes_len {
             return Ok(false);
         }
@@ -401,7 +401,7 @@ fn mark_variables(
     // calc offset addr for each var
     let mut var_addr_map = VariableAddressMap::new();
     for (var_label, (var_type, label_definition_line_number)) in var_addr_def_map {
-        let (offset, _) = calc_offset(&compiled_bytes, 0, *label_definition_line_number);
+        let (offset, _) = calc_offset(compiled_bytes, 0, *label_definition_line_number);
         let org_offset = if is_org_defined { 0x100 } else { 0x00 };
         var_addr_map.insert(var_label.clone(), (var_type.clone(), offset + org_offset));
     }
@@ -411,8 +411,8 @@ fn mark_variables(
         let line_number = *line_number;
         let compiled_tokens = compile(tokenized_line, is_org_defined, None, Some(&var_addr_map))?;
 
-        compiled_bytes[line_number as usize] = compiled_tokens.compiled_bytes;
-        compiled_bytes_ref[line_number as usize] = compiled_tokens.compiled_bytes_ref;
+        compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
+        compiled_bytes_ref[line_number] = compiled_tokens.compiled_bytes_ref;
     }
 
     Ok(())
@@ -435,7 +435,7 @@ fn get_err_if_already_defined_label<T>(
             line[idx].token_length,
             &format!(
                 "The label \"{}\" is already defined in line {}, Please use a different name.",
-                label_key.to_string(),
+                label_key,
                 already_defined_line_number
             ),
         ));
@@ -572,7 +572,7 @@ pub fn compile_lines(
 
     // check if all the variables are defined
     let mut var_errors = false;
-    for (i, (var, used_as_type, line_number, line)) in var_ref.iter().enumerate() {
+    for (_i, (var, used_as_type, line_number, line)) in var_ref.iter().enumerate() {
         let idx = line
             .iter()
             .position(|_token| _token.token_type == Assembly8086Tokens::Character(var.clone()))

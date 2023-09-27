@@ -64,14 +64,14 @@ impl Memory {
 
     pub fn read_byte(&self, segment: u16, offset: u16) -> Byte {
         let address = self.get_addr(segment, offset);
-        self.mem[address as usize]
+        self.mem[address]
     }
 
     pub fn read_word(&self, segment: u16, offset: u16) -> Word {
         let addr_1 = self.get_addr(segment, offset);
         let addr_2 = self.get_addr(segment, offset + 1);
-        let byte_1 = self.mem[addr_1 as usize];
-        let byte_2 = self.mem[addr_2 as usize];
+        let byte_1 = self.mem[addr_1];
+        let byte_2 = self.mem[addr_2];
         ((byte_2 as u16) << 8) | (byte_1 as u16)
     }
 
@@ -87,7 +87,7 @@ impl Memory {
             time,
             index_old_new_values_pairs: vec![(address, self.mem[address], data)],
         });
-        self.mem[address as usize] = data;
+        self.mem[address] = data;
     }
 
     pub fn write_byte(&mut self, segment: u16, offset: u16, data: Byte) {
@@ -101,13 +101,13 @@ impl Memory {
             index_old_new_values_pairs: vec![
                 (address, self.mem[address], (data & 0xFF) as Byte),
                 (
-                    (address + 1) as usize,
+                    (address + 1),
                     self.mem[address + 1],
                     ((data >> 8) & 0xFF) as Byte,
                 ),
             ],
         });
-        self.mem[address as usize] = (data & 0xFF) as Byte;
-        self.mem[(address + 1) as usize] = ((data >> 8) & 0xFF) as Byte;
+        self.mem[address] = (data & 0xFF) as Byte;
+        self.mem[address + 1] = ((data >> 8) & 0xFF) as Byte;
     }
 }

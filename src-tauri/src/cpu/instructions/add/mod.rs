@@ -7,7 +7,7 @@ pub mod register_addressing;
 impl CPU {
     // add bx, _
     pub(in crate::cpu) fn execute_add(&mut self, mem: &mut Memory) {
-        let instruction = self.consume_instruction(&mem);
+        let instruction = self.consume_instruction(mem);
         match instruction {
             0x06..=0x3E => {
                 let is_direct_addressing = ((instruction - 0x06) % 8) == 0;

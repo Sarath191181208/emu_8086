@@ -1,4 +1,4 @@
-use crate::{consts::Byte, cpu::CPU, memory::Memory};
+use crate::{consts::Byte, cpu::CPU};
 
 // Register Addressing
 impl CPU {

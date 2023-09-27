@@ -35,10 +35,10 @@ pub(in crate::compiler) fn parse_sub(
             low_token,
         } => {
             let high_reg_idx = get_idx_from_token(high_token)?;
-            let low_reg_idx = get_idx_from_token(&low_token)?;
+            let low_reg_idx = get_idx_from_token(low_token)?;
             let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
             push_instruction(compiled_bytes, vec![0x2B], token, compiled_bytes_ref);
-            push_instruction(compiled_bytes, vec![ins], &low_token, compiled_bytes_ref);
+            push_instruction(compiled_bytes, vec![ins], low_token, compiled_bytes_ref);
             Ok(i + 3)
         }
         AddressingMode::Registers8bit {
@@ -65,7 +65,7 @@ pub(in crate::compiler) fn parse_sub(
                 push_instruction(
                     compiled_bytes,
                     vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                    &low_token,
+                    low_token,
                     compiled_bytes_ref,
                 );
             } else {
@@ -187,7 +187,7 @@ pub(in crate::compiler) fn parse_sub(
                 (
                     token => vec![0x2A],
                     high_token => vec![0x06 | reg_idx << 3],
-                    &low_token => address_bytes.to_vec()
+                    low_token => address_bytes.to_vec()
                 )
             );
             Ok(i + 3)
@@ -205,7 +205,7 @@ pub(in crate::compiler) fn parse_sub(
                 (
                     token => vec![0x28],
                     high_token => vec![0x06 | reg_idx << 3],
-                    &low_token => address_bytes.to_vec()
+                    low_token => address_bytes.to_vec()
                 )
             );
             Ok(i + 3)
@@ -231,7 +231,7 @@ pub(in crate::compiler) fn parse_sub(
                 (
                     token => vec![add_ins, 0x2E],
                     high_token => address_bytes.to_vec(),
-                    &low_token => vec![num]
+                    low_token => vec![num]
                 )
             );
             Ok(i + 3)

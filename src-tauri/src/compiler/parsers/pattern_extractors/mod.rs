@@ -127,12 +127,12 @@ pub(crate) fn parse_line<'a>(
                 }),
                 Assembly8086Tokens::Register16bit(_) => Ok(AddressingMode::Registers16bit {
                     high_token,
-                    low_token: low_token,
+                    low_token,
                 }),
                 Assembly8086Tokens::Character(label) => {
                     Ok(AddressingMode::Register16bitAndAddress {
                         high_token,
-                        low_token: low_token,
+                        low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 3,
                             label,

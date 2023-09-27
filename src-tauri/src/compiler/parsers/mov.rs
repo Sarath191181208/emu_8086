@@ -4,7 +4,7 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         tokens::{
-            registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
+            registers16bit::Registers16bit, registers8bit::Registers8bit,
         },
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference, TokenizedLine, parsers::utils::{is_variable_defined_as_16bit, get_token_as_label},
@@ -15,7 +15,7 @@ use crate::{
 use super::{
     pattern_extractors::{parse_line, AddressingMode},
     utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, invalid_path_error,
+        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token,
         push_instruction,
     },
 };
@@ -41,14 +41,14 @@ pub(in crate::compiler) fn parse_mov(
             low_token,
         } => {
             let high_reg_idx = get_idx_from_token(high_token)?;
-            let low_reg_idx = get_idx_from_token(&low_token)?;
+            let low_reg_idx = get_idx_from_token(low_token)?;
             let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
                     token => vec![0x8B],
-                    &low_token => vec![ins]
+                    low_token => vec![ins]
                 )
             );
             Ok(i + 3)
@@ -86,7 +86,7 @@ pub(in crate::compiler) fn parse_mov(
                 compiled_bytes_ref,
                 (
                     token => vec![0xB8 | high_reg_idx],
-                    &low_token => vec![ins, ins2]
+                    low_token => vec![ins, ins2]
                 )
             );
             Ok(i + 3)
@@ -120,7 +120,7 @@ pub(in crate::compiler) fn parse_mov(
                     compiled_bytes_ref,
                     (
                         high_token => vec![0xA1],
-                        &low_token => address_bytes.to_vec()
+                        low_token => address_bytes.to_vec()
                     )
                 );
                 Ok(i + 3)
@@ -133,7 +133,7 @@ pub(in crate::compiler) fn parse_mov(
                     (
                         token => vec![0x8B],
                         high_token => vec![0x0E | (high_reg_idx-1) << 3],
-                        &low_token => address_bytes.to_vec()
+                        low_token => address_bytes.to_vec()
                     )
                 );
                 Ok(i + 3)
@@ -163,7 +163,7 @@ pub(in crate::compiler) fn parse_mov(
                     compiled_bytes_ref,
                     (
                         token => vec![0x89],
-                        &high_token => vec![0x06
+                        high_token => vec![0x06
                          | reg_idx << 3],
                         &low_token => address_bytes.to_vec()
                     )
@@ -182,7 +182,7 @@ pub(in crate::compiler) fn parse_mov(
                 compiled_bytes_ref,
                 (
                     token => vec![0xC7, 0x06],
-                    &high_token => address_bytes.to_vec(),
+                    high_token => address_bytes.to_vec(),
                     &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
                 )
             );
@@ -200,20 +200,20 @@ pub(in crate::compiler) fn parse_mov(
                     compiled_bytes_ref,
                     (
                         token => vec![0xA0],
-                        &low_token => address_bytes.to_vec()
+                        low_token => address_bytes.to_vec()
                     )
                 );
                 Ok(i + 3)
             }
             _ => {
-                let reg_idx = get_8bit_register(&high_token).get_as_idx();
+                let reg_idx = get_8bit_register(high_token).get_as_idx();
                 convert_and_push_instructions!(
                     compiled_bytes,
                     compiled_bytes_ref,
                     (
                         token => vec![0x8A],
-                        &high_token => vec![0x06 | reg_idx << 3],
-                        &low_token => address_bytes.to_vec()
+                        high_token => vec![0x06 | reg_idx << 3],
+                        low_token => address_bytes.to_vec()
                     )
                 );
                 Ok(i + 3)
@@ -231,20 +231,20 @@ pub(in crate::compiler) fn parse_mov(
                     compiled_bytes_ref,
                     (
                         token => vec![0xA2],
-                        &high_token => address_bytes.to_vec()
+                        high_token => address_bytes.to_vec()
                     )
                 );
                 Ok(i + 3)
             }
             _ => {
-                let reg_idx = get_8bit_register(&low_token).get_as_idx();
+                let reg_idx = get_8bit_register(low_token).get_as_idx();
                 convert_and_push_instructions!(
                     compiled_bytes,
                     compiled_bytes_ref,
                     (
                         token => vec![0x88],
-                        &high_token => vec![0x06 | reg_idx << 3],
-                        &low_token => address_bytes.to_vec()
+                        high_token => vec![0x06 | reg_idx << 3],
+                        low_token => address_bytes.to_vec()
                     )
                 );
                 Ok(i + 3)
@@ -269,8 +269,8 @@ pub(in crate::compiler) fn parse_mov(
                 compiled_bytes_ref,
                 (
                     token => vec![mov_ins, 0x06],
-                    &high_token => address_bytes.to_vec(),
-                    &low_token => vec![num]
+                    high_token => address_bytes.to_vec(),
+                    low_token => vec![num]
                 )
             );
             Ok(i + 3)
