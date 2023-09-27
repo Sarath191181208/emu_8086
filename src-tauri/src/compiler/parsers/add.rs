@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use crate::{
     compiler::{
@@ -34,7 +33,7 @@ pub(in crate::compiler) fn parse_add(
         i,
         "ADD",
         variable_ref_map,
-        variable_abs_offset_map.unwrap_or(&HashMap::new()),
+        variable_abs_offset_map.unwrap_or(&VariableAddressMap::new()),
     )? {
         AddressingMode::Registers16bit {
             high_token,
@@ -220,7 +219,7 @@ pub(in crate::compiler) fn parse_add(
             ) {
                 0x83
             } else {
-                0x81
+                0x80
             };
 
             convert_and_push_instructions!(
