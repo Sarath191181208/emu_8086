@@ -71,7 +71,7 @@ impl CPU {
             }
             0x83 => { // 8bit add
                 let data_from_mem = self.read_word_from_pointer(mem, data_address);
-                let num: u16 = self.consume_word(mem);
+                let num: u16 = self.consume_byte(mem) as u16;
                 let (result, _) = self.add_16bit_with_overflow_and_set_flags(data_from_mem, num);
                 self.write_word_from_pointer(mem, data_address, result);
             } 
@@ -184,7 +184,7 @@ mod test_add_direct_address {
             ADD var, 0x11
             ",
             3,
-            |cpu: &CPU, mem: &Memory| assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x23),
+            |cpu: &CPU, mem: &Memory| assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x45),
         );
     }
 
