@@ -1,7 +1,7 @@
 use crate::compiler::{
     compilation_error::CompilationError,
     tokenized_line::TokenizedLine,
-    tokens::{Assembly8086Tokens, Token},
+    tokens::{Assembly8086Tokens, Token, registers16bit::Registers16bit, registers8bit::Registers8bit},
     types_structs::{
         ArrayIndex, Label, VariableReferenceMap, VariableAddressMap, VariableType,
     },
@@ -21,41 +21,49 @@ pub(crate) enum AddressingMode<'a> {
     Registers16bitNumber {
         high_token: &'a Token,
         low_token: Token,
+        num: u16,
     },
     Register8bitNumber {
         high_token: &'a Token,
         low_token: &'a Token,
+        num: u8
     },
 
     Register16bitAndVariable {
         high_token: &'a Token,
         low_token: Token,
         address_bytes: [u8; 2],
+        register_type: Registers16bit,
     },
     VariableAnd16bitRegister {
         high_token: &'a Token,
         low_token: Token,
         address_bytes: [u8; 2],
+        register_type: Registers16bit,
     },
     VariableAnd16bitNumber {
         high_token: &'a Token,
         low_token: Token,
         address_bytes: [u8; 2],
+        num: u16,
     },
     Register8bitAndVariable {
         high_token: &'a Token,
         low_token: &'a Token,
         address_bytes: [u8; 2],
+        register_type: Registers8bit,
     },
     VariableAnd8bitRegister {
         high_token: &'a Token,
         low_token: &'a Token,
         address_bytes: [u8; 2],
+        register_type: Registers8bit,
     },
     VariableAnd8bitNumber {
         high_token: &'a Token,
         low_token: &'a Token,
         address_bytes: [u8; 2],
+        num: u8,
     },
 }
 
@@ -96,7 +104,7 @@ pub(crate) fn parse_line<'a>(
     )?;
 
     match &high_token.token_type {
-        Assembly8086Tokens::Register16bit(_) => {
+        Assembly8086Tokens::Register16bit(register_type) => {
             check_comma(tokenized_line, high_token, i + 2)?;
             let low_token = tokenized_line.get(
                 i + 3,
@@ -109,9 +117,10 @@ pub(crate) fn parse_line<'a>(
                 low_token.token_length,
             );
             match &changed_low_token.token_type {
-                Assembly8086Tokens::Number16bit(_) => Ok(AddressingMode::Registers16bitNumber {
+                Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::Registers16bitNumber {
                     high_token,
                     low_token: changed_low_token.clone(),
+                    num: *num
                 }),
                 Assembly8086Tokens::Register16bit(_) => Ok(AddressingMode::Registers16bit {
                     high_token,
@@ -128,6 +137,7 @@ pub(crate) fn parse_line<'a>(
                             variable_abs_address_map,
                             variable_ref_map,
                         ),
+                        register_type: register_type.clone(),
                     })
                 }
 
@@ -156,7 +166,7 @@ pub(crate) fn parse_line<'a>(
             //     low_token.token_length,
             // );
             match &low_token.token_type {
-                Assembly8086Tokens::Number16bit(_) => Ok(AddressingMode::VariableAnd16bitNumber {
+                Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::VariableAnd16bitNumber {
                     high_token,
                     low_token: low_token.clone(),
                     address_bytes: get_label_address_or_push_into_ref(
@@ -166,8 +176,9 @@ pub(crate) fn parse_line<'a>(
                         variable_abs_address_map,
                         variable_ref_map,
                     ),
+                    num: *num,
                 }),
-                Assembly8086Tokens::Register16bit(_) => {
+                Assembly8086Tokens::Register16bit(low_token_register_type) => {
                     Ok(AddressingMode::VariableAnd16bitRegister {
                         high_token,
                         low_token: low_token.clone(),
@@ -178,9 +189,10 @@ pub(crate) fn parse_line<'a>(
                             variable_abs_address_map,
                             variable_ref_map,
                         ),
+                        register_type: low_token_register_type.clone()
                     })
                 }
-                Assembly8086Tokens::Number8bit(_) => Ok(AddressingMode::VariableAnd8bitNumber {
+                Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::VariableAnd8bitNumber {
                     high_token,
                     low_token,
                     address_bytes: get_label_address_or_push_into_ref(
@@ -190,8 +202,9 @@ pub(crate) fn parse_line<'a>(
                         variable_abs_address_map,
                         variable_ref_map,
                     ),
+                    num: *num,
                 }),
-                Assembly8086Tokens::Register8bit(_) => {
+                Assembly8086Tokens::Register8bit(low_token_reg_type) => {
                     Ok(AddressingMode::VariableAnd8bitRegister {
                         high_token,
                         low_token,
@@ -202,6 +215,7 @@ pub(crate) fn parse_line<'a>(
                             variable_abs_address_map,
                             variable_ref_map,
                         ),
+                        register_type: low_token_reg_type.clone()
                     })
                 }
                 _ => Err(CompilationError::new(
@@ -216,16 +230,17 @@ pub(crate) fn parse_line<'a>(
             }
         }
 
-        Assembly8086Tokens::Register8bit(_) => {
+        Assembly8086Tokens::Register8bit(high_token_type) => {
             check_comma(tokenized_line, high_token, i + 2)?;
             let low_token = tokenized_line.get(
                 i + 3,
                 format!("Expected 8bit value after {:?} got nothing", high_token).to_string(),
             )?;
             match &low_token.token_type {
-                Assembly8086Tokens::Number8bit(_) => Ok(AddressingMode::Register8bitNumber {
+                Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::Register8bitNumber {
                     high_token,
                     low_token,
+                    num: *num,
                 }),
                 Assembly8086Tokens::Register8bit(_) => Ok(AddressingMode::Registers8bit {
                     high_token,
@@ -242,6 +257,7 @@ pub(crate) fn parse_line<'a>(
                             variable_abs_address_map,
                             variable_ref_map,
                         ),
+                        register_type: high_token_type.clone()
                     })
                 }
 

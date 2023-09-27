@@ -75,14 +75,12 @@ pub(in crate::compiler) fn parse_mov(
         AddressingMode::Registers16bitNumber {
             high_token,
             low_token,
+            num,
         } => {
             let high_reg_idx = get_idx_from_token(high_token)?;
-            let number = match low_token.token_type {
-                Assembly8086Tokens::Number16bit(num) => num,
-                _ => unreachable!(),
-            };
-            let ins = (number & 0xFF) as u8;
-            let ins2 = (number >> 8) as u8;
+
+            let ins = (num & 0xFF) as u8;
+            let ins2 = (num >> 8) as u8;
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
@@ -96,25 +94,15 @@ pub(in crate::compiler) fn parse_mov(
         AddressingMode::Register8bitNumber {
             high_token,
             low_token,
+            num,
         } => {
             let high_reg = get_8bit_register(high_token);
-            let number = match low_token.token_type {
-                Assembly8086Tokens::Number8bit(num) => num,
-                _ => unreachable!(),
-            };
-            // push_instruction(
-            //     compiled_bytes,
-            //     vec![0xB0 | high_reg.get_as_idx()],
-            //     token,
-            //     compiled_bytes_ref,
-            // );
-            // push_instruction(compiled_bytes, vec![number], low_token, compiled_bytes_ref);
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
                     token => vec![0xB0 | high_reg.get_as_idx()],
-                    low_token => vec![number]
+                    low_token => vec![num]
                 )
             );
 
@@ -124,100 +112,89 @@ pub(in crate::compiler) fn parse_mov(
             high_token,
             low_token,
             address_bytes,
-        } => match &high_token.token_type {
-            Assembly8086Tokens::Register16bit(var) => match var {
-                Registers16bit::AX => {
-                    convert_and_push_instructions!(
-                        compiled_bytes,
-                        compiled_bytes_ref,
-                        (
-                            high_token => vec![0xA1],
-                            &low_token => address_bytes.to_vec()
-                        )
-                    );
-                    Ok(i + 3)
-                }
-                _ => {
-                    let high_reg_idx = get_idx_from_token(high_token)?;
-                    convert_and_push_instructions!(
-                        compiled_bytes,
-                        compiled_bytes_ref,
-                        (
-                            token => vec![0x8B],
-                            high_token => vec![0x0E | (high_reg_idx-1) << 3],
-                            &low_token => address_bytes.to_vec()
-                        )
-                    );
-                    Ok(i + 3)
-                }
-            },
-            _ => invalid_path_error(token),
+            register_type,
+        } => match &register_type {
+            Registers16bit::AX => {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        high_token => vec![0xA1],
+                        &low_token => address_bytes.to_vec()
+                    )
+                );
+                Ok(i + 3)
+            }
+            _ => {
+                let high_reg_idx = get_idx_from_token(high_token)?;
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        token => vec![0x8B],
+                        high_token => vec![0x0E | (high_reg_idx-1) << 3],
+                        &low_token => address_bytes.to_vec()
+                    )
+                );
+                Ok(i + 3)
+            }
         },
         AddressingMode::VariableAnd16bitRegister {
             high_token,
             low_token,
             address_bytes,
-        } => match &high_token.token_type {
-            Assembly8086Tokens::Character(_) => match &low_token.token_type {
-                Assembly8086Tokens::Register16bit(reg) => match &reg {
-                    Registers16bit::AX => {
-                        convert_and_push_instructions!(
-                            compiled_bytes,
-                            compiled_bytes_ref,
-                            (
-                                high_token => vec![0xA3],
-                                &low_token => address_bytes.to_vec()
-                            )
-                        );
-                        Ok(i + 3)
-                    }
-                    _ => {
-                        let reg_idx = get_idx_from_token(&low_token)?;
-                        convert_and_push_instructions!(
-                            compiled_bytes,
-                            compiled_bytes_ref,
-                            (
-                                token => vec![0x89],
-                                &high_token => vec![0x0E
-                                 | (reg_idx-1) << 3],
-                                &low_token => address_bytes.to_vec()
-                            )
-                        );
-                        Ok(i + 3)
-                    }
-                },
-                _ => invalid_path_error(token),
-            },
-            _ => invalid_path_error(token),
+            register_type,
+        } => match &register_type {
+            Registers16bit::AX => {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        high_token => vec![0xA3],
+                        &low_token => address_bytes.to_vec()
+                    )
+                );
+                Ok(i + 3)
+            }
+            _ => {
+                let reg_idx = get_idx_from_token(&low_token)?;
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        token => vec![0x89],
+                        &high_token => vec![0x06
+                         | reg_idx << 3],
+                        &low_token => address_bytes.to_vec()
+                    )
+                );
+                Ok(i + 3)
+            }
         },
         AddressingMode::VariableAnd16bitNumber {
             high_token,
             low_token,
             address_bytes,
-        } => match &high_token.token_type {
-            Assembly8086Tokens::Character(_) => match &low_token.token_type {
-                Assembly8086Tokens::Number16bit(num) => {
-                    convert_and_push_instructions!(
-                        compiled_bytes,
-                        compiled_bytes_ref,
-                        (
-                            token => vec![0xC7, 0x06],
-                            &high_token => address_bytes.to_vec(),
-                            &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
-                        )
-                    );
-                    Ok(i + 3)
-                }
-                _ => invalid_path_error(token),
-            },
-            _ => invalid_path_error(token),
-        },
+            num,
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0xC7, 0x06],
+                    &high_token => address_bytes.to_vec(),
+                    &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
+                )
+            );
+            Ok(i + 3)
+        }
         AddressingMode::Register8bitAndVariable {
             high_token,
             low_token,
             address_bytes,
-        } => match &high_token.token_type {
-            Assembly8086Tokens::Register8bit(Registers8bit::AL) => {
+            register_type,
+        } => match &register_type {
+            Registers8bit::AL => {
                 convert_and_push_instructions!(
                     compiled_bytes,
                     compiled_bytes_ref,
@@ -228,7 +205,7 @@ pub(in crate::compiler) fn parse_mov(
                 );
                 Ok(i + 3)
             }
-            Assembly8086Tokens::Register8bit(_) => {
+            _ => {
                 let reg_idx = get_8bit_register(&high_token).get_as_idx();
                 convert_and_push_instructions!(
                     compiled_bytes,
@@ -241,14 +218,14 @@ pub(in crate::compiler) fn parse_mov(
                 );
                 Ok(i + 3)
             }
-            _ => invalid_path_error(token),
         },
         AddressingMode::VariableAnd8bitRegister {
             high_token,
             low_token,
             address_bytes,
-        } => match &low_token.token_type {
-            Assembly8086Tokens::Register8bit(Registers8bit::AL) => {
+            register_type,
+        } => match &register_type {
+            Registers8bit::AL => {
                 convert_and_push_instructions!(
                     compiled_bytes,
                     compiled_bytes_ref,
@@ -259,7 +236,7 @@ pub(in crate::compiler) fn parse_mov(
                 );
                 Ok(i + 3)
             }
-            Assembly8086Tokens::Register8bit(_) => {
+            _ => {
                 let reg_idx = get_8bit_register(&low_token).get_as_idx();
                 convert_and_push_instructions!(
                     compiled_bytes,
@@ -272,27 +249,24 @@ pub(in crate::compiler) fn parse_mov(
                 );
                 Ok(i + 3)
             }
-            _ => invalid_path_error(token),
         },
         AddressingMode::VariableAnd8bitNumber {
             high_token,
             low_token,
             address_bytes,
-        } => match &low_token.token_type {
-            Assembly8086Tokens::Number8bit(num) => {
-                convert_and_push_instructions!(
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    (
-                        token => vec![0xC6, 0x06],
-                        &high_token => address_bytes.to_vec(),
-                        &low_token => vec![*num]
-                    )
-                );
-                Ok(i + 3)
-            }
-            _ => invalid_path_error(token),
-        },
+            num,
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0xC6, 0x06],
+                    &high_token => address_bytes.to_vec(),
+                    &low_token => vec![num]
+                )
+            );
+            Ok(i + 3)
+        }
     }
 }
 
@@ -372,6 +346,91 @@ mod tests {
             assert_eq!(compiled_instructions, &[0xbc, 0x34, 0x12]);
         }
     );
+
+    test_compile!(
+        test_compile_str_mov_ax_var,
+        "
+        org 100h 
+        .data 
+        var dw 10h
+        code:
+        mov ax, var
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x10, 0x00, 0xA1, 0x02, 0x01]
+            )
+        }
+    );
+
+    test_compile!(
+        test_compile_str_mov_var_ax,
+        "
+        org 100h 
+        .data 
+        var dw 10h
+        code:
+        mov var, ax
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x10, 0x00, 0xA3, 0x02, 0x01]
+            )
+        }
+    );
+
+    test_compile!(
+        test_mov_bx_var,
+        "
+        org 100h 
+        .data 
+        var dw 10h
+        code:
+        mov bx, var
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x10, 0x00, 0x8B, 0x1E, 0x02, 0x01]
+            )
+        }
+    );
+
+    test_compile!(
+        test_mov_var_sp,
+        "
+        org 100h 
+        .data 
+        var dw 10h
+        code:
+        mov var, SP
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x10, 0x00, 0x89, 0x26, 0x02, 0x01]
+            )
+        }
+    );
+
+    test_compile!(
+        test_mov_var_bp,
+        "
+        org 100h 
+        .data 
+        var dw 10h
+        code:
+        mov var, 0x01
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x10, 0x00, 0xC7, 0x06, 0x02, 0x01, 0x01]
+            )
+        }
+    );
 }
 
 #[cfg(test)]
@@ -438,7 +497,42 @@ mod tests8bit {
         |compiled_instructions: &Vec<u8>| {
             assert_eq!(
                 compiled_instructions,
-                &[0xEB, 0x01, 0x10, 0x89, 0x36, 0x02, 0x01]
+                &[0xEB, 0x01, 0x10, 0x8A, 0x36, 0x02, 0x01]
+            );
+        }
+    );
+
+    test_compile!(
+        test_mov_var_bh,
+        "
+        org 100h 
+        .data 
+        var db 10h, 20h, 0x30
+        code: 
+        MOV var, BH
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x03, 0x10, 0x20, 0x30, 0x88, 0x3E, 0x02, 0x01]
+            );
+        }
+    );
+
+    test_compile!(
+        test_mov_var_0x08,
+        "
+        org 100h 
+        .data 
+        var db 10h
+        var2 db 0x20
+        code: 
+        MOV var, 0x08
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x10, 0x20, 0xC6, 0x06, 0x02, 0x01, 0x08]
             );
         }
     );
