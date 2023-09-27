@@ -22,18 +22,11 @@ impl CPU {
 
     pub(in crate::cpu) fn execute_sub_immediate_byte(&mut self, mem: &Memory) {
         let instruction = self.consume_instruction(mem);
-        match instruction {
-            0xC8..=0xCF => {
-                let index = (instruction - 8) & 0x07;
-                let data = self.consume_instruction(mem);
-                let (result, _) = self.sub_8bit_with_overflow_and_set_flags(
-                    self.get_8bit_register_by_index(index),
-                    data,
-                );
-                self.set_8bit_register_by_index(index, result);
-            }
-            x => panic!("ADD instruction not implemented! for {}", x),
-        }
+        let index = (instruction - 8) & 0x07;
+        let data = self.consume_instruction(mem);
+        let (result, _) =
+            self.sub_8bit_with_overflow_and_set_flags(self.get_8bit_register_by_index(index), data);
+        self.set_8bit_register_by_index(index, result);
     }
 
     fn get_data_sub(&mut self, mem: &Memory, instruction: Byte) -> Word {
@@ -118,89 +111,38 @@ mod sub_immediate_16bit_tests {
 
 #[cfg(test)]
 mod sub_immediate_8bit_tests {
-    use crate::{cpu::CPU, generate_test, memory::Memory};
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        memory::Memory,
+    };
 
-    // test al+0x12
-    generate_test!(
-        add_al_0x12,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x04, 0x12]);
-            cpu.ax = 0x0001;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0x0013);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00000000)
-        })
-    );
+    #[test]
+    fn sub_al_0x12_overflow() {
+        compile_and_test_str(
+            "
+            MOV AL, 0x01
+            SUB AL, 0x12
+            ",
+            2,
+            |cpu: &CPU, _: &Memory| {
+                assert_eq!(cpu.ax, 0x00EF);
+                assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
+            },
+        );
+    }
 
-    // test al+0xFF overflow
-    generate_test!(
-        add_al_0x12_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x04, 0xFF]);
-            cpu.ax = 0x00FE;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0x00FD);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
-        })
-    );
-
-    // add cl + 0x12
-    generate_test!(
-        add_cl_0x12,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC1, 0x12]);
-            cpu.cx = 0x0001;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.cx, 0x0013);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00000000);
-        })
-    );
-
-    // add cl + 0xFF overflow
-    generate_test!(
-        add_cl_0xff_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC1, 0xFF]);
-            cpu.cx = 0x00FE;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.cx, 0x00FD);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
-        })
-    );
-
-    // add bh + 0x12
-    generate_test!(
-        add_bh_0x12,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC7, 0x12]);
-            cpu.bx = 0xFF01;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.bx, 0x1101);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00110001);
-        })
-    );
-
-    // add bh + 0xFF overflow
-    generate_test!(
-        add_bh_0xff_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC7, 0xFF]);
-            cpu.bx = 0x00FE;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.bx, 0xFFFE);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00010100);
-        })
-    );
+    #[test]
+    fn sub_dl_0x12() {
+        compile_and_test_str(
+            "
+            MOV DL, 0x21
+            SUB DL, 0x12
+            ",
+            2,
+            |cpu: &CPU, _: &Memory| {
+                assert_eq!(cpu.dx, 0x000F);
+                assert_eq!(cpu.get_flags_as_binary(), 0b0011_0000);
+            },
+        );
+    }
 }
