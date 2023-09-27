@@ -85,6 +85,11 @@ impl CPU {
         };
         (source_idx, write_idx)
     }
+
+    pub(in crate::cpu) fn get_index_from_06_e6_pattern(&self, instruction: Byte) -> u8 {
+        (instruction-0x06) >> 3
+    }
+    
 }
 
 impl CPU {
