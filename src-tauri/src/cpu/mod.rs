@@ -220,6 +220,12 @@ impl CPU {
             // ADD AX, 0x1234 i.e immediate addressing
             0x05 => self.add_ax_in_immediate_addressing(mem),
 
+            // SUB [0x1234], AL
+            0x28 => self.execute_sub_direct_addr_8bit_register(mem),
+
+            // SUB [0x1234], AX
+            0x29 => self.execute_sub_direct_addr_16bit_register(mem),
+
             // SUB, AL, 8bit register
             0x2A => self.execute_sub_register_byte(mem),
 
@@ -241,8 +247,9 @@ impl CPU {
             0x80 => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
-                    // 0x06 => self.add_direct_address_immediate_value(mem, opcode),
-                    0xC0..=0xC7 => self.add_direct_address_8bit_val_immediate_value(mem),
+                    0x06 => self.add_direct_address_8bit_val_immediate_value(mem),
+                    0x2E => self.sub_direct_address_8bit_val_immediate_value(mem),
+                    0xC0..=0xC7 => self.execute_add_immediate_byte(mem),
                     0xE8..=0xEF => self.execute_sub_immediate_byte(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x80", opcode),
                 }
@@ -253,6 +260,7 @@ impl CPU {
                 let _opcode = self.peek_instruction(mem);
                 match _opcode {
                     0x06 => self.add_direct_address_16bit_val_immediate_value(mem, opcode),
+                    0x2E => self.sub_direct_address_16bit_val_immediate_value(mem, opcode),
                     0xC0..=0xC7 => self.execute_add_reg_immediate_word(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
                     _ => unimplemented!(
