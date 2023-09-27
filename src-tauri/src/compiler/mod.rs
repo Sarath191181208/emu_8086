@@ -25,14 +25,8 @@ use self::{
         is_org_defined,
     },
     parsers::{
-        add::parse_add,
-        dec::parse_dec,
-        inc::parse_inc,
-        jmp::parse_jmp,
-        mov::parse_mov,
-        mul::parse_mul,
-        var::parse_var_declaration, 
-        // sub::parse_sub,
+        add::parse_add, dec::parse_dec, inc::parse_inc, jmp::parse_jmp, mov::parse_mov,
+        mul::parse_mul, sub::parse_sub, var::parse_var_declaration,
     },
     tokenized_line::TokenizedLine,
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
@@ -165,8 +159,6 @@ fn compile(
                 Ok(compiled_line)
             }
 
-            Instructions::Sub => unimplemented!("SUB is not implemented yet!"),
-
             Instructions::Add => {
                 i = parse_add(
                     &tokenized_line,
@@ -179,7 +171,7 @@ fn compile(
 
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "ADD", 2)?;
                 Ok(compiled_line)
-            }, 
+            }
 
             Instructions::Inc => {
                 i = parse_inc(
@@ -204,16 +196,20 @@ fn compile(
                 return Ok(compiled_line);
             }
 
-            // Instructions::Sub => {
-            //     i = parse_sub(
-            //         &tokenized_line,
-            //         i,
-            //         &mut compiled_bytes,
-            //         &mut compiled_bytes_ref,
-            //     )?;
+            Instructions::Sub => {
+                i = parse_sub(
+                    &tokenized_line,
+                    i,
+                    &mut compiled_bytes,
+                    &mut compiled_bytes_ref,
+                    &mut label_ref_map,
+                    variable_address_map,
+                )?;
 
-            //     has_consumed_all_instructions(&lexed_str_without_spaces, i, "SUB", 2)?;
-            // }
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "ADD", 2)?;
+                Ok(compiled_line)
+            }
+
             Instructions::Mul => {
                 i = parse_mul(
                     &tokenized_line,
