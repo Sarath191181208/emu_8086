@@ -38,17 +38,17 @@ impl CPU {
 
     fn get_data_add(&mut self, mem: &Memory, instruction: Byte) -> Word {
         match instruction {
-            0x81 => {
-                self.consume_word(mem)
-            }
-            0x83 => {
-                self.consume_byte(mem) as Word
-            }
+            0x81 => self.consume_word(mem),
+            0x83 => self.consume_byte(mem) as Word,
             x => panic!("ADD instruction not implemented! for {}", x),
         }
     }
 
-    pub(in crate::cpu) fn execute_add_reg_immediate_word(&mut self, mem: &Memory, instruction: Byte) {
+    pub(in crate::cpu) fn execute_add_reg_immediate_word(
+        &mut self,
+        mem: &Memory,
+        instruction: Byte,
+    ) {
         let index = self.consume_instruction(mem) & 0x07;
         let data = self.get_data_add(mem, instruction);
         let (result, _) = self

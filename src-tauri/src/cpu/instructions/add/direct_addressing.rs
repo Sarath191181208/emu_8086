@@ -59,27 +59,33 @@ impl CPU {
         self.write_byte_from_pointer(mem, data_addr, result);
     }
 
-    pub(in crate::cpu) fn add_direct_address_16bit_val_immediate_value(&mut self, mem: &mut Memory, ins: Byte){
+    pub(in crate::cpu) fn add_direct_address_16bit_val_immediate_value(
+        &mut self,
+        mem: &mut Memory,
+        ins: Byte,
+    ) {
         let _ = self.consume_instruction(mem); // 0x06
         let data_address = self.consume_word(mem);
-        match ins{
-            0x81 => { // 16 bit add 
+        match ins {
+            0x81 => {
+                // 16 bit add
                 let data_from_mem = self.read_word_from_pointer(mem, data_address);
                 let num: u16 = self.consume_word(mem);
                 let (result, _) = self.add_16bit_with_overflow_and_set_flags(data_from_mem, num);
                 self.write_word_from_pointer(mem, data_address, result);
             }
-            0x83 => { // 8bit add
+            0x83 => {
+                // 8bit add
                 let data_from_mem = self.read_word_from_pointer(mem, data_address);
                 let num: u16 = self.consume_byte(mem) as u16;
                 let (result, _) = self.add_16bit_with_overflow_and_set_flags(data_from_mem, num);
                 self.write_word_from_pointer(mem, data_address, result);
-            } 
-            _ => unimplemented!("ADD instruction not implemented! for {}", ins)
+            }
+            _ => unimplemented!("ADD instruction not implemented! for {}", ins),
         }
     }
 
-    pub(in crate::cpu) fn add_direct_address_8bit_val_immediate_value(&mut self, mem: &mut Memory){
+    pub(in crate::cpu) fn add_direct_address_8bit_val_immediate_value(&mut self, mem: &mut Memory) {
         let _ = self.consume_instruction(mem); // 0x06
         let data_addr = self.consume_word(mem);
         let data_from_mem = self.read_byte_from_pointer(mem, data_addr);

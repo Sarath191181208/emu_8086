@@ -1,4 +1,4 @@
-use strum_macros::{EnumString, Display};
+use strum_macros::{Display, EnumString};
 
 #[derive(Debug, Clone, PartialEq, Default, Eq, EnumString, Display)]
 pub(crate) enum AssemblerDirectives {

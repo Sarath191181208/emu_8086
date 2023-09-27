@@ -118,7 +118,7 @@ impl CPU {
         self.code_segment
     }
 
-    pub fn set_org_defined(&mut self){
+    pub fn set_org_defined(&mut self) {
         self.instruction_pointer = 0x100;
         self.code_segment = 0x700;
         self.data_segment = 0x700;
@@ -163,15 +163,15 @@ impl CPU {
         mem.read_word(self.data_segment, pointer)
     }
 
-    fn read_byte_from_pointer(&self, mem: &Memory, pointer: Word) -> Byte{
+    fn read_byte_from_pointer(&self, mem: &Memory, pointer: Word) -> Byte {
         mem.read_byte(self.data_segment, pointer)
     }
 
-    fn write_byte_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Byte){
+    fn write_byte_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Byte) {
         mem.write_byte(self.data_segment, pointer, data);
     }
 
-    fn write_word_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Word){
+    fn write_word_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Word) {
         mem.write_word(self.data_segment, pointer, data);
     }
 
@@ -197,7 +197,6 @@ impl CPU {
 
     fn execute_nop(&mut self, mem: &mut Memory) {
         let _ = self.consume_instruction(mem);
-
     }
 
     pub fn execute(&mut self, mem: &mut Memory) {
@@ -274,7 +273,7 @@ impl CPU {
             0x8A => self.execute_mov_register_byte(mem),
             0x8B => self.execute_mov_register_word(mem),
 
-            // No op 
+            // No op
             0x90 => self.execute_nop(mem),
 
             // MOV AL, [0x102]

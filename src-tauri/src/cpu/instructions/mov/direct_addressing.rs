@@ -43,10 +43,13 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ cpu::{CPU, instructions::test_macro::compile_and_test_str}, memory::Memory};
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        memory::Memory,
+    };
 
     #[test]
-    fn mov_ax_var(){
+    fn mov_ax_var() {
         compile_and_test_str(
             "
             org 100h

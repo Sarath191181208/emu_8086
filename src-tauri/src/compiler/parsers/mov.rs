@@ -3,21 +3,17 @@ use std::{collections::HashMap, vec};
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        tokens::{
-            registers16bit::Registers16bit, registers8bit::Registers8bit,
-        },
+        parsers::utils::{get_token_as_label, is_variable_defined_as_16bit},
+        tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
         types_structs::{VariableAddressMap, VariableReferenceMap},
-        CompiledBytesReference, TokenizedLine, parsers::utils::{is_variable_defined_as_16bit, get_token_as_label},
+        CompiledBytesReference, TokenizedLine,
     },
     convert_and_push_instructions,
 };
 
 use super::{
     pattern_extractors::{parse_line, AddressingMode},
-    utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token,
-        push_instruction,
-    },
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
 pub(in crate::compiler) fn parse_mov(

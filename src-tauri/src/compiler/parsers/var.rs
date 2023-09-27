@@ -4,7 +4,7 @@ use crate::{
         parsers::utils::push_instruction,
         tokenized_line::TokenizedLine,
         tokens::{data::DefineData, Assembly8086Tokens},
-        types_structs::{CompiledBytesReference, VariableType, VariableAddressDefinitionMap},
+        types_structs::{CompiledBytesReference, VariableAddressDefinitionMap, VariableType},
     },
     convert_and_push_instructions,
 };
@@ -189,9 +189,7 @@ mod test_variable_declaration {
         "
         var dw 0x1234, 0x1234
         ",
-        |instructions: &Vec<u8>| {
-            assert_eq!(instructions, &vec![0x34, 0x12, 0x34, 0x12])
-        }
+        |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0x34, 0x12, 0x34, 0x12]) }
     );
 
     test_compile!(
@@ -200,9 +198,7 @@ mod test_variable_declaration {
         var dw 0x1234
         var2 dw 0x1234
         ",
-        |instructions: &Vec<u8>| {
-            assert_eq!(instructions, &vec![0x34, 0x12, 0x34, 0x12])
-        }
+        |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0x34, 0x12, 0x34, 0x12]) }
     );
 
     test_compile!(
@@ -211,8 +207,11 @@ mod test_variable_declaration {
         var dw 0x1234, 0x1234
         var2 dw 0x1234, 0x1234
         ",
-        | instructions: &Vec<u8> | {
-            assert_eq!(instructions, &vec![0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12])
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &vec![0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12]
+            )
         }
     );
 }

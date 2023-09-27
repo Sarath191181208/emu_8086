@@ -1,10 +1,10 @@
 use unicase::UniCase;
 
 pub mod assembler_directives;
+pub mod data;
 pub mod instructions;
 pub mod registers16bit;
 pub mod registers8bit;
-pub mod data;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Assembly8086Tokens {
@@ -51,7 +51,7 @@ pub(crate) enum Assembly8086Tokens {
     Comma,
     Colon,
 
-    // Define data 
+    // Define data
     Data(data::DefineData),
 
     // Error

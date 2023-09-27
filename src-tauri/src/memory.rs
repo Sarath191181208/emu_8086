@@ -56,9 +56,10 @@ impl Memory {
                             .collect::<Vec<(usize, Byte)>>()
                     })
                     .collect::<Vec<(usize, Byte)>>()
-
             }
-            None => { vec![] }
+            None => {
+                vec![]
+            }
         }
     }
 

@@ -2,12 +2,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 pub mod compiler;
+pub mod consts;
 pub mod cpu;
 pub mod memory;
-pub mod consts;
 pub mod utils;
 
-use compiler::{compilation_error::CompilationError, compile_lines, types_structs::CompiledBytesReference};
+use compiler::{
+    compilation_error::CompilationError, compile_lines, types_structs::CompiledBytesReference,
+};
 use consts::Byte;
 use cpu::CPU;
 use memory::Memory;

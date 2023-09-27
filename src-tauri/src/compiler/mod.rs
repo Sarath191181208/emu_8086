@@ -307,7 +307,7 @@ fn calc_offset(
 ) -> (u16, IsLabelBeforeRef) {
     let mut offset = 0;
     if label_addr < label_ref {
-        for bytes in compiled_bytes.iter().take(label_ref).skip(label_addr){
+        for bytes in compiled_bytes.iter().take(label_ref).skip(label_addr) {
             offset += bytes.len();
         }
     } else {

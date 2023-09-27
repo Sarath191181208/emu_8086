@@ -76,6 +76,7 @@ impl CompiledLine {
         self.compiled_bytes_ref.extend(other.compiled_bytes_ref);
         self.label_idx_map.extend(other.label_idx_map);
         self.label_reference_map.extend(other.label_reference_map);
-        self.label_abs_address_map.extend(other.label_abs_address_map);
+        self.label_abs_address_map
+            .extend(other.label_abs_address_map);
     }
 }

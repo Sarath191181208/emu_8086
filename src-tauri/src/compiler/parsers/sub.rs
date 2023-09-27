@@ -267,45 +267,72 @@ mod tests16bit {
     });
 
     // sub cx, var
-    test_compile!(sub_cx_var, "
+    test_compile!(
+        sub_cx_var,
+        "
     org 100h 
     .data 
     var dw 0x1234
     code: 
-    SUB CX, var", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0xEB, 0x02, 0x34, 0x12, 0x2B, 0x0E, 0x02, 0x01]);
-    });
+    SUB CX, var",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0xEB, 0x02, 0x34, 0x12, 0x2B, 0x0E, 0x02, 0x01]
+            );
+        }
+    );
 
-    // sub var, sp 
-    test_compile!(sub_var_sp, "
+    // sub var, sp
+    test_compile!(
+        sub_var_sp,
+        "
     org 100h 
     .data 
     var dw 0x1234
     code: 
-    SUB var, SP", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0xEB, 0x02, 0x34, 0x12, 0x29, 0x26, 0x02, 0x01]);
-    });
+    SUB var, SP",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0xEB, 0x02, 0x34, 0x12, 0x29, 0x26, 0x02, 0x01]
+            );
+        }
+    );
 
     // sub var, 0x12
-    test_compile!(sub_var_0x12, "
+    test_compile!(
+        sub_var_0x12,
+        "
     org 100h
     .data
     var dw 0x1234
     code:
-    SUB var, 0x12", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0xEB, 0x02, 0x34, 0x12, 0x83, 0x2E, 0x02, 0x01, 0x12]);
-    });
+    SUB var, 0x12",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0xEB, 0x02, 0x34, 0x12, 0x83, 0x2E, 0x02, 0x01, 0x12]
+            );
+        }
+    );
 
     // sub var, 0x1234
-    test_compile!(sub_var_0x1234, "
+    test_compile!(
+        sub_var_0x1234,
+        "
     org 100h
     .data 
     var dw 0x1234 
     code: 
-    SUB var, 0x1234", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0xEB, 0x02, 0x34, 0x12, 0x81, 0x2E, 0x02, 0x01, 0x34, 0x12]);
-    });
-
+    SUB var, 0x1234",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0xEB, 0x02, 0x34, 0x12, 0x81, 0x2E, 0x02, 0x01, 0x34, 0x12]
+            );
+        }
+    );
 }
 
 #[cfg(test)]
@@ -337,33 +364,47 @@ mod tests8bit {
     });
 
     // sub bl, var
-    test_compile!(sub_bl_var, "
+    test_compile!(
+        sub_bl_var,
+        "
     org 100h
     .data 
     var db 0x12
     code:
-    SUB bL, var", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0xEB, 0x01, 0x12, 0x2A, 0x1E, 0x02, 0x01]);
-    });
+    SUB bL, var",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0xEB, 0x01, 0x12, 0x2A, 0x1E, 0x02, 0x01]);
+        }
+    );
 
     // sub var, bl
-    test_compile!(sub_var_bl, "
+    test_compile!(
+        sub_var_bl,
+        "
     org 100h
     .data
     var db 0x12
     code:
-    SUB var, bL", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0xEB, 0x01, 0x12, 0x28, 0x1E, 0x02, 0x01]);
-    });
+    SUB var, bL",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0xEB, 0x01, 0x12, 0x28, 0x1E, 0x02, 0x01]);
+        }
+    );
 
     // sub var, 0x12
-    test_compile!(sub_var_0x12, "
+    test_compile!(
+        sub_var_0x12,
+        "
     org 100h
     .data
     var db 0x12
     code:
-    SUB var, 0x12", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0xEB, 0x01, 0x12, 0x80, 0x2E, 0x02, 0x01, 0x12]);
-    });
-
+    SUB var, 0x12",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0xEB, 0x01, 0x12, 0x80, 0x2E, 0x02, 0x01, 0x12]
+            );
+        }
+    );
 }

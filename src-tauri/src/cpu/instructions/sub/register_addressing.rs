@@ -2,7 +2,7 @@ use crate::{consts::Byte, cpu::CPU};
 
 // Register Addressing
 impl CPU {
-    pub(in crate) fn sub_8bit_register_addressing(&mut self, instruction: Byte) {
+    pub(crate) fn sub_8bit_register_addressing(&mut self, instruction: Byte) {
         let (source_index, write_index) = self.get_index_from_c0_ff_pattern(instruction);
         let reg = self.get_8bit_register_by_index(source_index % 8);
         let write_reg = self.get_8bit_register_by_index(write_index);
@@ -10,15 +10,13 @@ impl CPU {
         self.set_8bit_register_by_index(write_index, result);
     }
 
-    pub(in super) fn sub_16bit_register_addressing(&mut self, instruction: Byte) {
+    pub(super) fn sub_16bit_register_addressing(&mut self, instruction: Byte) {
         let (source_index, write_index) = self.get_index_from_c0_ff_pattern(instruction);
         let reg = self.get_16bit_register_by_index(source_index % 8);
         let write_reg = self.get_16bit_register_by_index(write_index);
         let (result, _) = self.sub_16bit_with_overflow_and_set_flags(write_reg, reg);
         self.set_16bit_register_by_index(write_index, result);
     }
-
-
 }
 
 #[cfg(test)]

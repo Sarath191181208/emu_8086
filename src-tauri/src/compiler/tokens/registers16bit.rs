@@ -1,4 +1,4 @@
-use strum_macros::{EnumString, Display};
+use strum_macros::{Display, EnumString};
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumString, Display)]
 pub(crate) enum Registers16bit {

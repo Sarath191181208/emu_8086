@@ -1,4 +1,3 @@
-
 use crate::{
     compiler::{
         compilation_error::CompilationError,
@@ -324,7 +323,6 @@ mod tests16bit {
             );
         }
     );
-
 }
 
 #[cfg(test)]

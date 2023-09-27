@@ -1,4 +1,4 @@
-use crate::{ cpu::CPU, memory::Memory};
+use crate::{cpu::CPU, memory::Memory};
 
 pub mod direct_addressing;
 pub mod immediate_addressing;
@@ -38,5 +38,4 @@ impl CPU {
             x => unimplemented!("ADD instruction not implemented! for {}", x),
         }
     }
-
 }

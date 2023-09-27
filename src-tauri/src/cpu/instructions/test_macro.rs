@@ -44,7 +44,7 @@ pub fn compile_and_test_str(code: &str, cycles: usize, expected_fn: fn(&CPU, &Me
     let mut cpu = CPU::new();
     let mut mem = Memory::new();
     cpu.reset(&mut mem);
-    
+
     let (compiled_bytes, _, is_org_defined) = compile_lines(code, false).unwrap();
     if is_org_defined {
         cpu.set_org_defined()
