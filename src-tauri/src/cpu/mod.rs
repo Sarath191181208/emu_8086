@@ -121,11 +121,10 @@ impl CPU {
     pub fn set_org_defined(&mut self){
         self.instruction_pointer = 0x100;
         self.code_segment = 0x700;
+        self.data_segment = 0x700;
+        self.stack_segment = 0x700;
+        self.extra_segment = 0x700;
     }
-
-    // fn set_instruciton_pointer(&mut self, value: Word) {
-    //     self.instruction_pointer = value;
-    // }
 
     pub fn write_instructions(&mut self, mem: &mut Memory, instructions: &[Byte]) {
         mem.write_instructions(self.code_segment, self.instruction_pointer, instructions);
@@ -160,6 +159,22 @@ impl CPU {
         mem.reset();
     }
 
+    fn read_word_from_pointer(&self, mem: &Memory, pointer: Word) -> Word {
+        mem.read_word(self.data_segment, pointer)
+    }
+
+    fn read_byte_from_pointer(&self, mem: &Memory, pointer: Word) -> Byte{
+        mem.read_byte(self.data_segment, pointer)
+    }
+
+    fn write_byte_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Byte){
+        mem.write_byte(self.data_segment, pointer, data);
+    }
+
+    fn write_word_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Word){
+        mem.write_word(self.data_segment, pointer, data);
+    }
+
     fn consume_instruction(&mut self, mem: &Memory) -> Byte {
         let opcode = mem.read_byte(self.code_segment, self.instruction_pointer);
         self.instruction_pointer += 1;
@@ -184,12 +199,16 @@ impl CPU {
     pub fn execute(&mut self, mem: &mut Memory) {
         let opcode = self.consume_instruction(mem);
         match opcode {
-            0x00 => self.execute_nop(mem),
-            // ADD 8bit register, 8bit register
-            0x02 => self.execute_add_register_byte(mem),
+            0x00 => self.execute_add_address_and_8bit_register(mem),
 
-            // ADD 16bit register addressing
-            0x03 => self.execute_add_register_word(mem),
+            // ADD [0x1234], AX
+            0x01 => self.execute_add_address_and_16bit_register(mem),
+
+            // ADD 8bit register, 8bit register
+            0x02 => self.execute_add_register(mem),
+
+            // ADD AX, _ 16bit register, direct addressing
+            0x03 => self.execute_add(mem),
 
             // ADD AL, 0x12 i.e immediate addressing
             0x04 => self.add_al_in_immediate_addressing(mem),
@@ -228,7 +247,8 @@ impl CPU {
             0x81 | 0x83 => {
                 let _opcode = self.peek_instruction(mem);
                 match _opcode {
-                    0xC0..=0xC7 => self.execute_add_immediate_word(mem, opcode),
+                    0x06 => self.add_direct_address_immediate_value(mem, opcode),
+                    0xC0..=0xC7 => self.execute_add_reg_immediate_word(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
                     _ => unimplemented!(
                         "Unimplemented opcode: {:X} for operation 0x81 | 0x83",
@@ -240,6 +260,9 @@ impl CPU {
             // MOV 16bit register, 16bit register
             0x8A => self.execute_mov_register_byte(mem),
             0x8B => self.execute_mov_register_word(mem),
+
+            // No op 
+            0x90 => self.execute_nop(mem),
 
             // MOV AL, [0x102]
             0xA0 => self.execute_mov_al_direct_addressing(mem),
