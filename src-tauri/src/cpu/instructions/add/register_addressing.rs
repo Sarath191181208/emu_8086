@@ -2,7 +2,7 @@ use crate::{consts::Byte, cpu::CPU, memory::Memory};
 
 // Register Addressing
 impl CPU {
-    fn add_8bit_register_addressing(&mut self, instruction: Byte) {
+    pub(in super) fn add_8bit_register_addressing(&mut self, instruction: Byte) {
         let (source_index, write_index) = self.get_index_from_c0_ff_pattern(instruction);
         let reg = self.get_8bit_register_by_index(source_index % 8);
         let write_reg = self.get_8bit_register_by_index(write_index);
@@ -10,17 +10,7 @@ impl CPU {
         self.set_8bit_register_by_index(write_index, result);
     }
 
-    pub(in crate::cpu) fn execute_add_register_byte(&mut self, mem: &Memory) {
-        let instruction = self.consume_instruction(mem);
-        match instruction {
-            0xC0..=0xFF => {
-                self.add_8bit_register_addressing(instruction);
-            }
-            x => panic!("ADD instruction not implemented! for {}", x),
-        }
-    }
-
-    fn add_16bit_register_addressing(&mut self, instruction: Byte) {
+    pub(in crate::cpu::instructions::add) fn add_16bit_register_addressing(&mut self, instruction: Byte) {
         let (source_index, write_index) = self.get_index_from_c0_ff_pattern(instruction);
         let reg = self.get_16bit_register_by_index(source_index % 8);
         let write_reg = self.get_16bit_register_by_index(write_index);
@@ -28,15 +18,6 @@ impl CPU {
         self.set_16bit_register_by_index(write_index, result);
     }
 
-    pub(in crate::cpu) fn execute_add_register_word(&mut self, mem: &Memory) {
-        let instruction = self.consume_instruction(mem);
-        match instruction {
-            0xC1..=0xFF => {
-                self.add_16bit_register_addressing(instruction);
-            }
-            x => panic!("ADD instruction not implemented! for {}", x),
-        }
-    }
 }
 
 #[cfg(test)]

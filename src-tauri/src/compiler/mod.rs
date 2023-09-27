@@ -25,13 +25,13 @@ use self::{
         is_org_defined,
     },
     parsers::{
-        // add::parse_add,
+        add::parse_add,
         dec::parse_dec,
         inc::parse_inc,
         jmp::parse_jmp,
         mov::parse_mov,
         mul::parse_mul,
-        var::parse_var_declaration,
+        var::parse_var_declaration, 
         // sub::parse_sub,
     },
     tokenized_line::TokenizedLine,
@@ -165,19 +165,22 @@ fn compile(
                 Ok(compiled_line)
             }
 
-            Instructions::Add => unimplemented!("ADD is not implemented yet!"),
             Instructions::Sub => unimplemented!("SUB is not implemented yet!"),
 
-            // Instructions::Add => {
-            //     i = parse_add(
-            //         &tokenized_line,
-            //         i,
-            //         &mut compiled_bytes,
-            //         &mut compiled_bytes_ref,
-            //     )?;
+            Instructions::Add => {
+                i = parse_add(
+                    &tokenized_line,
+                    i,
+                    &mut compiled_bytes,
+                    &mut compiled_bytes_ref,
+                    &mut label_ref_map,
+                    variable_address_map,
+                )?;
 
-            //     has_consumed_all_instructions(&lexed_str_without_spaces, i, "ADD", 2)?;
-            // }
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "ADD", 2)?;
+                Ok(compiled_line)
+            }, 
+
             Instructions::Inc => {
                 i = parse_inc(
                     &tokenized_line,
@@ -404,10 +407,10 @@ fn mark_variables(
 ) -> Result<(), CompilationError> {
     // calc offset addr for each var
     let mut var_addr_map = VariableAddressMap::new();
-    for (var_label, (_, label_definition_line_number)) in var_addr_def_map {
+    for (var_label, (var_type, label_definition_line_number)) in var_addr_def_map {
         let (offset, _) = calc_offset(&compiled_bytes, 0, *label_definition_line_number);
         let org_offset = if is_org_defined { 0x100 } else { 0x00 };
-        var_addr_map.insert(var_label.clone(), offset + org_offset);
+        var_addr_map.insert(var_label.clone(), (var_type.clone(), offset + org_offset));
     }
 
     // mark the variables
@@ -576,8 +579,7 @@ pub fn compile_lines(
 
     // check if all the variables are defined
     let mut var_errors = false;
-    let mut changes = Vec::<(usize, (Label, VariableType, LineNumber, &Vec<Token>))>::new();
-    for (i, (var, label_type, line_number, line)) in var_ref.iter().enumerate() {
+    for (i, (var, used_as_type, line_number, line)) in var_ref.iter().enumerate() {
         let idx = line
             .iter()
             .position(|_token| _token.token_type == Assembly8086Tokens::Character(var.clone()))
@@ -590,8 +592,8 @@ pub fn compile_lines(
                 line[idx].token_length,
                 &format!("The variable \"{}\" is Undefined, Please define it.", var),
             ));
-        } else if *label_type == VariableType::Byte
-            && var_addr_map.get(var).unwrap().0 == VariableType::Word
+        } else if *used_as_type == VariableType::Word
+            && var_addr_map.get(var).unwrap().0 == VariableType::Byte
         {
             var_errors = true;
             compilation_errors.push(CompilationError::new(
@@ -602,18 +604,10 @@ pub fn compile_lines(
                     "The variable \"{}\" is defined as {:?}, but used as {:?}.",
                     var,
                     var_addr_map.get(var).unwrap().0,
-                    label_type
+                    used_as_type
                 ),
             ));
-        } else if *label_type == VariableType::Word
-            && var_addr_map.get(var).unwrap().0 == VariableType::Byte
-        {
-            changes.push((i, (var.clone(), VariableType::Byte, *line_number, line)));
         }
-    }
-
-    for (i, (var, label_type, line_number, line)) in changes {
-        var_ref[i] = (var, label_type, line_number, line);
     }
 
     if label_errors || var_errors {

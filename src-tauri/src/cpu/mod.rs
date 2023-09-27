@@ -187,6 +187,10 @@ impl CPU {
         ((high_byte as Word) << 8) | (low_byte as Word)
     }
 
+    fn consume_byte(&mut self, mem: &Memory) -> Byte {
+        self.consume_instruction(mem)
+    }
+
     fn peek_instruction(&self, mem: &Memory) -> Byte {
         mem.read_byte(self.code_segment, self.instruction_pointer)
     }
@@ -237,7 +241,8 @@ impl CPU {
             0x80 => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
-                    0xC0..=0xC7 => self.execute_add_immediate_byte(mem),
+                    // 0x06 => self.add_direct_address_immediate_value(mem, opcode),
+                    0xC0..=0xC7 => self.add_direct_address_8bit_val_immediate_value(mem),
                     0xE8..=0xEF => self.execute_sub_immediate_byte(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x80", opcode),
                 }
@@ -247,7 +252,7 @@ impl CPU {
             0x81 | 0x83 => {
                 let _opcode = self.peek_instruction(mem);
                 match _opcode {
-                    0x06 => self.add_direct_address_immediate_value(mem, opcode),
+                    0x06 => self.add_direct_address_16bit_val_immediate_value(mem, opcode),
                     0xC0..=0xC7 => self.execute_add_reg_immediate_word(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
                     _ => unimplemented!(
