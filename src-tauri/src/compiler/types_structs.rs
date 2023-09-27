@@ -4,7 +4,7 @@ use super::Token;
 use serde::Serialize;
 use unicase::UniCase;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VariableType {
     Byte,
     Word,
@@ -20,7 +20,7 @@ pub type IsLabelBeforeRef = bool; // i.e is label before reference
 pub type LabelAddressMap = HashMap<Label, LineNumber>;
 
 pub type VariableReferenceMap = HashMap<Label, (VariableType, ArrayIndex)>;
-pub type VariableAddressMap = HashMap<Label, NumberOfBytes>;
+pub type VariableAddressMap = HashMap<Label, (VariableType, NumberOfBytes)>;
 pub type VariableAddressDefinitionMap = HashMap<Label, (VariableType, LineNumber)>;
 
 // This struct is used to store the compiled bytes of the coverted line
