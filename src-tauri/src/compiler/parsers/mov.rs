@@ -7,7 +7,7 @@ use crate::{
             registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
         },
         types_structs::{VariableAddressMap, VariableReferenceMap},
-        CompiledBytesReference, TokenizedLine,
+        CompiledBytesReference, TokenizedLine, parsers::utils::{is_variable_defined_as_16bit, get_token_as_label},
     },
     convert_and_push_instructions,
 };
@@ -256,11 +256,19 @@ pub(in crate::compiler) fn parse_mov(
             address_bytes,
             num,
         } => {
+            let mov_ins = if is_variable_defined_as_16bit(
+                &variable_abs_offset_map,
+                get_token_as_label(high_token),
+            ) {
+                0xC7
+            } else {
+                0xC6
+            };
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => vec![0xC6, 0x06],
+                    token => vec![mov_ins, 0x06],
                     &high_token => address_bytes.to_vec(),
                     &low_token => vec![num]
                 )
@@ -416,7 +424,7 @@ mod tests {
     );
 
     test_compile!(
-        test_mov_var_bp,
+        test_mov_var_0x01,
         "
         org 100h 
         .data 

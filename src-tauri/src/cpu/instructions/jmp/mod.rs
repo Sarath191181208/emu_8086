@@ -51,7 +51,7 @@ mod test_8bit_jmp {
             cpu.write_instructions(mem, &compiled_bytes);
         }),
         (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.instruction_pointer, 0x0101);
+            assert_eq!(cpu.instruction_pointer, 0x0001);
             assert_eq!(cpu.ax, 0x0003);
         }),
         5
@@ -74,7 +74,7 @@ mod test_8bit_jmp {
             cpu.write_instructions(mem, &compiled_bytes);
         }),
         (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.instruction_pointer, 0x0105);
+            assert_eq!(cpu.instruction_pointer, 0x0005);
             assert_eq!(cpu.ax, 0x0002);
         }),
         3
@@ -112,7 +112,7 @@ mod test_16_bit_jmp {
             cpu.write_instructions(mem, &compiled_bytes);
         }),
         (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.instruction_pointer, 0x0102);
+            assert_eq!(cpu.instruction_pointer, 0x0002);
             assert_eq!(cpu.ax, 0x0081);
         }),
         0x82
@@ -139,7 +139,7 @@ mod test_16_bit_jmp {
             cpu.write_instructions(mem, &compiled_bytes);
         }),
         (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.instruction_pointer, 0x0185);
+            assert_eq!(cpu.instruction_pointer, 0x085);
             assert_eq!(cpu.ax, 0x0002);
         }),
         0x3

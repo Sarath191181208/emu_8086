@@ -26,7 +26,7 @@ mod tests_directives {
                 mov ax, bx
         ",
         |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x05, 0x34, 0x12]);
+        assert_eq!(instructions, &[0xEB, 0x07, 0x8B, 0xC3, 0x8B, 0xCA, 0x40, 0xFE, 0xC0, 0x8B, 0xC3]);
     }
     );
 }

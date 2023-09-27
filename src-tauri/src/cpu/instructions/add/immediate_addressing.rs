@@ -149,7 +149,7 @@ mod add_immediate_16bit_tests {
         (|cpu: &mut CPU, mem: &mut Memory| {
             cpu.instruction_pointer = 0xFFFB;
             cpu.write_instructions(mem, &[0x83, 0xC3, 0xEE]);
-            cpu.bx = 0x0001;
+            cpu.bx = 0xFF01;
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFEF);

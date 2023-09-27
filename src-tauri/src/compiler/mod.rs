@@ -265,9 +265,6 @@ fn unwrap_and_find_offset(
     match compiled_line_label_ref {
         None => None,
         Some(line) => {
-            if !line.is_org_defined {
-                return None;
-            }
             let CompiledLineLabelRef {
                 compiled_bytes,
                 line_num,
