@@ -4,17 +4,9 @@ use crate::compiler::{
     tokens::{
         registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
     },
-    CompiledBytesReference, types_structs::Label,
+    types_structs::{Label, VariableAddressMap, VariableType},
+    CompiledBytesReference,
 };
-
-#[macro_export]
-macro_rules! convert_and_push_instructions {
-    ($compiled_bytes:ident, $compiled_bytes_ref:ident, ($($token:expr => $bytes:expr),+)) => {
-        $(
-            push_instruction($compiled_bytes, $bytes, $token, $compiled_bytes_ref);
-        )+
-    };
-}
 
 pub fn get_as_0xc0_0xff_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
     let ins = (0xC0) | (high_reg_idx / 2) << 4;
@@ -22,7 +14,7 @@ pub fn get_as_0xc0_0xff_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
     ins | ins2
 }
 
-pub(crate) fn get_idx_from_reg(
+pub(super) fn get_idx_from_reg(
     token: &Token,
     reg: &Registers16bit,
 ) -> Result<u8, CompilationError> {
@@ -37,7 +29,7 @@ pub(crate) fn get_idx_from_reg(
     }
 }
 
-pub(crate) fn push_instruction(
+pub(super) fn push_instruction(
     compiled_bytes: &mut Vec<u8>,
     ins: Vec<u8>,
     token: &Token,
@@ -53,7 +45,16 @@ pub(crate) fn push_instruction(
     ));
 }
 
-pub(crate) fn if_num_8bit_to_16bit(token: Assembly8086Tokens) -> Assembly8086Tokens {
+#[macro_export]
+macro_rules! convert_and_push_instructions {
+    ($compiled_bytes:ident, $compiled_bytes_ref:ident, ($($token:expr => $bytes:expr),+)) => {
+        $(
+            push_instruction($compiled_bytes, $bytes, $token, $compiled_bytes_ref);
+        )+
+    };
+}
+
+pub(super) fn if_num_8bit_to_16bit(token: Assembly8086Tokens) -> Assembly8086Tokens {
     match token {
         Assembly8086Tokens::Number8bit(num) => {
             let num = num as u16;
@@ -63,26 +64,26 @@ pub(crate) fn if_num_8bit_to_16bit(token: Assembly8086Tokens) -> Assembly8086Tok
     }
 }
 
-pub(crate) fn get_16bit_register(token: &Token) -> &Registers16bit {
+pub(super) fn get_16bit_register(token: &Token) -> &Registers16bit {
     match &token.token_type {
         Assembly8086Tokens::Register16bit(reg) => reg,
         _ => unreachable!(),
     }
 }
 
-pub(crate) fn get_8bit_register(token: &Token) -> &Registers8bit {
+pub(super) fn get_8bit_register(token: &Token) -> &Registers8bit {
     match &token.token_type {
         Assembly8086Tokens::Register8bit(reg) => reg,
         _ => unreachable!(),
     }
 }
 
-pub(crate) fn get_idx_from_token(token: &Token) -> Result<u8, CompilationError> {
+pub(super) fn get_idx_from_token(token: &Token) -> Result<u8, CompilationError> {
     let reg = get_16bit_register(token);
     get_idx_from_reg(token, reg)
 }
 
-pub(crate) fn check_comma<'a>(
+pub(super) fn check_comma<'a>(
     tokenized_line: &'a TokenizedLine<'a>,
     previous_token: &'a Token,
     i: usize,
@@ -105,18 +106,31 @@ pub(crate) fn check_comma<'a>(
     Ok(())
 }
 
-pub(crate) fn get_token_as_label(token: &Token) -> &Label{
+pub(super) fn get_token_as_label(token: &Token) -> &Label {
     match &token.token_type {
         Assembly8086Tokens::Character(label) => label,
         _ => unreachable!(),
     }
 }
 
-pub(crate) fn invalid_path_error(token: &Token) -> Result<usize, CompilationError> {
+pub(super) fn invalid_path_error(token: &Token) -> Result<usize, CompilationError> {
     Err(CompilationError::new(
         token.line_number,
         token.column_number,
         token.token_length,
         "This is an invalid path, This shouldn't happen, Please report this!",
     ))
+}
+
+pub(super) fn is_variable_defined_as_16bit(map: &Option<&VariableAddressMap>, label: &Label) -> bool {
+    match map {
+        None => false,
+        Some(map) => match map.get(label) {
+            None => false,
+            Some((reg_type, _)) => match reg_type {
+                VariableType::Byte => false,
+                VariableType::Word => true,
+            },
+        },
+    }
 }
