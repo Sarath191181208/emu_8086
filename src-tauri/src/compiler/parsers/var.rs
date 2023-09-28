@@ -2,7 +2,7 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         parsers::utils::push_instruction,
-        suggestions_utils::{get_8bit_number_suggestion, get_all_define_data_suggestions, get_16bit_number_suggestion},
+        suggestions_utils::{get_8bit_number_suggestion, get_16bit_number_suggestion},
         tokenized_line::TokenizedLine,
         tokens::{data::DefineData, Assembly8086Tokens},
         types_structs::{CompiledBytesReference, VariableAddressDefinitionMap, VariableType},
