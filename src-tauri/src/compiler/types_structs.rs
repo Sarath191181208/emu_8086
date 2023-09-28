@@ -18,6 +18,7 @@ pub type LineNumber = usize; // i.e line number
 pub type NumberOfBytes = u16; // i.e size of mem
 pub type IsLabelBeforeRef = bool; // i.e is label before reference
 pub type LabelAddressMap = HashMap<Label, LineNumber>;
+pub type LabelRefrenceList = Vec<(Label, Token, LineNumber, LineNumber)>;
 
 pub type Variable = Label;
 // The map used to store where a particular variable is being referenced
@@ -26,6 +27,8 @@ pub type VariableReferenceMap = HashMap<Variable, (VariableType, ArrayIndex)>;
 pub type VariableAddressMap = HashMap<Variable, (VariableType, NumberOfBytes)>;
 // The map used to store where a particular variable is being defined  (i.e. the line number)
 pub type VariableAddressDefinitionMap = HashMap<Variable, (VariableType, LineNumber)>;
+// The list used to store where a particular variable is being referenced
+pub type VariableReferenceList<'a> = Vec<(Label, VariableType, LineNumber, LineNumber )>;
 
 // This struct is used to store the compiled bytes of the coverted line
 // for ex: MOV AX, BX

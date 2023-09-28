@@ -35,7 +35,7 @@ use self::{
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
     types_structs::{
         CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap, LineNumber,
-        VariableAddressDefinitionMap, VariableAddressMap, VariableType,
+        VariableAddressDefinitionMap, VariableAddressMap, VariableType, LabelRefrenceList, VariableReferenceList,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -492,9 +492,6 @@ pub fn compile_lines(
         }
     }
 }
-
-type LabelRefrenceList = Vec<(Label, Token, LineNumber, LineNumber)>;
-type VariableReferenceList<'a> = Vec<(Label, VariableType, LineNumber, LineNumber )>;
 
 fn compile_lines_perform_var_label_substiution(
     lexer: &mut Lexer,
