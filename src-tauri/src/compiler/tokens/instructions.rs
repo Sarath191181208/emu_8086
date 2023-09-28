@@ -1,6 +1,6 @@
-use strum_macros::EnumString;
+use strum_macros::{EnumString, IntoStaticStr, Display};
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumString)]
+#[derive(Debug, Clone, IntoStaticStr, Display, PartialEq, Eq, EnumString)]
 pub(crate) enum Instructions {
     #[strum(ascii_case_insensitive)]
     Mov,
@@ -16,19 +16,4 @@ pub(crate) enum Instructions {
     Mul,
     #[strum(ascii_case_insensitive)]
     Jmp
-}
-
-// impl the Display trait for Instructions
-impl std::fmt::Display for Instructions {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Instructions::Mov => write!(f, "Mov"),
-            Instructions::Add => write!(f, "Add"),
-            Instructions::Inc => write!(f, "Inc"),
-            Instructions::Dec => write!(f, "Dec"),
-            Instructions::Sub => write!(f, "Sub"),
-            Instructions::Mul => write!(f, "Mul"),
-            Instructions::Jmp => write!(f, "Jmp")
-        }
-    }
 }

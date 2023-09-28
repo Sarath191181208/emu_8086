@@ -1,6 +1,6 @@
-use strum_macros::{Display, EnumString};
+use strum_macros::{Display, EnumString, IntoStaticStr};
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumString, Display)]
+#[derive(Debug, Clone, PartialEq, Eq, EnumString, Display, IntoStaticStr)]
 pub(crate) enum Registers8bit {
     #[strum(ascii_case_insensitive)]
     AH,
