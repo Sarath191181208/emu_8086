@@ -1,7 +1,7 @@
 use super::{
     compilation_error::CompilationError,
     strip_space_and_comments_and_iterate_labels,
-    tokens::{assembler_directives, instructions::Instructions, Assembly8086Tokens, Token},
+    tokens::{assembler_directives, Assembly8086Tokens, Token}, suggestions_utils::get_org_100h,
 };
 
 pub(crate) fn find_data_line_num(lexed_strings: &[Vec<Token>]) -> u32 {
@@ -9,9 +9,9 @@ pub(crate) fn find_data_line_num(lexed_strings: &[Vec<Token>]) -> u32 {
     let data_line_num = lexed_strings.iter().position(|line| {
         line.iter().any(|token| {
             token.token_type
-                == Assembly8086Tokens::Instruction(Instructions::AssemblerDirectives(
+                == Assembly8086Tokens::AssemblerDirectives(
                     assembler_directives::AssemblerDirectives::Data,
-                ))
+                )
         })
     });
     match data_line_num {
@@ -31,9 +31,9 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
 
         let is_org = matches!(
             stripped_line[0].token_type,
-            Assembly8086Tokens::Instruction(Instructions::AssemblerDirectives(
+            Assembly8086Tokens::AssemblerDirectives(
                 assembler_directives::AssemblerDirectives::Org,
-            ))
+            )
         );
 
         if !is_org {
@@ -42,7 +42,7 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
 
         // check if data line is smaller than org
         if data_line_num < line[0].line_number {
-            return Err(CompilationError::new(
+            return Err(CompilationError::new_without_suggestions(
                 line[0].line_number,
                 line[0].column_number,
                 line[0].token_length,
@@ -55,7 +55,7 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
 
         // chekc the len of arr
         if stripped_line.len() != 2 {
-            return Err(CompilationError::new(
+            return Err(CompilationError::new_with_suggestions(
                 stripped_line[0].line_number,
                 stripped_line[0].column_number,
                 stripped_line[0].token_length,
@@ -63,6 +63,9 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
                     "Can't compile starting with {:?} as the ORG directive only supports 1 argument",
                     stripped_line[0].token_type
                 ),
+                vec![
+                    get_org_100h(),
+                ]
             ));
         }
 
@@ -71,7 +74,7 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
             Assembly8086Tokens::Number16bit(0x100) => return Ok(true),
             Assembly8086Tokens::Register16bit(_) => return Ok(false),
             _ => {
-                return Err(CompilationError::new(
+                return Err(CompilationError::new_without_suggestions(
                         stripped_line[1].line_number,
                         stripped_line[1].column_number,
                         stripped_line[1].token_length,
@@ -94,7 +97,7 @@ pub(crate) fn get_full_line_error_starting_from_i(
     if i < lexed_str_without_spaces.len() - 1 {
         let unparsed_tokens_start = lexed_str_without_spaces[i + 1];
         let unparsed_tokens_end = lexed_str_without_spaces.last().unwrap();
-        return Err(CompilationError::new(
+        return Err(CompilationError::new_without_suggestions(
             unparsed_tokens_start.line_number,
             unparsed_tokens_start.column_number,
             unparsed_tokens_start.column_number
