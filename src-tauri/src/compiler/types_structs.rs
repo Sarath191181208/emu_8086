@@ -18,7 +18,7 @@ pub type LineNumber = usize; // i.e line number
 pub type NumberOfBytes = u16; // i.e size of mem
 pub type IsLabelBeforeRef = bool; // i.e is label before reference
 pub type LabelAddressMap = HashMap<Label, LineNumber>;
-pub type LabelRefrenceList = Vec<(Label, Token, LineNumber, LineNumber)>;
+pub(crate) type LabelRefrenceList = Vec<(Label, Token, LineNumber, LineNumber)>;
 
 pub type Variable = Label;
 // The map used to store where a particular variable is being referenced
