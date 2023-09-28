@@ -1,6 +1,6 @@
-use strum_macros::{EnumString, IntoStaticStr, Display};
+use strum_macros::{EnumString, IntoStaticStr, Display, EnumIter};
 
-#[derive(Debug, Clone, IntoStaticStr, Display, PartialEq, Eq, EnumString)]
+#[derive(Debug, Clone, IntoStaticStr, Display, PartialEq, Eq, EnumString, EnumIter)]
 pub(crate) enum Instructions {
     #[strum(ascii_case_insensitive)]
     Mov,

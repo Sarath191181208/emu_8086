@@ -1,6 +1,6 @@
-use strum_macros::{Display, EnumString, IntoStaticStr};
+use strum_macros::{Display, EnumString, IntoStaticStr, EnumIter};
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumString, Display, IntoStaticStr)]
+#[derive(Debug, Clone, PartialEq, Eq, EnumString, Display, IntoStaticStr, EnumIter)]
 pub(crate) enum Registers16bit {
     #[strum(ascii_case_insensitive)]
     AX,
