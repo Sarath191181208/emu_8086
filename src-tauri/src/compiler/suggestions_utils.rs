@@ -1,15 +1,15 @@
-use super::{suggestions::SuggestionType, tokens::{instructions::Instructions, data::DefineData, registers16bit::Registers16bit, registers8bit::Registers8bit}, types_structs::{ VariableType, VariableAddressMap}};
+use super::{suggestions::SuggestionType, tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit}, types_structs::{ VariableType, VariableAddressMap}};
 use strum::IntoEnumIterator;
 
 pub(super) fn get_org_100h() -> Vec<SuggestionType> {
     vec![SuggestionType::Constant16bit(0x100)]
 }
 
-pub(super) fn get_all_instructions_suggestions() -> Vec<SuggestionType> {
-    Instructions::iter()
-        .map(|x| SuggestionType::Instruction(x.into()))
-        .collect()
-}
+// pub(super) fn get_all_instructions_suggestions() -> Vec<SuggestionType> {
+//     Instructions::iter()
+//         .map(|x| SuggestionType::Instruction(x.into()))
+//         .collect()
+// }
 
 pub(super) fn get_8bit_number_suggestion() -> Vec<SuggestionType> {
     vec![SuggestionType::Constant8bit(0)]
@@ -65,8 +65,8 @@ pub(super) fn get_all_8bit_variables_suggestions(variable_address_map: Option<&V
         .collect()
 }
 
-pub(super) fn get_all_define_data_suggestions() -> Vec<SuggestionType> {
-    DefineData::iter()
-        .map(|x| SuggestionType::DefineData(x.into()))
-        .collect()
-}
+// pub(super) fn get_all_define_data_suggestions() -> Vec<SuggestionType> {
+//     DefineData::iter()
+//         .map(|x| SuggestionType::DefineData(x.into()))
+//         .collect()
+// }

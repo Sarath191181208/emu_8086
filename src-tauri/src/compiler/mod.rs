@@ -57,7 +57,7 @@ fn strip_space_and_comments_and_iterate_labels(
 }
 
 fn compile(
-    lexed_strings: &Vec<Token>,
+    lexed_strings: &[Token],
     is_org_defined: bool,
     compiled_line_label_ref: Option<&CompiledLineLabelRef>,
     variable_address_map: Option<&VariableAddressMap>,
@@ -391,7 +391,7 @@ fn mark_variables(
     compiled_bytes: &mut [Vec<u8>],
     compiled_bytes_ref: &mut [Vec<CompiledBytesReference>],
 
-    tokenized_lines: &Vec<Vec<Token>>,
+    tokenized_lines: &[Vec<Token>],
 
     var_ref: &VariableReferenceList,
     var_addr_def_map: &VariableAddressDefinitionMap,
@@ -493,6 +493,7 @@ pub fn compile_lines(
     }
 }
 
+#[allow(clippy::too_many_arguments)] 
 pub(crate) fn compile_lines_perform_var_label_substiution(
     lexer: &mut Lexer,
     compilation_errors: &mut Vec<CompilationError>,
