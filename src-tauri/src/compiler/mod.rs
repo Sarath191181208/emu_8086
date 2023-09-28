@@ -35,7 +35,7 @@ use self::{
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
     types_structs::{
         CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap, LineNumber,
-        VariableAddressDefinitionMap, VariableAddressMap, VariableType,
+        VariableAddressDefinitionMap, VariableAddressMap, VariableType, VariableReferenceMap,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -103,11 +103,12 @@ fn compile(
                         0,
                         &mut temp_line.compiled_bytes,
                         &mut temp_line.compiled_bytes_ref,
+                        Some(&VariableAddressMap::new()),
                         &mut temp_line.label_idx_map,
                         offset_bytes_from_line_and_is_label_before_ref,
                     )?;
                     let high_token = tokenized_line
-                        .get(i, "Unexpected error, Please report this".to_string())?;
+                        .get(i, "Unexpected error, Please report this".to_string(), None)?;
                     temp_line
                         .label_idx_map
                         .insert("code".to_string(), (high_token.clone(), i));
@@ -175,7 +176,7 @@ fn compile(
             }
 
             Instructions::Inc => {
-                i = parse_inc(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+                i = parse_inc(&tokenized_line, i, compiled_bytes, compiled_bytes_ref, variable_address_map)?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "INC", 1)?;
                 Ok(compiled_line)
             }
@@ -186,7 +187,7 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    variable_ref_map,
+                    variable_address_map,
                 )?;
 
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "DEC", 1)?;
@@ -208,7 +209,7 @@ fn compile(
             }
 
             Instructions::Mul => {
-                i = parse_mul(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+                i = parse_mul(&tokenized_line, i, compiled_bytes, compiled_bytes_ref, variable_address_map)?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MUL", 1)?;
                 Ok(compiled_line)
             }
@@ -219,6 +220,7 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
+                    variable_address_map,
                     &mut compiled_line.label_idx_map,
                     offset_bytes_from_line_and_is_label_before_ref,
                 )?;
@@ -455,7 +457,7 @@ pub fn compile_lines(
     let mut label_addr_map = LabelAddressMap::new();
     let mut label_ref = LabelRefrenceList::new();
 
-    let mut var_addr_map = VariableAddressDefinitionMap::new();
+    let mut var_addr_def_map = VariableAddressDefinitionMap::new();
     let mut var_ref = VariableReferenceList::new();
 
     match compile_lines_perform_var_label_substiution(
@@ -465,7 +467,7 @@ pub fn compile_lines(
         &mut compiled_bytes_ref_lines_vec,
         &mut label_addr_map,
         &mut label_ref,
-        &mut var_addr_map,
+        &mut var_addr_def_map,
         &mut var_ref,
     ) {
         Some(is_org_defined) => {
@@ -501,7 +503,7 @@ fn compile_lines_perform_var_label_substiution(
     compiled_bytes_ref_lines_vec: &mut Vec<Vec<CompiledBytesReference>>,
     label_addr_map: &mut LabelAddressMap,
     label_ref: &mut LabelRefrenceList,
-    var_addr_map: &mut VariableAddressDefinitionMap,
+    var_addr_def_map: &mut VariableAddressDefinitionMap,
     var_ref: &mut VariableReferenceList,
     // ) -> Result<(Vec<u8>, Vec<CompiledBytesReference>, bool), Vec<CompilationError>> {
 ) -> Option<bool> {
@@ -541,7 +543,7 @@ fn compile_lines_perform_var_label_substiution(
                 for (label_str, (label_type, _)) in compiled_line.variable_abs_address_map {
                     let label_key = UniCase::new(label_str.to_string().clone());
                     // get the line number of the already defined label if it exists
-                    let already_defined_line_number = var_addr_map
+                    let already_defined_line_number = var_addr_def_map
                         .get(&label_key)
                         .unwrap_or(&(VariableType::Byte, 0))
                         .1;
@@ -549,14 +551,14 @@ fn compile_lines_perform_var_label_substiution(
                     if let Some(err) = get_err_if_already_defined_label(
                         label_key.clone(),
                         &line,
-                        var_addr_map,
+                        var_addr_def_map,
                         already_defined_line_number,
                     ) {
                         compilation_errors.push(err);
                         continue;
                     }
                     // push the label into the label_addr_map if it's not already defined
-                    var_addr_map.insert(
+                    var_addr_def_map.insert(
                         label_str,
                         (label_type, compiled_bytes_lines_vec.len() as LineNumber),
                     );
@@ -623,7 +625,7 @@ fn compile_lines_perform_var_label_substiution(
             .iter()
             .position(|_token| _token.token_type == Assembly8086Tokens::Character(var.clone()))
             .unwrap();
-        if !var_addr_map.contains_key(var) {
+        if !var_addr_def_map.contains_key(var) {
             var_errors = true;
             compilation_errors.push(CompilationError::new_without_suggestions(
                 *line_number as u32,
@@ -632,7 +634,7 @@ fn compile_lines_perform_var_label_substiution(
                 &format!("The variable \"{}\" is Undefined, Please define it.", var),
             ));
         } else if *used_as_type == VariableType::Word
-            && var_addr_map.get(var).unwrap().0 == VariableType::Byte
+            && var_addr_def_map.get(var).unwrap().0 == VariableType::Byte
         {
             var_errors = true;
             compilation_errors.push(CompilationError::new_without_suggestions(
@@ -642,7 +644,7 @@ fn compile_lines_perform_var_label_substiution(
                 &format!(
                     "The variable \"{}\" is defined as {:?}, but used as {:?}.",
                     var,
-                    var_addr_map.get(var).unwrap().0,
+                    var_addr_def_map.get(var).unwrap().0,
                     used_as_type
                 ),
             ));
@@ -673,7 +675,7 @@ fn compile_lines_perform_var_label_substiution(
         compiled_bytes_ref_lines_vec,
         &lexer.tokens,
         &var_ref,
-        &var_addr_map,
+        &var_addr_def_map,
         is_org_defined,
     ) {
         Ok(_) => (),

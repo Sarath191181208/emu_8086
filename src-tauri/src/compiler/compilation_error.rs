@@ -17,19 +17,19 @@ impl CompilationError {
         column_number: u32,
         length: u32,
         message: &str,
-        // suggestions: Vec<SuggestionType>,
+        suggestions: Vec<SuggestionType>,
     ) -> Self {
         Self {
             line_number,
             column_number,
             length,
             message: message.to_string(),
-            // suggestions: if suggestions.len() > 0 {
-            //     Some(suggestions)
-            // } else {
-            //     None
-            // },
-            suggestions: None
+            suggestions: if suggestions.len() > 0 {
+                Some(suggestions)
+            } else {
+                None
+            },
+            // suggestions: None
         }
     }
 

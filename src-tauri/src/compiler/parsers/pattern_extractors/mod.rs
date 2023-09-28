@@ -1,6 +1,12 @@
 use crate::{
     compiler::{
         compilation_error::CompilationError,
+        suggestions_utils::{
+            get_16bit_number_suggestion, get_8bit_number_suggestion,
+            get_all_16bit_registers_suggestions, get_all_16bit_variables_suggestions,
+            get_all_8bit_registers_suggestions, get_all_registers_and_variable_suggestions,
+            get_all_variables_suggestions, get_all_8bit_variables_suggestions,
+        },
         tokenized_line::TokenizedLine,
         tokens::{
             registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
@@ -101,10 +107,17 @@ pub(crate) fn parse_line<'a>(
     variable_abs_address_map: &VariableAddressMap,
 ) -> Result<AddressingMode<'a>, CompilationError> {
     let len_lexed_strings = tokenized_line.get_len_lexed_strings();
-    let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
+    let token = tokenized_line.get(
+        i,
+        "This shouldn't happen, Please report this".to_string(),
+        None,
+    )?;
     let high_token = tokenized_line.get(
         i + 1,
         format!("Expected arguments after {} got nothing", ins).to_string(),
+        Some(vec![get_all_registers_and_variable_suggestions(
+            Some(variable_abs_address_map),
+        )]),
     )?;
 
     match &high_token.token_type {
@@ -113,6 +126,12 @@ pub(crate) fn parse_line<'a>(
             let low_token = tokenized_line.get(
                 i + 3,
                 format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
+                Some(vec![
+                    get_all_16bit_registers_suggestions(),
+                    get_all_16bit_variables_suggestions(Some(variable_abs_address_map)),
+                    get_8bit_number_suggestion(),
+                    get_16bit_number_suggestion(),
+                ]),
             )?;
             match &low_token.token_type {
                 Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::Registers16bitNumber {
@@ -144,7 +163,7 @@ pub(crate) fn parse_line<'a>(
                     })
                 }
 
-                _ => Err(CompilationError::new(
+                _ => Err(CompilationError::new_without_suggestions(
                     token.line_number,
                     high_token.column_number + high_token.token_length + 1,
                     len_lexed_strings - high_token.column_number - high_token.token_length,
@@ -161,6 +180,29 @@ pub(crate) fn parse_line<'a>(
             let low_token = tokenized_line.get(
                 i + 3,
                 format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
+                Some(
+                    // try to get label if it doesn't exists show 8bit suggestions else match no the tye of the var and show suggestions
+                    if let Some((var_type, _)) = variable_ref_map.get(label) {
+                        match var_type {
+                            VariableType::Byte => vec![
+                                get_all_8bit_registers_suggestions(),
+                                get_8bit_number_suggestion(),
+                            ],
+                            VariableType::Word => vec![
+                                get_all_16bit_registers_suggestions(),
+                                get_16bit_number_suggestion(),
+                                get_8bit_number_suggestion(),
+                            ],
+                        }
+                    } else {
+                        vec![
+                            get_all_16bit_registers_suggestions(),
+                            get_all_8bit_registers_suggestions(),
+                            get_16bit_number_suggestion(),
+                            get_8bit_number_suggestion(),
+                        ]
+                    },
+                ),
             )?;
             match &low_token.token_type {
                 Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::AddressAnd16bitNumber {
@@ -215,7 +257,7 @@ pub(crate) fn parse_line<'a>(
                         register_type: low_token_reg_type.clone(),
                     })
                 }
-                _ => Err(CompilationError::new(
+                _ => Err(CompilationError::new_without_suggestions(
                     token.line_number,
                     high_token.column_number + high_token.token_length + 1,
                     len_lexed_strings - high_token.column_number - high_token.token_length,
@@ -232,6 +274,11 @@ pub(crate) fn parse_line<'a>(
             let low_token = tokenized_line.get(
                 i + 3,
                 format!("Expected 8bit value after {:?} got nothing", high_token).to_string(),
+                Some(vec![
+                    get_all_8bit_registers_suggestions(),
+                    get_all_8bit_variables_suggestions(Some(variable_abs_address_map)),
+                    get_8bit_number_suggestion(),
+                ]),
             )?;
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::Register8bitNumber {
@@ -258,7 +305,7 @@ pub(crate) fn parse_line<'a>(
                     })
                 }
 
-                _ => Err(CompilationError::new(
+                _ => Err(CompilationError::new_without_suggestions(
                     token.line_number,
                     high_token.column_number + high_token.token_length + 1,
                     len_lexed_strings - high_token.column_number - high_token.token_length,
@@ -270,7 +317,7 @@ pub(crate) fn parse_line<'a>(
             }
         }
 
-        _ => Err(CompilationError::new(
+        _ => Err(CompilationError::new_without_suggestions(
             high_token.line_number,
             high_token.column_number,
             high_token.token_length,

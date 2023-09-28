@@ -1,4 +1,4 @@
-use super::{compilation_error::CompilationError, tokens::Token};
+use super::{compilation_error::CompilationError, tokens::Token, suggestions::SuggestionType};
 
 pub struct TokenizedLine<'a> {
     tokens: &'a Vec<&'a Token>,
@@ -25,12 +25,13 @@ impl<'a> TokenizedLine<'a> {
         &self,
         i: usize,
         exception_str: String,
+        possible_suggestions: Option<Vec<Vec<SuggestionType>>>,
     ) -> Result<&'a Token, CompilationError> {
         if i > self.tokens.len() - 1 {
             let last_token = match self.tokens.last() {
                 Some(token) => token,
                 None => {
-                    return Err(CompilationError::new(
+                    return Err(CompilationError::new_without_suggestions(
                         0,
                         0,
                         0,
@@ -38,11 +39,12 @@ impl<'a> TokenizedLine<'a> {
                     ))
                 }
             };
-            return Err(CompilationError::new(
+            return Err(CompilationError::new_with_suggestions(
                 last_token.line_number,
                 last_token.column_number + last_token.token_length,
                 self.len_lexed_strings + 1,
                 &exception_str,
+                possible_suggestions.unwrap_or(vec![]),
             ));
         }
         Ok(self.tokens[i])

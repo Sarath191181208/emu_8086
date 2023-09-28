@@ -20,8 +20,11 @@ pub type IsLabelBeforeRef = bool; // i.e is label before reference
 pub type LabelAddressMap = HashMap<Label, LineNumber>;
 
 pub type Variable = Label;
-pub type VariableReferenceMap = HashMap<Variable, (VariableType, ArrayIndex)>;
+// The map used to store where a particular variable is being referenced
+pub type VariableReferenceMap = HashMap<Variable, (VariableType, ArrayIndex)>; 
+// The map used to store where a particular variable is being defined
 pub type VariableAddressMap = HashMap<Variable, (VariableType, NumberOfBytes)>;
+// The map used to store where a particular variable is being defined  (i.e. the line number)
 pub type VariableAddressDefinitionMap = HashMap<Variable, (VariableType, LineNumber)>;
 
 // This struct is used to store the compiled bytes of the coverted line

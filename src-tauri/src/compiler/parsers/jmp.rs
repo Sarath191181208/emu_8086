@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 use crate::compiler::{
     compilation_error::CompilationError,
+    suggestions_utils::get_all_registers_and_variable_suggestions,
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},
-    CompiledBytesReference,
+    CompiledBytesReference, types_structs::{VariableReferenceMap, VariableAddressMap, VariableAddressDefinitionMap},
 };
 
 use super::utils::push_instruction;
@@ -19,13 +20,22 @@ pub(in crate::compiler) fn parse_jmp(
     i: usize,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+    variable_address_map: Option<&VariableAddressMap>,
+
     label_idx_map: &mut HashMap<String, (Token, usize)>,
     offset_bytes_from_line_and_is_label_before_ref: Option<(u16, bool)>,
 ) -> Result<usize, CompilationError> {
-    let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string())?;
+    let token = tokenized_line.get(
+        i,
+        "This shouldn't happen, Please report this".to_string(),
+        None,
+    )?;
     let high_token = tokenized_line.get(
         i + 1,
         "Expected arguments after JMP got nothing".to_string(),
+        Some(vec![get_all_registers_and_variable_suggestions(
+            variable_address_map,
+        )]),
     )?;
     match &high_token.token_type {
         Assembly8086Tokens::Character(label) => {
@@ -65,7 +75,7 @@ pub(in crate::compiler) fn parse_jmp(
             }
         }
 
-        _ => Err(CompilationError::new(
+        _ => Err(CompilationError::new_without_suggestions(
             high_token.line_number,
             high_token.column_number,
             high_token.token_length,

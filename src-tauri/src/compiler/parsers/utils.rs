@@ -20,7 +20,7 @@ pub(super) fn get_idx_from_reg(
 ) -> Result<u8, CompilationError> {
     match reg.get_as_idx() {
         Ok(idx) => Ok(idx),
-        Err(err) => Err(CompilationError::new(
+        Err(err) => Err(CompilationError::new_without_suggestions(
             token.line_number,
             token.column_number,
             token.token_length,
@@ -91,9 +91,10 @@ pub(super) fn check_comma<'a>(
     let sepertor_token = tokenized_line.get(
         i,
         format!("Expected , after {:?} got nothing", previous_token).to_string(),
+        None
     )?;
     if sepertor_token.token_type != Assembly8086Tokens::Comma {
-        return Err(CompilationError::new(
+        return Err(CompilationError::new_without_suggestions(
             sepertor_token.line_number,
             sepertor_token.column_number,
             sepertor_token.token_length,
