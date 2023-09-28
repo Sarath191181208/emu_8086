@@ -40,8 +40,8 @@ export const langRules: languages.IMonarchLanguage = {
 export const langConfiguration: languages.LanguageConfiguration = {
   comments: {
     lineComment: ";",
-  }
-}
+  },
+};
 
 export const langTheme: editor.IStandaloneThemeData = {
   base: "vs-dark",
@@ -68,3 +68,28 @@ export const langTheme: editor.IStandaloneThemeData = {
     "editorWhitespace.foreground": "#3B4048",
   },
 };
+
+// export const completionRules: languages.CompletionItemProvider = {
+//   provideCompletionItems(model, position, context, token) {
+//     var word = model.getWordUntilPosition(position);
+//     var range = {
+//       startLineNumber: position.lineNumber,
+//       endLineNumber: position.lineNumber,
+//       startColumn: word.startColumn,
+//       endColumn: word.endColumn,
+//     };
+
+//     const suggestions: languages.CompletionItem[] = [
+//       {
+//         label: "mov",
+//         kind: languages.CompletionItemKind.Keyword,
+//         insertText: "mov",
+//         documentation: "Move a value from one register to another",
+//         range: range,
+//       },
+//     ];
+//     return {
+//       suggestions: suggestions,
+//     };
+//   },
+// };

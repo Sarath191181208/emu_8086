@@ -16,6 +16,14 @@ use memory::Memory;
 use std::sync::{Arc, Mutex};
 use tauri::State;
 
+use crate::compiler::{
+    compile_lines_perform_var_label_substiution,
+    lexer::Lexer,
+    types_structs::{
+        LabelAddressMap, LabelRefrenceList, VariableAddressDefinitionMap, VariableReferenceList,
+    },
+};
+
 type CompilationErrors = Vec<CompilationError>;
 type CompiledBytesReferences = Vec<CompiledBytesReference>;
 type MemoryChanges = Vec<(usize, Byte)>;
@@ -54,8 +62,32 @@ fn compile_code(
 
 #[tauri::command]
 fn try_compile_code(code: String) -> Result<(), Vec<CompilationError>> {
-    compile_lines(&code, false)?;
-    Ok(())
+    let mut lexer = Lexer::new();
+    lexer.tokenize(&code);
+
+    let mut compilation_errors = Vec::new();
+    let mut compiled_bytes_lines_vec = Vec::new();
+    let mut compiled_bytes_ref_lines_vec = Vec::new();
+
+    let mut label_addr_map = LabelAddressMap::new();
+    let mut label_ref = LabelRefrenceList::new();
+
+    let mut var_addr_def_map = VariableAddressDefinitionMap::new();
+    let mut var_ref = VariableReferenceList::new();
+
+    match compile_lines_perform_var_label_substiution(
+        &mut lexer,
+        &mut compilation_errors,
+        &mut compiled_bytes_lines_vec,
+        &mut compiled_bytes_ref_lines_vec,
+        &mut label_addr_map,
+        &mut label_ref,
+        &mut var_addr_def_map,
+        &mut var_ref,
+    ) {
+        Some(_) => Ok(()),
+        None => Err(compilation_errors),
+    }
 }
 
 fn main() {
