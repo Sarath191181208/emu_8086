@@ -141,7 +141,7 @@ pub(in crate::compiler) fn parse_var_declaration(
     let define_data = tokenized_line.get(
         i + 1,
         "Expected db (or) dw, Got nothing!".to_string(),
-        Some(vec![get_all_define_data_suggestions()]),
+        None,
     )?;
     let var_label = get_token_as_label(variable_token);
     match &define_data.token_type {
