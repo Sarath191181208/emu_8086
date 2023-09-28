@@ -1,4 +1,4 @@
-use super::{suggestions::SuggestionType, tokens::{instructions::Instructions, data::DefineData}, types_structs::{ VariableType, VariableAddressMap}};
+use super::{suggestions::SuggestionType, tokens::{instructions::Instructions, data::DefineData, registers16bit::Registers16bit, registers8bit::Registers8bit}, types_structs::{ VariableType, VariableAddressMap}};
 use strum::IntoEnumIterator;
 
 pub(super) fn get_org_100h() -> Vec<SuggestionType> {
@@ -28,13 +28,13 @@ pub(super) fn get_all_registers_and_variable_suggestions(variable_address_map: O
 }
 
 pub(super) fn get_all_16bit_registers_suggestions() -> Vec<SuggestionType> {
-    Instructions::iter()
+    Registers16bit::iter()
         .map(|x| SuggestionType::Registers16bit(x.into()))
         .collect()
 }
 
 pub(super) fn get_all_8bit_registers_suggestions() -> Vec<SuggestionType> {
-    Instructions::iter()
+    Registers8bit::iter()
         .map(|x| SuggestionType::Registers8bit(x.into()))
         .collect()
 }
