@@ -493,7 +493,7 @@ pub fn compile_lines(
     }
 }
 
-fn compile_lines_perform_var_label_substiution(
+pub fn compile_lines_perform_var_label_substiution(
     lexer: &mut Lexer,
     compilation_errors: &mut Vec<CompilationError>,
     compiled_bytes_lines_vec: &mut Vec<Vec<u8>>,
