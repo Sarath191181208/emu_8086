@@ -2,6 +2,8 @@
 - [x] add the labels into the symbol table
 - [x] add calc offset in compile itself 
 - [x] parse the data segments
+- [ ] Look into the .CODE crash
+- [ ] Look into why CX is loded with some value 
 -[ ] Setting up a CI/CD pipeline
 -[ ] Adding more addressing modes to 
     - [ ] MOV
