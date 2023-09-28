@@ -3,4 +3,5 @@ interface CompilationError {
   length: number;
   line_number: number;
   message: string;
+  suggestions: string[];
 }
