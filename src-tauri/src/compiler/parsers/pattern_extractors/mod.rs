@@ -4,8 +4,7 @@ use crate::{
         suggestions_utils::{
             get_16bit_number_suggestion, get_8bit_number_suggestion,
             get_all_16bit_registers_suggestions, get_all_16bit_variables_suggestions,
-            get_all_8bit_registers_suggestions, get_all_registers_and_variable_suggestions,
-            get_all_variables_suggestions, get_all_8bit_variables_suggestions,
+            get_all_8bit_registers_suggestions, get_all_registers_and_variable_suggestions, get_all_8bit_variables_suggestions,
         },
         tokenized_line::TokenizedLine,
         tokens::{

@@ -35,7 +35,7 @@ use self::{
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
     types_structs::{
         CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap, LineNumber,
-        VariableAddressDefinitionMap, VariableAddressMap, VariableType, VariableReferenceMap,
+        VariableAddressDefinitionMap, VariableAddressMap, VariableType,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -484,7 +484,7 @@ pub fn compile_lines(
             Ok((compiled_bytes, compiled_bytes_ref, is_org_defined))
         }
         None => {
-            if compilation_errors.len() > 0 {
+            if !compilation_errors.is_empty() {
                 Err(compilation_errors)
             } else {
                 Ok((Vec::new(), Vec::new(), false))
@@ -516,7 +516,7 @@ fn compile_lines_perform_var_label_substiution(
     };
 
     for (i, line) in lexer.tokens.iter().enumerate() {
-        match compile(&line, is_org_defined, None, None) {
+        match compile(line, is_org_defined, None, None) {
             Ok(compiled_line) => {
                 let compiled_bytes_line = compiled_line.compiled_bytes;
                 let compiled_bytes_ref_line = compiled_line.compiled_bytes_ref;
@@ -528,7 +528,7 @@ fn compile_lines_perform_var_label_substiution(
                     // check if the label is already defined
                     if let Some(err) = get_err_if_already_defined_label(
                         label_key.clone(),
-                        &line,
+                        line,
                         label_addr_map,
                         already_defined_line_number,
                     ) {
@@ -550,7 +550,7 @@ fn compile_lines_perform_var_label_substiution(
                     // check if the label is already defined
                     if let Some(err) = get_err_if_already_defined_label(
                         label_key.clone(),
-                        &line,
+                        line,
                         var_addr_def_map,
                         already_defined_line_number,
                     ) {
@@ -656,11 +656,11 @@ fn compile_lines_perform_var_label_substiution(
     }
 
     match mark_labels(
-        &label_ref,
+        label_ref,
         &lexer.tokens,
         compiled_bytes_lines_vec,
         compiled_bytes_ref_lines_vec,
-        &label_addr_map,
+        label_addr_map,
         is_org_defined,
         0,
     ) {
@@ -674,8 +674,8 @@ fn compile_lines_perform_var_label_substiution(
         compiled_bytes_lines_vec,
         compiled_bytes_ref_lines_vec,
         &lexer.tokens,
-        &var_ref,
-        &var_addr_def_map,
+        var_ref,
+        var_addr_def_map,
         is_org_defined,
     ) {
         Ok(_) => (),

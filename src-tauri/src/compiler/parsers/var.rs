@@ -29,7 +29,7 @@ fn to_bytes(
             last_token.line_number,
             last_token.column_number,
             last_token.token_length,
-            &format!("Expected 8 bit number, Got nothing!"),
+            "Expected 8 bit number, Got nothing!",
             vec![get_8bit_number_suggestion()]),
         );
     }
@@ -87,7 +87,7 @@ fn to_words(
             last_token.line_number,
             last_token.column_number,
             last_token.token_length,
-            &format!("Expected 8 bit number, Got nothing!"),
+            "Expected 8 bit number, Got nothing!",
             vec![get_16bit_number_suggestion()]),
         );
     }

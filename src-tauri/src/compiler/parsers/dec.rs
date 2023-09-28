@@ -1,11 +1,9 @@
 use crate::compiler::{
     compilation_error::CompilationError,
-    suggestions_utils::{
-        get_all_16bit_registers_suggestions, get_all_8bit_registers_suggestions, get_all_instructions_suggestions, get_all_variables_suggestions, get_all_registers_and_variable_suggestions,
-    },
+    suggestions_utils::get_all_registers_and_variable_suggestions,
     tokenized_line::TokenizedLine,
     tokens::Assembly8086Tokens,
-    types_structs::{VariableReferenceMap, VariableAddressMap},
+    types_structs::VariableAddressMap,
     CompiledBytesReference,
 };
 

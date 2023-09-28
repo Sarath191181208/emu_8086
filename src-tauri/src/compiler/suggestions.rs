@@ -30,9 +30,9 @@ impl Serialize for SuggestionType {
             SuggestionType::Registers16bit(x) => serializer.serialize_str(x),
             SuggestionType::Registers8bit(x) => serializer.serialize_str(x),
             SuggestionType::DefineData(x) => serializer.serialize_str(x),
-            SuggestionType::Variables16bit(x) => serializer.serialize_str(&x.to_string()),
-            SuggestionType::Variables8bit(x) => serializer.serialize_str(&x.to_string()),
-            SuggestionType::Label(x) => serializer.serialize_str(&x.to_string()),
+            SuggestionType::Variables16bit(x) => serializer.serialize_str(x.as_ref()),
+            SuggestionType::Variables8bit(x) => serializer.serialize_str(x.as_ref()),
+            SuggestionType::Label(x) => serializer.serialize_str(x.as_ref()),
             SuggestionType::Constant16bit(x) => serializer.serialize_u16(*x),
             SuggestionType::Constant8bit(x) => serializer.serialize_u8(*x),
         }

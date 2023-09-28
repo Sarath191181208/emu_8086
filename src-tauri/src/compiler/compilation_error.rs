@@ -24,7 +24,7 @@ impl CompilationError {
             column_number,
             length,
             message: message.to_string(),
-            suggestions: if suggestions.len() > 0 {
+            suggestions: if !suggestions.is_empty() {
                 Some(suggestions)
             } else {
                 None
@@ -60,7 +60,7 @@ impl CompilationError {
             column_number,
             length,
             message: message.to_string(),
-            suggestions: if suggestions.len() > 0 && suggestions.iter().any(|arr| arr.len() > 0) {
+            suggestions: if !suggestions.is_empty() && suggestions.iter().any(|arr| !arr.is_empty()) {
                 Some(suggestions.into_iter().flatten().collect())
             } else {
                 None

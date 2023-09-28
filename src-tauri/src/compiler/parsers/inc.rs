@@ -1,6 +1,6 @@
 use crate::compiler::{
     compilation_error::CompilationError, tokenized_line::TokenizedLine, tokens::Assembly8086Tokens,
-    CompiledBytesReference, suggestions_utils::get_all_registers_and_variable_suggestions, types_structs::{VariableReferenceMap, VariableAddressMap},
+    CompiledBytesReference, suggestions_utils::get_all_registers_and_variable_suggestions, types_structs::{VariableAddressMap},
 };
 
 use super::utils::{get_idx_from_reg, push_instruction};
