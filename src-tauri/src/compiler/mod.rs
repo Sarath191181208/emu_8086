@@ -13,6 +13,9 @@ pub(crate) mod tokenized_line;
 pub mod types_structs;
 pub(crate) mod utils;
 
+pub(self) mod suggestions;
+pub(self) mod suggestions_utils;
+
 use compilation_error::CompilationError;
 use lexer::Lexer;
 use tokens::instructions::Instructions;
@@ -54,7 +57,7 @@ fn strip_space_and_comments_and_iterate_labels(
 }
 
 fn compile(
-    lexed_strings: &[Token],
+    lexed_strings: &Vec<Token>,
     is_org_defined: bool,
     compiled_line_label_ref: Option<&CompiledLineLabelRef>,
     variable_address_map: Option<&VariableAddressMap>,
@@ -84,9 +87,7 @@ fn compile(
     let tokenized_line = TokenizedLine::new(&lexed_str_without_spaces, len_lexed_strings);
 
     let token = &lexed_str_without_spaces[i];
-    if let Assembly8086Tokens::Instruction(Instructions::AssemblerDirectives(dir)) =
-        &token.token_type
-    {
+    if let Assembly8086Tokens::AssemblerDirectives(dir) = &token.token_type {
         match dir {
             AssemblerDirectives::Org => {}
             AssemblerDirectives::Data => {
@@ -128,7 +129,7 @@ fn compile(
     let token = &lexed_str_without_spaces[i];
     let compiled_bytes = &mut compiled_line.compiled_bytes;
     let compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
-    let label_ref_map = &mut compiled_line.label_reference_map;
+    let variable_ref_map = &mut compiled_line.variable_reference_map;
 
     let offset_bytes_from_line_and_is_label_before_ref =
         unwrap_and_find_offset(&compiled_line_label_ref);
@@ -140,7 +141,7 @@ fn compile(
                 i,
                 compiled_bytes,
                 compiled_bytes_ref,
-                &mut compiled_line.label_abs_address_map,
+                &mut compiled_line.variable_abs_address_map,
             )?;
             get_full_line_error_starting_from_i(&lexed_str_without_spaces, i, "VAR")?;
             Ok(compiled_line)
@@ -152,7 +153,7 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    label_ref_map,
+                    variable_ref_map,
                     variable_address_map,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MOV", 2)?;
@@ -165,7 +166,7 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    label_ref_map,
+                    variable_ref_map,
                     variable_address_map,
                 )?;
 
@@ -180,7 +181,13 @@ fn compile(
             }
 
             Instructions::Dec => {
-                i = parse_dec(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+                i = parse_dec(
+                    &tokenized_line,
+                    i,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    variable_ref_map,
+                )?;
 
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "DEC", 1)?;
                 Ok(compiled_line)
@@ -192,7 +199,7 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    label_ref_map,
+                    variable_ref_map,
                     variable_address_map,
                 )?;
 
@@ -219,10 +226,12 @@ fn compile(
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JMP", 1)?;
                 Ok(compiled_line)
             }
-            Instructions::AssemblerDirectives(_) => Ok(compiled_line),
         },
+        Assembly8086Tokens::AssemblerDirectives(_) => {
+            Ok(compiled_line)
+        }
 
-        _ => Err(CompilationError::new(
+        _ => Err(CompilationError::new_without_suggestions(
             token.line_number,
             token.column_number,
             token.token_length,
@@ -322,9 +331,13 @@ fn calc_offset(
 }
 
 fn mark_labels(
-    label_ref: &Vec<(Label, Token, LineNumber, &Vec<Token>)>,
+    label_ref: &LabelRefrenceList,
+
+    tokenized_line: &Vec<Vec<Token>>,
+
     compiled_bytes: &mut [Vec<u8>],
     compiled_bytes_ref: &mut [Vec<CompiledBytesReference>],
+
     label_addr_map: &LabelAddressMap,
     is_org_defined: bool,
     idx: usize,
@@ -332,11 +345,11 @@ fn mark_labels(
     if idx >= label_ref.len() {
         return Ok(true);
     }
-    let (label, _, line_number, tokenized_line) = &label_ref[idx];
+    let (label, _, line_number, tokenized_line_idx) = &label_ref[idx];
     let line_number = *line_number;
     for _ in 0..(label_ref.len() - idx) {
         let compiled_tokens = compile(
-            tokenized_line,
+            &tokenized_line[*tokenized_line_idx],
             is_org_defined,
             Some(&CompiledLineLabelRef {
                 compiled_bytes,
@@ -359,6 +372,7 @@ fn mark_labels(
 
         if mark_labels(
             label_ref,
+            tokenized_line,
             compiled_bytes,
             compiled_bytes_ref,
             label_addr_map,
@@ -375,7 +389,9 @@ fn mark_variables(
     compiled_bytes: &mut [Vec<u8>],
     compiled_bytes_ref: &mut [Vec<CompiledBytesReference>],
 
-    var_ref: &Vec<(Label, VariableType, LineNumber, &Vec<Token>)>,
+    tokenized_lines: &Vec<Vec<Token>>,
+
+    var_ref: &VariableReferenceList,
     var_addr_def_map: &VariableAddressDefinitionMap,
 
     is_org_defined: bool,
@@ -389,7 +405,8 @@ fn mark_variables(
     }
 
     // mark the variables
-    for (_, _, line_number, tokenized_line) in var_ref {
+    for (_, _, line_number, tokenized_line_index) in var_ref {
+        let tokenized_line = &tokenized_lines[*tokenized_line_index];
         let line_number = *line_number;
         let compiled_tokens = compile(tokenized_line, is_org_defined, None, Some(&var_addr_map))?;
 
@@ -411,7 +428,7 @@ fn get_err_if_already_defined_label<T>(
         .position(|_token| _token.token_type == Assembly8086Tokens::Character(label_key.clone()))
         .unwrap();
     if label_addr_map.contains_key(&label_key) {
-        return Some(CompilationError::new(
+        return Some(CompilationError::new_without_suggestions(
             line[idx].line_number,
             line[idx].column_number,
             line[idx].token_length,
@@ -431,17 +448,63 @@ pub fn compile_lines(
     let mut lexer = Lexer::new();
     lexer.tokenize(code);
 
-    let mut compilation_errors = Vec::<CompilationError>::new();
-
+    let mut compilation_errors = Vec::new();
     let mut compiled_bytes_lines_vec = Vec::new();
     let mut compiled_bytes_ref_lines_vec = Vec::new();
 
     let mut label_addr_map = LabelAddressMap::new();
-    let mut label_ref: Vec<(Label, Token, LineNumber, &Vec<Token>)> = Vec::new();
+    let mut label_ref = LabelRefrenceList::new();
 
     let mut var_addr_map = VariableAddressDefinitionMap::new();
-    let mut var_ref: Vec<(Label, VariableType, LineNumber, &Vec<Token>)> = Vec::new();
+    let mut var_ref = VariableReferenceList::new();
 
+    match compile_lines_perform_var_label_substiution(
+        &mut lexer,
+        &mut compilation_errors,
+        &mut compiled_bytes_lines_vec,
+        &mut compiled_bytes_ref_lines_vec,
+        &mut label_addr_map,
+        &mut label_ref,
+        &mut var_addr_map,
+        &mut var_ref,
+    ) {
+        Some(is_org_defined) => {
+            let compiled_bytes = compiled_bytes_lines_vec.into_iter().flatten().collect();
+            let compiled_bytes_ref = compiled_bytes_ref_lines_vec
+                .into_iter()
+                .flatten()
+                .collect::<Vec<CompiledBytesReference>>();
+
+            if debug_print {
+                lexer.print_with_compiled_tokens(&compiled_bytes_ref);
+            }
+
+            Ok((compiled_bytes, compiled_bytes_ref, is_org_defined))
+        }
+        None => {
+            if compilation_errors.len() > 0 {
+                Err(compilation_errors)
+            } else {
+                Ok((Vec::new(), Vec::new(), false))
+            }
+        }
+    }
+}
+
+type LabelRefrenceList = Vec<(Label, Token, LineNumber, LineNumber)>;
+type VariableReferenceList<'a> = Vec<(Label, VariableType, LineNumber, LineNumber )>;
+
+fn compile_lines_perform_var_label_substiution(
+    lexer: &mut Lexer,
+    compilation_errors: &mut Vec<CompilationError>,
+    compiled_bytes_lines_vec: &mut Vec<Vec<u8>>,
+    compiled_bytes_ref_lines_vec: &mut Vec<Vec<CompiledBytesReference>>,
+    label_addr_map: &mut LabelAddressMap,
+    label_ref: &mut LabelRefrenceList,
+    var_addr_map: &mut VariableAddressDefinitionMap,
+    var_ref: &mut VariableReferenceList,
+    // ) -> Result<(Vec<u8>, Vec<CompiledBytesReference>, bool), Vec<CompilationError>> {
+) -> Option<bool> {
     let is_org_defined = match is_org_defined(&lexer.tokens) {
         Ok(is_org_defined) => is_org_defined,
         Err(err) => {
@@ -450,8 +513,8 @@ pub fn compile_lines(
         }
     };
 
-    for line in lexer.tokens.iter() {
-        match compile(line, is_org_defined, None, None) {
+    for (i, line) in lexer.tokens.iter().enumerate() {
+        match compile(&line, is_org_defined, None, None) {
             Ok(compiled_line) => {
                 let compiled_bytes_line = compiled_line.compiled_bytes;
                 let compiled_bytes_ref_line = compiled_line.compiled_bytes_ref;
@@ -463,8 +526,8 @@ pub fn compile_lines(
                     // check if the label is already defined
                     if let Some(err) = get_err_if_already_defined_label(
                         label_key.clone(),
-                        line,
-                        &mut label_addr_map,
+                        &line,
+                        label_addr_map,
                         already_defined_line_number,
                     ) {
                         compilation_errors.push(err);
@@ -475,7 +538,7 @@ pub fn compile_lines(
                 }
 
                 // Pushing all the variables into a map after checking if they are already defined
-                for (label_str, (label_type, _)) in compiled_line.label_abs_address_map {
+                for (label_str, (label_type, _)) in compiled_line.variable_abs_address_map {
                     let label_key = UniCase::new(label_str.to_string().clone());
                     // get the line number of the already defined label if it exists
                     let already_defined_line_number = var_addr_map
@@ -485,8 +548,8 @@ pub fn compile_lines(
                     // check if the label is already defined
                     if let Some(err) = get_err_if_already_defined_label(
                         label_key.clone(),
-                        line,
-                        &mut var_addr_map,
+                        &line,
+                        var_addr_map,
                         already_defined_line_number,
                     ) {
                         compilation_errors.push(err);
@@ -506,17 +569,17 @@ pub fn compile_lines(
                         label.clone(),
                         token,
                         compiled_bytes_lines_vec.len() as LineNumber,
-                        line,
+                        i
                     ));
                 }
 
                 // Pushing all the variable that reference a particular variable
-                for (var_str, (label_type, _)) in compiled_line.label_reference_map {
+                for (var_str, (label_type, _)) in compiled_line.variable_reference_map {
                     var_ref.push((
                         var_str.clone(),
                         label_type,
                         compiled_bytes_lines_vec.len() as LineNumber,
-                        line,
+                        i,
                     ));
                 }
 
@@ -532,7 +595,8 @@ pub fn compile_lines(
 
     // check if all flags are defined
     let mut label_errors = false;
-    for (label, token, line_number, line) in &label_ref {
+    for (label, token, line_number, tokenized_line_number) in &mut *label_ref {
+        let line = &lexer.tokens[*tokenized_line_number];
         let idx = line
             .iter()
             .position(|_token| {
@@ -542,7 +606,7 @@ pub fn compile_lines(
             .unwrap();
         if !label_addr_map.contains_key(label) {
             label_errors = true;
-            compilation_errors.push(CompilationError::new(
+            compilation_errors.push(CompilationError::new_without_suggestions(
                 *line_number as u32,
                 line[idx].column_number,
                 line[idx].token_length,
@@ -553,14 +617,15 @@ pub fn compile_lines(
 
     // check if all the variables are defined
     let mut var_errors = false;
-    for (_i, (var, used_as_type, line_number, line)) in var_ref.iter().enumerate() {
+    for (_i, (var, used_as_type, line_number, tokenized_line_number)) in var_ref.iter().enumerate() {
+        let line = &lexer.tokens[*tokenized_line_number];
         let idx = line
             .iter()
             .position(|_token| _token.token_type == Assembly8086Tokens::Character(var.clone()))
             .unwrap();
         if !var_addr_map.contains_key(var) {
             var_errors = true;
-            compilation_errors.push(CompilationError::new(
+            compilation_errors.push(CompilationError::new_without_suggestions(
                 *line_number as u32,
                 line[idx].column_number,
                 line[idx].token_length,
@@ -570,7 +635,7 @@ pub fn compile_lines(
             && var_addr_map.get(var).unwrap().0 == VariableType::Byte
         {
             var_errors = true;
-            compilation_errors.push(CompilationError::new(
+            compilation_errors.push(CompilationError::new_without_suggestions(
                 *line_number as u32,
                 line[idx].column_number,
                 line[idx].token_length,
@@ -585,13 +650,14 @@ pub fn compile_lines(
     }
 
     if label_errors || var_errors {
-        return Err(compilation_errors);
+        return None;
     }
 
     match mark_labels(
         &label_ref,
-        &mut compiled_bytes_lines_vec,
-        &mut compiled_bytes_ref_lines_vec,
+        &lexer.tokens,
+        compiled_bytes_lines_vec,
+        compiled_bytes_ref_lines_vec,
         &label_addr_map,
         is_org_defined,
         0,
@@ -603,8 +669,9 @@ pub fn compile_lines(
     };
 
     match mark_variables(
-        &mut compiled_bytes_lines_vec,
-        &mut compiled_bytes_ref_lines_vec,
+        compiled_bytes_lines_vec,
+        compiled_bytes_ref_lines_vec,
+        &lexer.tokens,
         &var_ref,
         &var_addr_map,
         is_org_defined,
@@ -615,28 +682,11 @@ pub fn compile_lines(
         }
     };
 
-    // convert compiled bytes and ref to single vec
-    let compiled_bytes = compiled_bytes_lines_vec
-        .iter()
-        .flatten()
-        .cloned()
-        .collect::<Vec<u8>>();
-
-    let mut compiled_bytes_ref = Vec::new();
-    for i in compiled_bytes_ref_lines_vec {
-        for j in i {
-            compiled_bytes_ref.push(j);
-        }
-    }
-
-    if debug_print {
-        lexer.print_with_compiled_tokens(&compiled_bytes_ref);
-    }
-
     if !compilation_errors.is_empty() {
-        return Err(compilation_errors);
+        return None;
     }
-    Ok((compiled_bytes, compiled_bytes_ref, is_org_defined))
+
+    Some(is_org_defined)
 }
 
 pub fn compile_str(
