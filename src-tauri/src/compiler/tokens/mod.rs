@@ -1,5 +1,7 @@
 use unicase::UniCase;
 
+use self::assembler_directives::AssemblerDirectives;
+
 pub mod assembler_directives;
 pub mod data;
 pub mod instructions;
@@ -24,6 +26,7 @@ pub(crate) enum Assembly8086Tokens {
     // ex: .data, .code, .model, .stack, .const, .byte, .word, .dword, .qword, .tbyte, .float, .double, .real4, .real8, .real10, .xmmword, .ymmword, .zmmword, .bnd, .oword, .tword, .far, .near, .proc, .endp, .public, .assume, .include, .include_lib, .model, .stack, .const, .byte, .word, .dword, .qword,
     // .tbyte, .float, .double, .real4, .real8, .real10, .xmmword, .ymmword, .zmmword, .bnd, .oword, .tword, .far, .near, .proc, .endp, .public, .assume, .include, .include_lib
     // Directive,
+    AssemblerDirectives(AssemblerDirectives),
 
     // Comments
     // ex: ;, //, #
@@ -73,6 +76,7 @@ impl std::fmt::Display for Assembly8086Tokens {
             Assembly8086Tokens::Colon => write!(f, "Colon"),
             Assembly8086Tokens::Character(character) => write!(f, "{}", character),
             Assembly8086Tokens::Data(data) => write!(f, "{}", data),
+            Assembly8086Tokens::AssemblerDirectives(directive) => write!(f, "{}", directive),
         }
     }
 }

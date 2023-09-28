@@ -1,7 +1,5 @@
 use strum_macros::EnumString;
 
-use super::assembler_directives::AssemblerDirectives;
-
 #[derive(Debug, Clone, PartialEq, Eq, EnumString)]
 pub(crate) enum Instructions {
     #[strum(ascii_case_insensitive)]
@@ -17,9 +15,7 @@ pub(crate) enum Instructions {
     #[strum(ascii_case_insensitive)]
     Mul,
     #[strum(ascii_case_insensitive)]
-    Jmp,
-
-    AssemblerDirectives(AssemblerDirectives),
+    Jmp
 }
 
 // impl the Display trait for Instructions
@@ -32,10 +28,7 @@ impl std::fmt::Display for Instructions {
             Instructions::Dec => write!(f, "Dec"),
             Instructions::Sub => write!(f, "Sub"),
             Instructions::Mul => write!(f, "Mul"),
-            Instructions::Jmp => write!(f, "Jmp"),
-            Instructions::AssemblerDirectives(assembler_directive) => {
-                write!(f, "{}", assembler_directive)
-            }
+            Instructions::Jmp => write!(f, "Jmp")
         }
     }
 }

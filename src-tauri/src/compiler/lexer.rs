@@ -103,9 +103,7 @@ impl Lexer {
 
     fn str_to_token(&self, token_string: &str) -> Option<Assembly8086Tokens> {
         if let Ok(directive) = AssemblerDirectives::from_str(token_string) {
-            return Some(Assembly8086Tokens::Instruction(
-                Instructions::AssemblerDirectives(directive),
-            ));
+            return Some(Assembly8086Tokens::AssemblerDirectives(directive));
         }
         if let Ok(instruction) = Instructions::from_str(token_string) {
             return Some(Assembly8086Tokens::Instruction(instruction));
