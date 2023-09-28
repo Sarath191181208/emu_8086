@@ -34,8 +34,9 @@ use self::{
     tokenized_line::TokenizedLine,
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
     types_structs::{
-        CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap, LineNumber,
-        VariableAddressDefinitionMap, VariableAddressMap, VariableType, LabelRefrenceList, VariableReferenceList,
+        CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap,
+        LabelRefrenceList, LineNumber, VariableAddressDefinitionMap, VariableAddressMap,
+        VariableReferenceList, VariableType,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -107,8 +108,11 @@ fn compile(
                         &mut temp_line.label_idx_map,
                         offset_bytes_from_line_and_is_label_before_ref,
                     )?;
-                    let high_token = tokenized_line
-                        .get(i, "Unexpected error, Please report this".to_string(), None)?;
+                    let high_token = tokenized_line.get(
+                        i,
+                        "Unexpected error, Please report this".to_string(),
+                        None,
+                    )?;
                     temp_line
                         .label_idx_map
                         .insert("code".to_string(), (high_token.clone(), i));
@@ -176,7 +180,13 @@ fn compile(
             }
 
             Instructions::Inc => {
-                i = parse_inc(&tokenized_line, i, compiled_bytes, compiled_bytes_ref, variable_address_map)?;
+                i = parse_inc(
+                    &tokenized_line,
+                    i,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    variable_address_map,
+                )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "INC", 1)?;
                 Ok(compiled_line)
             }
@@ -209,7 +219,13 @@ fn compile(
             }
 
             Instructions::Mul => {
-                i = parse_mul(&tokenized_line, i, compiled_bytes, compiled_bytes_ref, variable_address_map)?;
+                i = parse_mul(
+                    &tokenized_line,
+                    i,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    variable_address_map,
+                )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MUL", 1)?;
                 Ok(compiled_line)
             }
@@ -229,9 +245,7 @@ fn compile(
                 Ok(compiled_line)
             }
         },
-        Assembly8086Tokens::AssemblerDirectives(_) => {
-            Ok(compiled_line)
-        }
+        Assembly8086Tokens::AssemblerDirectives(_) => Ok(compiled_line),
 
         _ => Err(CompilationError::new_without_suggestions(
             token.line_number,
@@ -493,7 +507,7 @@ pub fn compile_lines(
     }
 }
 
-#[allow(clippy::too_many_arguments)] 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn compile_lines_perform_var_label_substiution(
     lexer: &mut Lexer,
     compilation_errors: &mut Vec<CompilationError>,
@@ -569,7 +583,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                         label.clone(),
                         token,
                         compiled_bytes_lines_vec.len() as LineNumber,
-                        i
+                        i,
                     ));
                 }
 
@@ -617,7 +631,8 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
 
     // check if all the variables are defined
     let mut var_errors = false;
-    for (_i, (var, used_as_type, line_number, tokenized_line_number)) in var_ref.iter().enumerate() {
+    for (_i, (var, used_as_type, line_number, tokenized_line_number)) in var_ref.iter().enumerate()
+    {
         let line = &lexer.tokens[*tokenized_line_number];
         let idx = line
             .iter()

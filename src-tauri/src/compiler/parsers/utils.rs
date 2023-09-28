@@ -91,7 +91,7 @@ pub(super) fn check_comma<'a>(
     let sepertor_token = tokenized_line.get(
         i,
         format!("Expected , after {:?} got nothing", previous_token).to_string(),
-        None
+        None,
     )?;
     if sepertor_token.token_type != Assembly8086Tokens::Comma {
         return Err(CompilationError::new_without_suggestions(

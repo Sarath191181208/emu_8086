@@ -2,7 +2,7 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         parsers::utils::push_instruction,
-        suggestions_utils::{get_8bit_number_suggestion, get_16bit_number_suggestion},
+        suggestions_utils::{get_16bit_number_suggestion, get_8bit_number_suggestion},
         tokenized_line::TokenizedLine,
         tokens::{data::DefineData, Assembly8086Tokens},
         types_structs::{CompiledBytesReference, VariableAddressDefinitionMap, VariableType},
@@ -30,8 +30,8 @@ fn to_bytes(
             last_token.column_number,
             last_token.token_length,
             "Expected 8 bit number, Got nothing!",
-            vec![get_8bit_number_suggestion()]),
-        );
+            vec![get_8bit_number_suggestion()],
+        ));
     }
     while j < tokenized_line.len() {
         let data_token = tokenized_line.get(
@@ -77,7 +77,7 @@ fn to_words(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
 ) -> Result<usize, CompilationError> {
     let mut j = i;
-        let last_token = tokenized_line.get(
+    let last_token = tokenized_line.get(
         tokenized_line.len() - 1,
         "This shouldn't happen, Please report this".to_string(),
         None,
@@ -88,8 +88,8 @@ fn to_words(
             last_token.column_number,
             last_token.token_length,
             "Expected 8 bit number, Got nothing!",
-            vec![get_16bit_number_suggestion()]),
-        );
+            vec![get_16bit_number_suggestion()],
+        ));
     }
     while j < tokenized_line.len() {
         let data_token = tokenized_line.get(
@@ -138,11 +138,8 @@ pub(in crate::compiler) fn parse_var_declaration(
         "This shouldn't happen, Please report this".to_string(),
         None,
     )?;
-    let define_data = tokenized_line.get(
-        i + 1,
-        "Expected db (or) dw, Got nothing!".to_string(),
-        None,
-    )?;
+    let define_data =
+        tokenized_line.get(i + 1, "Expected db (or) dw, Got nothing!".to_string(), None)?;
     let var_label = get_token_as_label(variable_token);
     match &define_data.token_type {
         Assembly8086Tokens::Data(data) => match data {

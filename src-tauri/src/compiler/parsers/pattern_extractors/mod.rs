@@ -4,7 +4,8 @@ use crate::{
         suggestions_utils::{
             get_16bit_number_suggestion, get_8bit_number_suggestion,
             get_all_16bit_registers_suggestions, get_all_16bit_variables_suggestions,
-            get_all_8bit_registers_suggestions, get_all_registers_and_variable_suggestions, get_all_8bit_variables_suggestions,
+            get_all_8bit_registers_suggestions, get_all_8bit_variables_suggestions,
+            get_all_registers_and_variable_suggestions,
         },
         tokenized_line::TokenizedLine,
         tokens::{
@@ -114,9 +115,9 @@ pub(crate) fn parse_line<'a>(
     let high_token = tokenized_line.get(
         i + 1,
         format!("Expected arguments after {} got nothing", ins).to_string(),
-        Some(vec![get_all_registers_and_variable_suggestions(
-            Some(variable_abs_address_map),
-        )]),
+        Some(vec![get_all_registers_and_variable_suggestions(Some(
+            variable_abs_address_map,
+        ))]),
     )?;
 
     match &high_token.token_type {

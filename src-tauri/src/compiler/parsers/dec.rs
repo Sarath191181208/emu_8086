@@ -1,10 +1,7 @@
 use crate::compiler::{
     compilation_error::CompilationError,
-    suggestions_utils::get_all_registers_and_variable_suggestions,
-    tokenized_line::TokenizedLine,
-    tokens::Assembly8086Tokens,
-    types_structs::VariableAddressMap,
-    CompiledBytesReference,
+    suggestions_utils::get_all_registers_and_variable_suggestions, tokenized_line::TokenizedLine,
+    tokens::Assembly8086Tokens, types_structs::VariableAddressMap, CompiledBytesReference,
 };
 
 use super::utils::{get_idx_from_reg, push_instruction};
@@ -24,9 +21,9 @@ pub(in crate::compiler) fn parse_dec(
     let high_token = tokenized_line.get(
         i + 1,
         "Expected arguments after DEC got nothing".to_string(),
-        Some(vec![
-            get_all_registers_and_variable_suggestions(variable_address_map),
-        ]),
+        Some(vec![get_all_registers_and_variable_suggestions(
+            variable_address_map,
+        )]),
     )?;
     match &high_token.token_type {
         Assembly8086Tokens::Register16bit(high_reg) => {

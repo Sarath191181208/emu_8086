@@ -1,4 +1,4 @@
-use super::{compilation_error::CompilationError, tokens::Token, suggestions::SuggestionType};
+use super::{compilation_error::CompilationError, suggestions::SuggestionType, tokens::Token};
 
 pub struct TokenizedLine<'a> {
     tokens: &'a Vec<&'a Token>,

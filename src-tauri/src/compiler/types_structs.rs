@@ -22,13 +22,13 @@ pub(crate) type LabelRefrenceList = Vec<(Label, Token, LineNumber, LineNumber)>;
 
 pub type Variable = Label;
 // The map used to store where a particular variable is being referenced
-pub type VariableReferenceMap = HashMap<Variable, (VariableType, ArrayIndex)>; 
+pub type VariableReferenceMap = HashMap<Variable, (VariableType, ArrayIndex)>;
 // The map used to store where a particular variable is being defined
 pub type VariableAddressMap = HashMap<Variable, (VariableType, NumberOfBytes)>;
 // The map used to store where a particular variable is being defined  (i.e. the line number)
 pub type VariableAddressDefinitionMap = HashMap<Variable, (VariableType, LineNumber)>;
 // The list used to store where a particular variable is being referenced
-pub type VariableReferenceList<'a> = Vec<(Label, VariableType, LineNumber, LineNumber )>;
+pub type VariableReferenceList<'a> = Vec<(Label, VariableType, LineNumber, LineNumber)>;
 
 // This struct is used to store the compiled bytes of the coverted line
 // for ex: MOV AX, BX
@@ -82,7 +82,8 @@ impl CompiledLine {
         self.compiled_bytes.extend(other.compiled_bytes);
         self.compiled_bytes_ref.extend(other.compiled_bytes_ref);
         self.label_idx_map.extend(other.label_idx_map);
-        self.variable_reference_map.extend(other.variable_reference_map);
+        self.variable_reference_map
+            .extend(other.variable_reference_map);
         self.variable_abs_address_map
             .extend(other.variable_abs_address_map);
     }

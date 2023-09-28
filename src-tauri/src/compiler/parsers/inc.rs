@@ -1,6 +1,7 @@
 use crate::compiler::{
-    compilation_error::CompilationError, tokenized_line::TokenizedLine, tokens::Assembly8086Tokens,
-    CompiledBytesReference, suggestions_utils::get_all_registers_and_variable_suggestions, types_structs::{VariableAddressMap},
+    compilation_error::CompilationError,
+    suggestions_utils::get_all_registers_and_variable_suggestions, tokenized_line::TokenizedLine,
+    tokens::Assembly8086Tokens, types_structs::VariableAddressMap, CompiledBytesReference,
 };
 
 use super::utils::{get_idx_from_reg, push_instruction};
@@ -12,7 +13,11 @@ pub(in crate::compiler) fn parse_inc(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     variable_address_map: Option<&VariableAddressMap>,
 ) -> Result<usize, CompilationError> {
-    let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string(), None)?;
+    let token = tokenized_line.get(
+        i,
+        "This shouldn't happen, Please report this".to_string(),
+        None,
+    )?;
     let high_token = tokenized_line.get(
         i + 1,
         "Expected arguments after INC got nothing".to_string(),

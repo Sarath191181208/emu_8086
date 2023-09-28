@@ -5,7 +5,8 @@ use crate::compiler::{
     suggestions_utils::get_all_registers_and_variable_suggestions,
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},
-    CompiledBytesReference, types_structs::VariableAddressMap,
+    types_structs::VariableAddressMap,
+    CompiledBytesReference,
 };
 
 use super::utils::push_instruction;

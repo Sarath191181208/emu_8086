@@ -1,4 +1,4 @@
-use strum_macros::{Display, EnumString, IntoStaticStr, EnumIter};
+use strum_macros::{Display, EnumIter, EnumString, IntoStaticStr};
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumString, Display, IntoStaticStr, EnumIter)]
 pub(crate) enum Registers8bit {

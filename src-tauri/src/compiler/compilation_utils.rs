@@ -1,7 +1,8 @@
 use super::{
     compilation_error::CompilationError,
     strip_space_and_comments_and_iterate_labels,
-    tokens::{assembler_directives, Assembly8086Tokens, Token}, suggestions_utils::get_org_100h,
+    suggestions_utils::get_org_100h,
+    tokens::{assembler_directives, Assembly8086Tokens, Token},
 };
 
 pub(crate) fn find_data_line_num(lexed_strings: &[Vec<Token>]) -> u32 {
@@ -31,9 +32,7 @@ pub(crate) fn is_org_defined(lexed_strings: &Vec<Vec<Token>>) -> Result<bool, Co
 
         let is_org = matches!(
             stripped_line[0].token_type,
-            Assembly8086Tokens::AssemblerDirectives(
-                assembler_directives::AssemblerDirectives::Org,
-            )
+            Assembly8086Tokens::AssemblerDirectives(assembler_directives::AssemblerDirectives::Org,)
         );
 
         if !is_org {

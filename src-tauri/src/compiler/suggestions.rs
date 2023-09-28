@@ -2,7 +2,6 @@ use serde::Serialize;
 
 use super::types_structs::{Label, Variable};
 
-
 #[derive(Debug)]
 pub enum SuggestionType {
     Instruction(&'static str),
@@ -11,7 +10,7 @@ pub enum SuggestionType {
     Registers8bit(&'static str),
 
     DefineData(&'static str),
-    
+
     Variables16bit(Variable),
     Variables8bit(Variable),
 
@@ -24,8 +23,9 @@ pub enum SuggestionType {
 impl Serialize for SuggestionType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
-        match &self{
+        S: serde::Serializer,
+    {
+        match &self {
             SuggestionType::Instruction(x) => serializer.serialize_str(x),
             SuggestionType::Registers16bit(x) => serializer.serialize_str(x),
             SuggestionType::Registers8bit(x) => serializer.serialize_str(x),

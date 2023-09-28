@@ -1,4 +1,4 @@
-use strum_macros::{EnumString, IntoStaticStr, Display, EnumIter};
+use strum_macros::{Display, EnumIter, EnumString, IntoStaticStr};
 
 #[derive(Debug, Clone, IntoStaticStr, Display, PartialEq, Eq, EnumString, EnumIter)]
 pub(crate) enum Instructions {
@@ -15,5 +15,5 @@ pub(crate) enum Instructions {
     #[strum(ascii_case_insensitive)]
     Mul,
     #[strum(ascii_case_insensitive)]
-    Jmp
+    Jmp,
 }

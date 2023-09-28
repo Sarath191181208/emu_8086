@@ -22,7 +22,11 @@ pub(in crate::compiler) fn parse_sub(
     variable_ref_map: &mut VariableReferenceMap,
     variable_abs_offset_map: Option<&VariableAddressMap>,
 ) -> Result<usize, CompilationError> {
-    let token = tokenized_line.get(i, "This shouldn't happen, Please report this".to_string(), None)?;
+    let token = tokenized_line.get(
+        i,
+        "This shouldn't happen, Please report this".to_string(),
+        None,
+    )?;
     match parse_line(
         tokenized_line,
         i,
