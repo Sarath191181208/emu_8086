@@ -9,6 +9,10 @@ import {
 } from "../types/CPUData/getDefaultRegistersAndFlags";
 import { useStateSavePrevious } from "./useStateSavePrevious";
 import { languages } from "monaco-editor/esm/vs/editor/editor.api";
+import {
+  CompilationError,
+  compilationErrorToSuggestions,
+} from "../types/compilationError";
 
 export function useApp() {
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
@@ -197,71 +201,66 @@ export function useApp() {
       clearErrorsOnEditor();
     } catch (e) {
       setErrorsOnEditor(e);
+      editorRef.current?.trigger("some", "editor.action.triggerSuggest", {});
     }
-    };
-    
-    let isReady = false;
-    let suggestions: Array<string> = [];
-    const getSuggestions = async (lineNumber: number, column: number) => {
-        try { 
-            await invoke("try_compile_code", {
-                code: editorRef.current?.getValue(),
-            });
-            clearErrorsOnEditor();
-        }catch (e) {
-            let errors = e as CompilationError[];
-            // iterate errors to find the error that matches the line number
-            console.log({errors, lineNumber, column});
-            for (let i = 0; i < errors.length; i++) {
-                const err = errors[i];
-                if (err.line_number === (lineNumber-1)) {
-                    suggestions = err.suggestions;
-                    isReady = true;
-                    editorRef.current?.trigger('some', 'editor.action.triggerSuggest', {});
-                    break;
-                }
-            }
-        }
+  };
 
+  let isReady = false;
+  let suggestionsArray: Array<string> = [];
+  const getSuggestions = async (lineNumber: number, _: number) => {
+    try {
+      await invoke("try_compile_code", {
+        code: editorRef.current?.getValue(),
+      });
+      clearErrorsOnEditor();
+    } catch (e) {
+      if (e === null || e === undefined || isReady === true) {
+        return;
+      }
+      let errors = e as CompilationError[];
+      let tempSuggestions = compilationErrorToSuggestions(
+        errors,
+        lineNumber,
+        _
+      );
+      if (tempSuggestions === null) {
+        return;
+      }
+      suggestionsArray = tempSuggestions;
+      isReady = true;
     }
+  };
+  const languageCompletionProvider: languages.CompletionItemProvider = {
+    triggerCharacters: [".", " "],
+    provideCompletionItems(model, position) {
+      let word = model.getWordUntilPosition(position);
+      let range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
 
-    const languageCompletionProvider: languages.CompletionItemProvider = {
-        triggerCharacters: [".", " ", "\t", "\n"],
-        provideCompletionItems(model, position, context, token) {
-            let word = model.getWordUntilPosition(position);
-            let range = {
-                startLineNumber: position.lineNumber,
-                endLineNumber: position.lineNumber,
-                startColumn: word.startColumn,
-                endColumn: word.endColumn,
-            };
-
-            getSuggestions(position.lineNumber, position.column);
-            if (isReady) {
-                isReady = false;
-                return {
-                    suggestions: suggestions.map((s) => ({
-                        label: s,
-                        kind: languages.CompletionItemKind.Text,
-                        insertText: s,
-                        documentation: s,
-                        range,
-                    })),
-                };
-            }
-            return {
-                suggestions: [
-                    {
-                        label: "Loading...",
-                        kind: languages.CompletionItemKind.Text,
-                        insertText: "Loading...",
-                        documentation: "Loading...",
-                        range,
-                    },
-                ],
-            };
-        }
-    };
+      getSuggestions(position.lineNumber, position.column);
+      if (isReady) {
+        let tempSuggestions = suggestionsArray;
+        isReady = false;
+        return {
+          suggestions: tempSuggestions.map((s) => ({
+            label: s,
+            kind: languages.CompletionItemKind.Text,
+            insertText: s,
+            documentation: s,
+            range,
+          })),
+        };
+      } else {
+        return {
+          suggestions: [],
+        };
+      }
+    },
+  };
 
   return {
     registers,
@@ -273,9 +272,9 @@ export function useApp() {
     prevRegistersRef,
     prevMemoryRef,
     editorRef,
-      monacoRef,
-    
-      languageCompletionProvider,
+    monacoRef,
+
+    languageCompletionProvider,
 
     compileCode,
     nextPressed,
