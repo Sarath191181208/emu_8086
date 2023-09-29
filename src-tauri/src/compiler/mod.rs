@@ -13,8 +13,8 @@ pub(crate) mod tokenized_line;
 pub mod types_structs;
 pub(crate) mod utils;
 
-pub(self) mod suggestions;
-pub(self) mod suggestions_utils;
+pub mod suggestions;
+pub mod suggestions_utils;
 
 use compilation_error::CompilationError;
 use lexer::Lexer;
