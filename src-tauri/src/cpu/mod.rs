@@ -333,13 +333,25 @@ impl CPU {
                 }
             }
 
-            // INC 8bit register
             0xFE => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
+                    // DEC [0x1234]
+                    0x0E => self.execute_dec_address_8bit(mem), 
+                    // INC AL | BH | CL .. 
                     0xC0..=0xC7 => self.execute_inc_register_byte(mem),
+                    // DEC AL | BH | CL ..
                     0xC8..=0xCF => self.execute_dec_register_byte(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFE", opcode),
+                }
+            }
+
+            0xFF => {
+                let opcode = self.peek_instruction(mem);
+                match opcode{
+                    // DEC [0x1234]
+                    0x0E => self.execute_dec_address_16bit(mem),
+                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFF", opcode),
                 }
             }
             _ => unimplemented!("Unimplemented opcode: {:X}", opcode),

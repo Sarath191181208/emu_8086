@@ -1,30 +1,51 @@
 use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
+    fn dec_from_16bitvalue_and_set_flags(&mut self, value: u16) -> u16 {
+        let (val, _) = self.sub_16bit_with_overflow_and_set_flags(value, 1);
+        val
+    }
+
+    fn dec_from_8bitvalue_and_set_flags(&mut self, value: u8) -> u8{
+        let (val, _) = self.sub_8bit_with_overflow_and_set_flags(value, 1);
+        val
+    }
+
     pub(in crate::cpu) fn execute_dec_word_register(&mut self, opcode: u8) {
         let register_index = (opcode & 0x0F) - 8;
         let value = self.get_16bit_register_by_index(register_index);
-        let (value, overflow) = value.overflowing_sub(1);
+        let value = self.dec_from_16bitvalue_and_set_flags(value);
         self.set_16bit_register_by_index(register_index, value);
-        self.zero_flag = value == 0;
-        self.negative_flag = value & 0x8000 != 0;
-        self.overflow_flag = overflow;
-        self.auxiliary_carry_flag = value.count_ones() % 2 == 0;
-        self.carry_flag = overflow;
     }
 
     pub(in crate::cpu) fn execute_dec_register_byte(&mut self, mem: &mut Memory) {
         let opcode = self.consume_instruction(mem);
         let register_index = (opcode & 0x0F) - 8;
         let value = self.get_8bit_register_by_index(register_index);
-        let (value, _) = value.overflowing_sub(1);
+        let value = self.dec_from_8bitvalue_and_set_flags(value);
         self.set_8bit_register_by_index(register_index, value);
+    }
+
+    pub(in crate::cpu) fn execute_dec_address_16bit(&mut self, mem: &mut Memory) {
+        self.consume_instruction(mem); // 0x0E
+        let address = self.consume_word(mem);
+        let value = self.read_word_from_pointer(mem, address);
+        let value = self.dec_from_16bitvalue_and_set_flags(value);
+        self.write_word_from_pointer(mem, address, value);
+    }
+
+    pub(in crate::cpu) fn execute_dec_address_8bit(&mut self, mem: &mut Memory) {
+        self.consume_instruction(mem); // 0x0E
+        let address = self.consume_word(mem);
+        let value = self.read_byte_from_pointer(mem, address);
+        let value = self.dec_from_8bitvalue_and_set_flags(value);
+        self.write_byte_from_pointer(mem, address, value);
     }
 }
 
 #[cfg(test)]
 mod test_16bit_dec {
-    use crate::{cpu::CPU, generate_test, memory::Memory};
+    use crate::{cpu::{CPU, instructions::test_macro::compile_and_test_str}, generate_test, memory::Memory};
 
     generate_test!(
         dec_ax,
@@ -34,11 +55,7 @@ mod test_16bit_dec {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.ax, 0x0000);
-            assert!(cpu.zero_flag);
-            assert!(!cpu.negative_flag);
-            assert!(!cpu.overflow_flag);
-            assert!(cpu.auxiliary_carry_flag);
-            assert!(!cpu.carry_flag);
+            assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
         })
     );
 
@@ -51,18 +68,32 @@ mod test_16bit_dec {
         }),
         (|cpu: &CPU, _: &Memory| {
             assert_eq!(cpu.bx, 0xFFFE);
-            assert!(!cpu.zero_flag);
-            assert!(cpu.negative_flag);
-            assert!(!cpu.overflow_flag);
-            assert!(!cpu.auxiliary_carry_flag);
-            assert!(!cpu.carry_flag);
+            assert_eq!(cpu.get_flags_as_binary(), 0b0000_0100);
         })
     );
+
+    #[test]
+    fn test_dec_address_16bit() {
+        compile_and_test_str(
+            "
+            org 0x100
+            .data
+            var dw 0x0001
+            code: 
+            DEC var
+            ",
+            2,
+            |cpu: &CPU, mem: &Memory| {
+                assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x0000);
+                assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
+            }
+        );
+    }
 }
 
 #[cfg(test)]
 mod test_8bit_dec {
-    use crate::{cpu::CPU, generate_test, memory::Memory};
+    use crate::{cpu::{CPU, instructions::test_macro::compile_and_test_str}, generate_test, memory::Memory};
 
     generate_test!(
         dec_al,
@@ -85,4 +116,22 @@ mod test_8bit_dec {
             assert_eq!(cpu.dx, 0x0000);
         })
     );
+
+        #[test]
+    fn test_dec_address_8bit() {
+        compile_and_test_str(
+            "
+            org 0x100
+            .data
+            var db 0x01
+            code: 
+            DEC var
+            ",
+            2,
+            |cpu: &CPU, mem: &Memory| {
+                assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x00);
+                assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
+            }
+        );
+    }
 }
