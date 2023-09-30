@@ -99,7 +99,7 @@ fn get_label_address_or_push_into_ref(
     }
 }
 
-pub(crate) fn parse_line<'a>(
+pub(crate) fn parse_two_arguments_line<'a>(
     tokenized_line: &'a TokenizedLine<'a>,
     i: usize,
     ins: &'a str,

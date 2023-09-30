@@ -10,7 +10,7 @@ use crate::{
 };
 
 use super::{
-    pattern_extractors::{parse_line, AddressingMode},
+    pattern_extractors::{parse_two_arguments_line, AddressingMode},
     utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
@@ -27,7 +27,7 @@ pub(in crate::compiler) fn parse_sub(
         "This shouldn't happen, Please report this".to_string(),
         None,
     )?;
-    match parse_line(
+    match parse_two_arguments_line(
         tokenized_line,
         i,
         "SUB",
