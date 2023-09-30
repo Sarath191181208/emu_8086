@@ -185,6 +185,7 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
+                    variable_ref_map,
                     variable_address_map,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "INC", 1)?;
