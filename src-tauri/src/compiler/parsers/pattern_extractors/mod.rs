@@ -12,7 +12,7 @@ use crate::{
             registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
         },
         types_structs::{
-            ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType,
+            VariableAddressMap, VariableReferenceMap, VariableType,
         },
     },
     utils::Either,

@@ -418,7 +418,7 @@ fn mark_variables(
     for (var_label, (var_type, label_definition_line_number)) in var_addr_def_map {
         let (offset, _) = calc_offset(compiled_bytes, 0, *label_definition_line_number);
         let org_offset = if is_org_defined { 0x100 } else { 0x00 };
-        var_addr_map.insert(var_label.clone(), (var_type.clone(), offset + org_offset));
+        var_addr_map.insert(var_label.clone(), (*var_type, offset + org_offset));
     }
 
     // mark the variables

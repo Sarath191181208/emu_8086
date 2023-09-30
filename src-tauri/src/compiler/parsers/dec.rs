@@ -63,7 +63,7 @@ pub(in crate::compiler) fn parse_dec(
             let variable_type = variable_address_map
                 .unwrap_or(&VariableAddressMap::new())
                 .get(high_char)
-                .unwrap_or(&(VariableType::Byte, 0 as u16))
+                .unwrap_or(&(VariableType::Byte, 0_u16))
                 .0;
 
             let instruction = match variable_type {
