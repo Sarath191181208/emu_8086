@@ -90,7 +90,12 @@ mod test_8bit_jmp {
 
 #[cfg(test)]
 mod test_16_bit_jmp {
-    use crate::{compiler::compile_lines, cpu::{CPU, instructions::test_macro::compile_and_test_str}, generate_test_with_cycles, memory::Memory};
+    use crate::{
+        compiler::compile_lines,
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        generate_test_with_cycles,
+        memory::Memory,
+    };
 
     fn generate_0x80_long_ins() -> String {
         let mut ins = String::new();

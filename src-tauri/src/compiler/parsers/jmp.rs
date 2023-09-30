@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use crate::compiler::{
-        compilation_error::CompilationError,
-        suggestions_utils::get_all_registers_and_variable_suggestions,
-        tokenized_line::TokenizedLine,
-        tokens::{Assembly8086Tokens, Token},
-        types_structs::{Label, VariableAddressMap},
-        CompiledBytesReference,
-    };
+    compilation_error::CompilationError,
+    suggestions_utils::get_all_registers_and_variable_suggestions,
+    tokenized_line::TokenizedLine,
+    tokens::{Assembly8086Tokens, Token},
+    types_structs::{Label, VariableAddressMap},
+    CompiledBytesReference,
+};
 
 use super::utils::push_instruction;
 
@@ -134,7 +134,9 @@ fn get_address(
 ) -> Option<[u8; 2]> {
     match variable_address_map {
         None => None,
-        Some(variable_address_map) => variable_address_map.get(label).map(|(_, address)| [(address & 0xFF) as u8, (address >> 8) as u8]),
+        Some(variable_address_map) => variable_address_map
+            .get(label)
+            .map(|(_, address)| [(address & 0xFF) as u8, (address >> 8) as u8]),
     }
 }
 

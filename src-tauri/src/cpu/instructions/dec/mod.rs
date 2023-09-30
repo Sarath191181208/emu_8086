@@ -1,7 +1,6 @@
 use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
-
     pub(in crate::cpu) fn execute_dec_word_register(&mut self, opcode: u8) {
         let register_index = (opcode & 0x0F) - 8;
         let value = self.get_16bit_register_by_index(register_index);

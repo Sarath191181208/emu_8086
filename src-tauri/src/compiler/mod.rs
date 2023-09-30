@@ -435,12 +435,8 @@ fn mark_variables(
     for (_, _, line_number, tokenized_line_index) in var_ref {
         let tokenized_line = &tokenized_lines[*tokenized_line_index];
         let line_number = *line_number;
-        let compiled_tokens = compile(
-            tokenized_line,
-            is_org_defined,
-            None,
-            Some(var_abs_addr_map),
-        )?;
+        let compiled_tokens =
+            compile(tokenized_line, is_org_defined, None, Some(var_abs_addr_map))?;
 
         compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
         compiled_bytes_ref[line_number] = compiled_tokens.compiled_bytes_ref;
@@ -677,11 +673,11 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
             let label_line_number = *label_line_number_map.get(label).unwrap();
             let label_line = &lexer.tokens[label_line_number];
             let label_idx = label_line
-            .iter()
-            .position(|_token| {
-                _token.token_type == Assembly8086Tokens::Character(label.clone())
-            })
-            .unwrap();
+                .iter()
+                .position(|_token| {
+                    _token.token_type == Assembly8086Tokens::Character(label.clone())
+                })
+                .unwrap();
             let label_token = &label_line[label_idx];
             compilation_errors.push(CompilationError::new_without_suggestions(
                 *line_number as u32,
