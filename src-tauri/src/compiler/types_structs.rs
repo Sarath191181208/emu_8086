@@ -4,7 +4,7 @@ use super::Token;
 use serde::Serialize;
 use unicase::UniCase;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VariableType {
     Byte,
     Word,
