@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 
-use crate::compiler::{
-    compilation_error::CompilationError,
-    suggestions_utils::get_all_registers_and_variable_suggestions,
-    tokenized_line::TokenizedLine,
-    tokens::{Assembly8086Tokens, Token},
-    types_structs::VariableAddressMap,
-    CompiledBytesReference,
+use crate::{
+    compiler::{
+        compilation_error::CompilationError,
+        suggestions_utils::get_all_registers_and_variable_suggestions,
+        tokenized_line::TokenizedLine,
+        tokens::{Assembly8086Tokens, Token},
+        types_structs::{Label, VariableAddressMap},
+        CompiledBytesReference,
+    },
+    cpu::instructions::add,
 };
 
 use super::utils::push_instruction;
@@ -42,10 +45,31 @@ pub(in crate::compiler) fn parse_jmp(
         Assembly8086Tokens::Character(label) => {
             match offset_bytes_from_line_and_is_label_before_ref {
                 None => {
-                    // placeholder instruction
-                    push_instruction(compiled_bytes, vec![0xEB], token, compiled_bytes_ref);
-                    push_instruction(compiled_bytes, vec![0x00], high_token, compiled_bytes_ref);
-                    let ins_idx = compiled_bytes.len() - 1;
+                    // try to get the bytes from the variable_address_map
+                    let address = get_address(label, variable_address_map);
+                    let placeholder_or_variable_val = match address {
+                        None => vec![0x00],
+                        Some(address) => address.to_vec(),
+                    };
+                    let placeholder_or_variable_ins = match address {
+                        None => vec![0xEB],
+                        Some(_) => vec![0xFF, 0x26],
+                    };
+                    let placeholder_or_variable_val_len =
+                        placeholder_or_variable_val.len() + 1 - placeholder_or_variable_ins.len();
+                    push_instruction(
+                        compiled_bytes,
+                        placeholder_or_variable_ins,
+                        token,
+                        compiled_bytes_ref,
+                    );
+                    push_instruction(
+                        compiled_bytes,
+                        placeholder_or_variable_val,
+                        high_token,
+                        compiled_bytes_ref,
+                    );
+                    let ins_idx = compiled_bytes.len() - placeholder_or_variable_val_len;
                     label_idx_map.insert(label.to_string(), (high_token.clone(), ins_idx));
                     Ok(i + 2)
                 }
@@ -104,6 +128,19 @@ fn calc_offset(offset_bytes: u16, is_jmp_after_label: bool) -> Offset {
         } else {
             Offset::U16(offset_bytes)
         }
+    }
+}
+
+fn get_address(
+    label: &Label,
+    variable_address_map: Option<&VariableAddressMap>,
+) -> Option<[u8; 2]> {
+    match variable_address_map {
+        None => None,
+        Some(variable_address_map) => match variable_address_map.get(label) {
+            None => None,
+            Some((_, address)) => Some([(address & 0xFF) as u8, (address >> 8) as u8]),
+        },
     }
 }
 
@@ -178,6 +215,23 @@ label:
             // let before_last_ins = compiled_instructions[len_ins - 2];
             // assert_eq!(last_ins, 0xFF);
             assert_eq!(ins, 0x7F)
+        }
+    );
+
+    test_compile!(
+        test_jmp_var,
+        "
+        org 100h
+        .data 
+            var1 dw 0x1000
+        code:
+        jmp var1
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x00, 0x10, 0xFF, 0x26, 0x02, 0x01]
+            );
         }
     );
 }
