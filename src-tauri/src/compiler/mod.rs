@@ -383,7 +383,7 @@ fn mark_labels(
                 label_addr_map,
                 // is_org_defined,
             }),
-            Some(&var_abs_addr_map),
+            Some(var_abs_addr_map),
         )?;
 
         compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
@@ -438,7 +438,7 @@ fn mark_variables(
             tokenized_line,
             is_org_defined,
             None,
-            Some(&var_abs_addr_map),
+            Some(var_abs_addr_map),
         )?;
 
         compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
@@ -666,7 +666,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
     // check between labels and variables
     for (label, (_, line_number)) in var_addr_def_map.iter() {
         let line: &Vec<Token> = &lexer.tokens[*line_number];
-        if label_line_number_map.contains_key(&label) {
+        if label_line_number_map.contains_key(label) {
             let var_idx = line
                 .iter()
                 .position(|_token| {
@@ -716,7 +716,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                     && _token.column_number == token.column_number
             })
             .unwrap();
-        if !label_addr_map.contains_key(label) && !var_addr_def_map.contains_key(&label) {
+        if !label_addr_map.contains_key(label) && !var_addr_def_map.contains_key(label) {
             label_errors = true;
             compilation_errors.push(CompilationError::new_without_suggestions(
                 *line_number as u32,
@@ -725,9 +725,9 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                 &format!("The label \"{}\" is Undefined, Please define it.", label),
             ));
         }
-        if var_addr_def_map.contains_key(&label) {
+        if var_addr_def_map.contains_key(label) {
             // check if the label is defined as a 16bit
-            if var_addr_def_map.get(&label).unwrap().0 == VariableType::Byte {
+            if var_addr_def_map.get(label).unwrap().0 == VariableType::Byte {
                 label_errors = true;
                 compilation_errors.push(CompilationError::new_without_suggestions(
                     *line_number as u32,
