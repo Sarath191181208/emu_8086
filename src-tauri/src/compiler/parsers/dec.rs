@@ -72,7 +72,7 @@ pub(in crate::compiler) fn parse_dec(
             };
 
             convert_and_push_instructions!(
-                compiled_bytes,
+                compiled_bytes, 
                 compiled_bytes_ref,
                 (
                     token => instruction,
@@ -106,6 +106,16 @@ mod test_inc_16bit {
     test_compile!(test_dec_sp, "dec SP", |compiled_instructions: &Vec<u8>| {
         assert_eq!(compiled_instructions, &[0x4C]);
     });
+
+    test_compile!(test_dec_var, "
+    org 100h 
+    .data 
+    var dw 0x0001
+    code:
+    dec var
+    ", |compiled_instructions: &Vec<u8>| {
+        assert_eq!(compiled_instructions, &[0xEB, 0x02, 0x01, 0x00, 0xFF, 0x0E, 0x02, 0x01]);
+    });
 }
 
 #[cfg(test)]
@@ -118,5 +128,15 @@ mod test_dec_8bit {
 
     test_compile!(test_dec_bl, "dec BL", |compiled_instructions: &Vec<u8>| {
         assert_eq!(compiled_instructions, &[0xFE, 0xCB]);
+    });
+
+    test_compile!(test_dec_var, "
+    org 100h
+    .data
+    var db 0x01
+    code:
+    dec var
+    ", |compiled_instructions: &Vec<u8>| {
+        assert_eq!(compiled_instructions, &[0xEB, 0x01, 0x01, 0xFE, 0x0E, 0x02, 0x01]);
     });
 }
