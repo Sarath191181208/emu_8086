@@ -1,11 +1,14 @@
-use crate::{compiler::{
-    compilation_error::CompilationError,
-    suggestions_utils::get_all_registers_and_variable_suggestions,
-    tokenized_line::TokenizedLine,
-    tokens::Assembly8086Tokens,
-    types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
-    CompiledBytesReference,
-}, convert_and_push_instructions};
+use crate::{
+    compiler::{
+        compilation_error::CompilationError,
+        suggestions_utils::get_all_registers_and_variable_suggestions,
+        tokenized_line::TokenizedLine,
+        tokens::Assembly8086Tokens,
+        types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
+        CompiledBytesReference,
+    },
+    convert_and_push_instructions,
+};
 
 use super::utils::{get_idx_from_reg, get_label_address_or_push_into_ref, push_instruction};
 
@@ -72,7 +75,7 @@ pub(in crate::compiler) fn parse_dec(
             };
 
             convert_and_push_instructions!(
-                compiled_bytes, 
+                compiled_bytes,
                 compiled_bytes_ref,
                 (
                     token => instruction,
@@ -107,15 +110,22 @@ mod test_inc_16bit {
         assert_eq!(compiled_instructions, &[0x4C]);
     });
 
-    test_compile!(test_dec_var, "
+    test_compile!(
+        test_dec_var,
+        "
     org 100h 
     .data 
     var dw 0x0001
     code:
     dec var
-    ", |compiled_instructions: &Vec<u8>| {
-        assert_eq!(compiled_instructions, &[0xEB, 0x02, 0x01, 0x00, 0xFF, 0x0E, 0x02, 0x01]);
-    });
+    ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x01, 0x00, 0xFF, 0x0E, 0x02, 0x01]
+            );
+        }
+    );
 }
 
 #[cfg(test)]
@@ -130,13 +140,20 @@ mod test_dec_8bit {
         assert_eq!(compiled_instructions, &[0xFE, 0xCB]);
     });
 
-    test_compile!(test_dec_var, "
+    test_compile!(
+        test_dec_var,
+        "
     org 100h
     .data
     var db 0x01
     code:
     dec var
-    ", |compiled_instructions: &Vec<u8>| {
-        assert_eq!(compiled_instructions, &[0xEB, 0x01, 0x01, 0xFE, 0x0E, 0x02, 0x01]);
-    });
+    ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x01, 0x01, 0xFE, 0x0E, 0x02, 0x01]
+            );
+        }
+    );
 }

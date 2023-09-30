@@ -4,7 +4,7 @@ use crate::compiler::{
     tokens::{
         registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
     },
-    types_structs::{Label, VariableAddressMap, VariableType, ArrayIndex, VariableReferenceMap},
+    types_structs::{ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType},
     CompiledBytesReference,
 };
 

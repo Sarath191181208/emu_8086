@@ -11,9 +11,7 @@ use crate::{
         tokens::{
             registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
         },
-        types_structs::{
-            VariableAddressMap, VariableReferenceMap, VariableType,
-        },
+        types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
     },
     utils::Either,
 };

@@ -6,7 +6,7 @@ impl CPU {
         val
     }
 
-    fn dec_from_8bitvalue_and_set_flags(&mut self, value: u8) -> u8{
+    fn dec_from_8bitvalue_and_set_flags(&mut self, value: u8) -> u8 {
         let (val, _) = self.sub_8bit_with_overflow_and_set_flags(value, 1);
         val
     }
@@ -45,7 +45,11 @@ impl CPU {
 
 #[cfg(test)]
 mod test_16bit_dec {
-    use crate::{cpu::{CPU, instructions::test_macro::compile_and_test_str}, generate_test, memory::Memory};
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        generate_test,
+        memory::Memory,
+    };
 
     generate_test!(
         dec_ax,
@@ -86,14 +90,18 @@ mod test_16bit_dec {
             |cpu: &CPU, mem: &Memory| {
                 assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x0000);
                 assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
-            }
+            },
         );
     }
 }
 
 #[cfg(test)]
 mod test_8bit_dec {
-    use crate::{cpu::{CPU, instructions::test_macro::compile_and_test_str}, generate_test, memory::Memory};
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        generate_test,
+        memory::Memory,
+    };
 
     generate_test!(
         dec_al,
@@ -117,7 +125,7 @@ mod test_8bit_dec {
         })
     );
 
-        #[test]
+    #[test]
     fn test_dec_address_8bit() {
         compile_and_test_str(
             "
@@ -131,7 +139,7 @@ mod test_8bit_dec {
             |cpu: &CPU, mem: &Memory| {
                 assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x00);
                 assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
-            }
+            },
         );
     }
 }
