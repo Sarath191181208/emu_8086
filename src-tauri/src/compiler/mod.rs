@@ -411,22 +411,27 @@ fn mark_variables(
 
     var_ref: &VariableReferenceList,
     var_addr_def_map: &VariableAddressDefinitionMap,
+    var_abs_addr_map: &mut VariableAddressMap,
 
     is_org_defined: bool,
 ) -> Result<(), CompilationError> {
     // calc offset addr for each var
-    let mut var_addr_map = VariableAddressMap::new();
     for (var_label, (var_type, label_definition_line_number)) in var_addr_def_map {
         let (offset, _) = calc_offset(compiled_bytes, 0, *label_definition_line_number);
         let org_offset = if is_org_defined { 0x100 } else { 0x00 };
-        var_addr_map.insert(var_label.clone(), (*var_type, offset + org_offset));
+        var_abs_addr_map.insert(var_label.clone(), (*var_type, offset + org_offset));
     }
 
     // mark the variables
     for (_, _, line_number, tokenized_line_index) in var_ref {
         let tokenized_line = &tokenized_lines[*tokenized_line_index];
         let line_number = *line_number;
-        let compiled_tokens = compile(tokenized_line, is_org_defined, None, Some(&var_addr_map))?;
+        let compiled_tokens = compile(
+            tokenized_line,
+            is_org_defined,
+            None,
+            Some(&var_abs_addr_map),
+        )?;
 
         compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
         compiled_bytes_ref[line_number] = compiled_tokens.compiled_bytes_ref;
@@ -609,28 +614,6 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     }
 
-    // check if all flags are defined
-    let mut label_errors = false;
-    for (label, token, line_number, tokenized_line_number) in &mut *label_ref {
-        let line = &lexer.tokens[*tokenized_line_number];
-        let idx = line
-            .iter()
-            .position(|_token| {
-                _token.line_number == token.line_number
-                    && _token.column_number == token.column_number
-            })
-            .unwrap();
-        if !label_addr_map.contains_key(label) {
-            label_errors = true;
-            compilation_errors.push(CompilationError::new_without_suggestions(
-                *line_number as u32,
-                line[idx].column_number,
-                line[idx].token_length,
-                &format!("The label \"{}\" is Undefined, Please define it.", label),
-            ));
-        }
-    }
-
     // check if all the variables are defined
     let mut var_errors = false;
     for (_i, (var, used_as_type, line_number, tokenized_line_number)) in var_ref.iter().enumerate()
@@ -666,9 +649,48 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     }
 
+    // check if all flags are defined
+    let mut label_errors = false;
+    for (label, token, line_number, tokenized_line_number) in &mut *label_ref {
+        let line = &lexer.tokens[*tokenized_line_number];
+        let idx = line
+            .iter()
+            .position(|_token| {
+                _token.line_number == token.line_number
+                    && _token.column_number == token.column_number
+            })
+            .unwrap();
+        if !label_addr_map.contains_key(label) {
+            label_errors = true;
+            compilation_errors.push(CompilationError::new_without_suggestions(
+                *line_number as u32,
+                line[idx].column_number,
+                line[idx].token_length,
+                &format!("The label \"{}\" is Undefined, Please define it.", label),
+            ));
+        }
+    }
+
     if label_errors || var_errors {
         return None;
     }
+
+    let mut var_abs_addr_map = VariableAddressMap::new();
+
+    match mark_variables(
+        compiled_bytes_lines_vec,
+        compiled_bytes_ref_lines_vec,
+        &lexer.tokens,
+        var_ref,
+        var_addr_def_map,
+        &mut var_abs_addr_map,
+        is_org_defined,
+    ) {
+        Ok(_) => (),
+        Err(err) => {
+            compilation_errors.push(err);
+        }
+    };
 
     match mark_labels(
         label_ref,
@@ -678,20 +700,6 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         label_addr_map,
         is_org_defined,
         0,
-    ) {
-        Ok(_) => (),
-        Err(err) => {
-            compilation_errors.push(err);
-        }
-    };
-
-    match mark_variables(
-        compiled_bytes_lines_vec,
-        compiled_bytes_ref_lines_vec,
-        &lexer.tokens,
-        var_ref,
-        var_addr_def_map,
-        is_org_defined,
     ) {
         Ok(_) => (),
         Err(err) => {
