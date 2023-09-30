@@ -6,6 +6,7 @@ export const langRules: languages.IMonarchLanguage = {
   keywords: ["mov", "add", "sub", "inc", "dec", "mul", "jmp"],
   registers16bit: ["ax", "bx", "cx", "dx", "si", "di", "sp", "bp"],
   registers8bit: ["al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"],
+  defineData: ["db", "dw"],
   comments: {
     lineComment: ";",
   },
@@ -13,14 +14,18 @@ export const langRules: languages.IMonarchLanguage = {
     root: [
       // white space
       [/[ \t\r\n]+/, "white"],
-      // labels
-      [/\w+:/, "label"],
       // support for comments
       [/;.*/, "comment"],
       //   write support for numbers hex numbers
       [/0[xX][0-9a-fA-F]+/, "number.hex"],
       [/[0-9a-fA-F]+[hH]/, "number.hex"],
       [/\d+/, "number"],
+      // directives
+      [/ *ORG/, "directive.org"],
+      [/ *(\.data|data)/, "directive.data"],
+      [/ *(\.code|code)/, "directive.code"],
+      // labels
+      [/\w+:/, "label"],
       // also if the last character is a h then it is a hex number
       [
         /[a-zA-Z_]\w*/,
@@ -29,6 +34,7 @@ export const langRules: languages.IMonarchLanguage = {
             "@keywords": "keyword",
             "@registers16bit": "registers16bit",
             "@registers8bit": "registers8bit",
+            "@defineData": "defineData",
             "@default": "identifier",
           },
         },
@@ -48,6 +54,10 @@ export const langTheme: editor.IStandaloneThemeData = {
   inherit: true,
   rules: [
     { token: "keyword", foreground: "#569CD6" },
+    { token: "defineData", foreground: "#569CD6" },
+    { token: "directive.org", foreground: "c586c0" },
+    { token: "directive.data", foreground: "c586c0" },
+    { token: "directive.code", foreground: "c586c0" },
     { token: "label", foreground: "#6b7280" },
     { token: "registers16bit", foreground: "#9CDCFE" },
     { token: "registers8bit", foreground: "#0891b2" },
@@ -68,28 +78,3 @@ export const langTheme: editor.IStandaloneThemeData = {
     "editorWhitespace.foreground": "#3B4048",
   },
 };
-
-// export const completionRules: languages.CompletionItemProvider = {
-//   provideCompletionItems(model, position, context, token) {
-//     var word = model.getWordUntilPosition(position);
-//     var range = {
-//       startLineNumber: position.lineNumber,
-//       endLineNumber: position.lineNumber,
-//       startColumn: word.startColumn,
-//       endColumn: word.endColumn,
-//     };
-
-//     const suggestions: languages.CompletionItem[] = [
-//       {
-//         label: "mov",
-//         kind: languages.CompletionItemKind.Keyword,
-//         insertText: "mov",
-//         documentation: "Move a value from one register to another",
-//         range: range,
-//       },
-//     ];
-//     return {
-//       suggestions: suggestions,
-//     };
-//   },
-// };
