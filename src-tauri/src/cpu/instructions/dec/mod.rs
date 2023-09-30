@@ -1,15 +1,6 @@
 use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
-    fn dec_from_16bitvalue_and_set_flags(&mut self, value: u16) -> u16 {
-        let (val, _) = self.sub_16bit_with_overflow_and_set_flags(value, 1);
-        val
-    }
-
-    fn dec_from_8bitvalue_and_set_flags(&mut self, value: u8) -> u8 {
-        let (val, _) = self.sub_8bit_with_overflow_and_set_flags(value, 1);
-        val
-    }
 
     pub(in crate::cpu) fn execute_dec_word_register(&mut self, opcode: u8) {
         let register_index = (opcode & 0x0F) - 8;

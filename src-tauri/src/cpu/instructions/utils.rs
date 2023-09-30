@@ -45,4 +45,18 @@ impl CPU {
         self.auxiliary_carry_flag = (a & 0x0F) < (b & 0x0F);
         (result, overflow)
     }
+
+    pub fn dec_from_16bitvalue_and_set_flags(&mut self, value: u16) -> u16 {
+        let prev_carry_flag = self.carry_flag;
+        let (val, _) = self.sub_16bit_with_overflow_and_set_flags(value, 1);
+        self.carry_flag = prev_carry_flag;
+        val
+    }
+
+    pub fn dec_from_8bitvalue_and_set_flags(&mut self, value: u8) -> u8 {
+        let prev_carr_flag = self.carry_flag;
+        let (val, _) = self.sub_8bit_with_overflow_and_set_flags(value, 1);
+        self.carry_flag = prev_carr_flag;
+        val
+    }
 }
