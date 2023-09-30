@@ -336,6 +336,8 @@ impl CPU {
             0xFE => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
+                    // INC [0x1234]
+                    0x06 => self.execute_inc_address_8bit(mem),
                     // DEC [0x1234]
                     0x0E => self.execute_dec_address_8bit(mem),
                     // INC AL | BH | CL ..
@@ -349,6 +351,8 @@ impl CPU {
             0xFF => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
+                    // INC [0x1234]
+                    0x06 => self.execute_inc_address_16bit(mem),
                     // DEC [0x1234]
                     0x0E => self.execute_dec_address_16bit(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFF", opcode),

@@ -1,10 +1,11 @@
 use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
+
     pub(in crate::cpu) fn execute_inc_word_register(&mut self, opcode: u8) {
         let register_index = opcode & 0x07;
         let value = self.get_16bit_register_by_index(register_index);
-        let (value, _) = self.add_16bit_with_overflow_and_set_flags(value, 0x0001);
+        let value = self.inc_from_16bitvalue_and_set_flags(value);
         self.set_16bit_register_by_index(register_index, value);
     }
 
@@ -12,14 +13,34 @@ impl CPU {
         let opcode = self.consume_instruction(mem);
         let register_index = opcode & 0x07;
         let value = self.get_8bit_register_by_index(register_index);
-        let (value, _) = self.add_8bit_with_overflow_and_set_flags(value, 0x01);
+        let value = self.inc_from_8bitvalue_and_set_flags(value);
         self.set_8bit_register_by_index(register_index, value);
+    }
+
+    pub(in crate::cpu) fn execute_inc_address_16bit(&mut self, mem: &mut Memory) {
+        self.consume_instruction(mem); // 0x06
+        let address = self.consume_word(mem);
+        let value = self.read_word_from_pointer(mem, address);
+        let value = self.inc_from_16bitvalue_and_set_flags(value);
+        self.write_word_from_pointer(mem, address, value);
+    }
+
+    pub(in crate::cpu) fn execute_inc_address_8bit(&mut self, mem: &mut Memory) {
+        self.consume_instruction(mem); // 0x06
+        let address = self.consume_word(mem);
+        let value = self.read_byte_from_pointer(mem, address);
+        let value = self.inc_from_8bitvalue_and_set_flags(value);
+        self.write_byte_from_pointer(mem, address, value);
     }
 }
 
 #[cfg(test)]
 mod test_16bit_inc {
-    use crate::{cpu::CPU, generate_test, memory::Memory};
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        generate_test,
+        memory::Memory,
+    };
 
     generate_test!(
         inc_ax,
@@ -70,11 +91,33 @@ mod test_16bit_inc {
             assert_eq!(cpu.get_flags_as_binary(), 0b00110000)
         })
     );
+
+    #[test]
+    fn test_inc_address_16bit() {
+        compile_and_test_str(
+            "
+            org 0x100
+            .data
+            var dw 0xFFFF
+            code: 
+            inc var
+            ",
+            2,
+            |cpu: &CPU, mem: &Memory| {
+                assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x0000);
+                assert_eq!(cpu.get_flags_as_binary(), 0b0011_0010);
+            },
+        );
+    }
 }
 
 #[cfg(test)]
 mod test_8bit_inc {
-    use crate::{cpu::CPU, generate_test, memory::Memory};
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        generate_test,
+        memory::Memory,
+    };
 
     generate_test!(
         inc_al,
@@ -111,4 +154,22 @@ mod test_8bit_inc {
             assert_eq!(cpu.get_flags_as_binary(), 0b00010000);
         })
     );
+
+    #[test]
+    fn test_dec_address_8bit() {
+        compile_and_test_str(
+            "
+            org 0x100
+            .data
+            var db 0x01
+            code: 
+            inc var
+            ",
+            2,
+            |cpu: &CPU, mem: &Memory| {
+                assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x02);
+                assert_eq!(cpu.get_flags_as_binary(), 0x00);
+            },
+        );
+    }
 }

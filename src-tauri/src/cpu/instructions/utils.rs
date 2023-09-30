@@ -59,4 +59,18 @@ impl CPU {
         self.carry_flag = prev_carr_flag;
         val
     }
+
+    pub(super) fn inc_from_16bitvalue_and_set_flags(&mut self, value: u16) -> u16 {
+        let prev_carr_flag = self.carry_flag;
+        let (val, _) = self.add_16bit_with_overflow_and_set_flags(value, 1);
+        self.carry_flag = prev_carr_flag;
+        val
+    }
+
+    pub(super) fn inc_from_8bitvalue_and_set_flags(&mut self, value: u8) -> u8 {
+        let prev_carr_flag = self.carry_flag;
+        let (val, _) = self.add_8bit_with_overflow_and_set_flags(value, 1);
+        self.carry_flag = prev_carr_flag;
+        val
+    }
 }
