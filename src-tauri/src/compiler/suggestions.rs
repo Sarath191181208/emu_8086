@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{ser::SerializeMap, Serialize};
 
 use super::types_structs::{Label, Variable};
 
@@ -26,15 +26,62 @@ impl Serialize for SuggestionType {
         S: serde::Serializer,
     {
         match &self {
-            SuggestionType::Instruction(x) => serializer.serialize_str(x),
-            SuggestionType::Registers16bit(x) => serializer.serialize_str(x),
-            SuggestionType::Registers8bit(x) => serializer.serialize_str(x),
-            SuggestionType::DefineData(x) => serializer.serialize_str(x),
-            SuggestionType::Variables16bit(x) => serializer.serialize_str(x.as_ref()),
-            SuggestionType::Variables8bit(x) => serializer.serialize_str(x.as_ref()),
-            SuggestionType::Label(x) => serializer.serialize_str(x.as_ref()),
-            SuggestionType::Constant16bit(x) => serializer.serialize_u16(*x),
-            SuggestionType::Constant8bit(x) => serializer.serialize_u8(*x),
+            // SuggestionType::Instruction(x) => serializer.
+            // conert instruction into a dict {instruction: x, type: "instruction"}
+            SuggestionType::Instruction(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", x)?;
+                s.serialize_entry("type", "instruction")?;
+                s.end()
+            }
+            SuggestionType::Registers16bit(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", x)?;
+                s.serialize_entry("type", "register16bit")?;
+                s.end()
+            }
+            SuggestionType::Registers8bit(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", x)?;
+                s.serialize_entry("type", "register8bit")?;
+                s.end()
+            }
+            SuggestionType::DefineData(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", x)?;
+                s.serialize_entry("type", "define")?;
+                s.end()
+            }
+            SuggestionType::Variables16bit(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", &x.to_string())?;
+                s.serialize_entry("type", "variable16bit")?;
+                s.end()
+            }
+            SuggestionType::Variables8bit(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", &x.to_string())?;
+                s.serialize_entry("type", "variable8bit")?;
+                s.end()
+            }
+            SuggestionType::Label(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", &x.to_string())?;
+                s.serialize_entry("type", "label")?;
+                s.end()
+            }
+            SuggestionType::Constant16bit(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", x)?;
+                s.serialize_entry("type", "constant16bit")?;
+                s.end()
+            }
+            SuggestionType::Constant8bit(x) => {
+                let mut s = serializer.serialize_map(Some(2))?;
+                s.serialize_entry("value", x)?;
+                s.serialize_entry("type", "constant8bit")?;
+                s.end()
+            }
         }
     }
 }

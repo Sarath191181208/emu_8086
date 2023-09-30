@@ -11,7 +11,9 @@ import { useStateSavePrevious } from "./useStateSavePrevious";
 import { languages } from "monaco-editor/esm/vs/editor/editor.api";
 import {
   CompilationError,
+  Suggestion,
   compilationErrorToSuggestions,
+  suggestionToCompletionProvider,
 } from "../types/compilationError";
 
 export function useApp() {
@@ -201,12 +203,13 @@ export function useApp() {
       clearErrorsOnEditor();
     } catch (e) {
       setErrorsOnEditor(e);
-      editorRef.current?.trigger("some", "editor.action.triggerSuggest", {});
+      // editorRef.current?.trigger("some", "editor.action.triggerSuggest", {});
     }
   };
 
   let isReady = false;
-  let suggestionsArray: Array<string> = [];
+  let suggestionsArray = useRef<Suggestion<string>[]>([]);
+  let itrRef = 0;
   const getSuggestions = async (lineNumber: number, _: number) => {
     try {
       await invoke("try_compile_code", {
@@ -223,17 +226,25 @@ export function useApp() {
         lineNumber,
         _
       );
-      if (tempSuggestions === null) {
+      if (tempSuggestions === null || tempSuggestions.length === 0) {
         return;
       }
-      suggestionsArray = tempSuggestions;
-      isReady = true;
+      itrRef++;
+      suggestionsArray.current = tempSuggestions;
+        (isReady = true);
+      console.log(suggestionsArray);
+      setTimeout(() => {
+        console.log("trigger");
+        editorRef.current?.trigger("some", "editor.action.triggerSuggest", {});
+      }, 100);
     }
   };
   const languageCompletionProvider: languages.CompletionItemProvider = {
-    triggerCharacters: [".", " "],
+    triggerCharacters: [".", " ", ","],
     provideCompletionItems(model, position) {
       let word = model.getWordUntilPosition(position);
+      // languages.CompletionList;
+
       let range = {
         startLineNumber: position.lineNumber,
         endLineNumber: position.lineNumber,
@@ -241,24 +252,25 @@ export function useApp() {
         endColumn: word.endColumn,
       };
 
-      getSuggestions(position.lineNumber, position.column);
-      if (isReady) {
-        let tempSuggestions = suggestionsArray;
-        isReady = false;
-        return {
-          suggestions: tempSuggestions.map((s) => ({
-            label: s,
-            kind: languages.CompletionItemKind.Text,
-            insertText: s,
-            documentation: s,
-            range,
-          })),
-        };
-      } else {
+      return getSuggestions(position.lineNumber, position.column).then(() => {
+        if (isReady) {
+          let tempSuggestions = suggestionsArray.current;
+          suggestionsArray.current = [];
+          isReady = false;
+          return {
+            suggestions: tempSuggestions.map((s) => ({
+              label: s.value,
+              kind: suggestionToCompletionProvider[s.type],
+              insertText: s.value,
+              documentation: s.value,
+              range,
+            })),
+          };
+        }
         return {
           suggestions: [],
         };
-      }
+      });
     },
   };
 
@@ -282,3 +294,26 @@ export function useApp() {
     tryCompile,
   };
 }
+
+// function getCompiletion(
+//   range: {
+//     startLineNumber: number;
+//     endLineNumber: number;
+//     startColumn: number;
+//     endColumn: number;
+//   },
+//   kind: languages.CompletionItemKind
+// ) {
+//   return {
+//     label: "test",
+//     kind,
+//     insertText: "test",
+//     documentation: "test",
+//     range: {
+//       startLineNumber: 1,
+//       endLineNumber: 1,
+//       startColumn: 1,
+//       endColumn: 1,
+//     },
+//   };
+// }
