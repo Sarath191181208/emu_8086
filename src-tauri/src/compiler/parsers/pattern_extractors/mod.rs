@@ -18,7 +18,7 @@ use crate::{
     utils::Either,
 };
 
-use super::utils::check_comma;
+use super::utils::{check_comma, get_label_address_or_push_into_ref};
 
 pub(crate) enum AddressingMode<'a> {
     Registers16bit {
@@ -76,27 +76,6 @@ pub(crate) enum AddressingMode<'a> {
         address_bytes: [u8; 2],
         num: u8,
     },
-}
-
-fn get_label_address_or_push_into_ref(
-    idx: ArrayIndex,
-    label: &Label,
-    var_type: VariableType,
-    variable_abs_offset_bytes_map: &VariableAddressMap,
-    var_ref_map: &mut VariableReferenceMap,
-) -> [u8; 2] {
-    match variable_abs_offset_bytes_map.get(label) {
-        Some((_, abs_addr)) => {
-            let ins = (abs_addr & 0xFF) as u8;
-            let ins2 = (abs_addr >> 8) as u8;
-            [ins, ins2]
-        }
-        None => {
-            let placeholder = [0x00, 0x00];
-            var_ref_map.insert(label.clone(), (var_type, idx));
-            placeholder
-        }
-    }
 }
 
 pub(crate) fn parse_two_arguments_line<'a>(
