@@ -30,6 +30,13 @@ impl CPU {
             }
         }
     }
+
+    pub(in crate::cpu) fn execute_jmp_abs_address(&mut self, mem: &mut Memory) {
+        self.consume_instruction(mem); // consume 0x26
+        let address = self.consume_word(mem);
+        print!("address: {:x}", address);
+        self.instruction_pointer = address;
+    }
 }
 
 #[cfg(test)]
@@ -83,7 +90,7 @@ mod test_8bit_jmp {
 
 #[cfg(test)]
 mod test_16_bit_jmp {
-    use crate::{compiler::compile_lines, cpu::CPU, generate_test_with_cycles, memory::Memory};
+    use crate::{compiler::compile_lines, cpu::{CPU, instructions::test_macro::compile_and_test_str}, generate_test_with_cycles, memory::Memory};
 
     fn generate_0x80_long_ins() -> String {
         let mut ins = String::new();
@@ -144,4 +151,21 @@ mod test_16_bit_jmp {
         }),
         0x3
     );
+
+    #[test]
+    fn test_jmp_var() {
+        compile_and_test_str(
+            "
+            org 0x100
+            .data
+            var dw 0x0110
+            code: 
+            jmp var
+            ",
+            2,
+            |cpu: &CPU, _: &Memory| {
+                assert_eq!(cpu.instruction_pointer, 0x0102);
+            },
+        );
+    }
 }

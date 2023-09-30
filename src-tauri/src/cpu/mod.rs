@@ -355,6 +355,8 @@ impl CPU {
                     0x06 => self.execute_inc_address_16bit(mem),
                     // DEC [0x1234]
                     0x0E => self.execute_dec_address_16bit(mem),
+                    // JMP [0x1234]
+                    0x26 => self.execute_jmp_abs_address(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFF", opcode),
                 }
             }
