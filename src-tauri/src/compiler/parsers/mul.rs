@@ -113,7 +113,7 @@ mod test_mul_16bit {
         assert_eq!(compiled_instructions, &[0xF7, 0xE4]);
     });
 
-        test_compile!(
+    test_compile!(
         test_dec_var,
         "
     org 100h 
