@@ -319,6 +319,7 @@ impl CPU {
             0xF6 => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
+                    0x26 => self.execute_mul_address_8bit(mem),
                     0xE0..=0xE7 => self.execute_mul_8bit(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xF6", opcode),
                 }
@@ -328,6 +329,7 @@ impl CPU {
             0xF7 => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
+                    0x26 => self.execute_mul_address_16bit(mem),
                     0xE0..=0xE7 => self.execute_mul_16bit(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xF7", opcode),
                 }
