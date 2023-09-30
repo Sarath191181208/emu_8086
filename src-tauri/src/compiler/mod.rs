@@ -354,6 +354,7 @@ fn calc_offset(
     (offset as u16, is_label_before_ref)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn mark_labels(
     label_ref: &LabelRefrenceList,
 
