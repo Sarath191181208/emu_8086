@@ -86,6 +86,15 @@ impl Lexer {
                         ));
                         iterating_col_num += 1;
                     },
+                    '+' => {
+                        temp_vec.push(Token::new(
+                            Assembly8086Tokens::Plus,
+                            line_number,
+                            iterating_col_num as u32,
+                            1,
+                        ));
+                        iterating_col_num += 1;
+                    }
                     _ => {
                         let mut token_length = 0;
                         let mut token_string_buffer = String::new();
