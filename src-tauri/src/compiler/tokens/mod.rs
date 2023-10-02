@@ -132,3 +132,62 @@ impl Token {
         }
     }
 }
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct SignedU16 {
+    val: u16,
+    is_negative: bool,
+}
+
+impl SignedU16 {
+    pub fn new(val: u16) -> Self {
+        Self {
+            val,
+            is_negative: false,
+        }
+    }
+
+    pub fn overflowing_add(self, other: Self) -> (Self, bool) {
+        match (self.is_negative, other.is_negative) {
+            (false, false) | (true, true) => {
+                let (res, overflow) = self.val.overflowing_add(other.val);
+                (
+                    Self {
+                        val: res,
+                        is_negative: self.is_negative,
+                    },
+                    overflow,
+                )
+            }
+            (false, true) | (true, false) => {
+                let (res, overflow) = self.val.overflowing_sub(other.val);
+                (
+                    Self {
+                        val: res,
+                        is_negative: if other.val > self.val {
+                            other.is_negative
+                        } else {
+                            self.is_negative
+                        },
+                    },
+                    overflow,
+                )
+            }
+        }
+    }
+
+    pub fn overflowing_sub(self, other: Self) -> (Self, bool) {
+        self.overflowing_add(other.negate())
+    }
+
+    fn negate(self) -> Self {
+        Self {
+            val: self.val,
+            is_negative: !self.is_negative,
+        }
+    }
+
+    pub fn as_num(self) -> Assembly8086Tokens{
+        Assembly8086Tokens::convert_to_min_num_type(self.val)
+    }
+}

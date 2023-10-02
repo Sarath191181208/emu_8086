@@ -1,4 +1,6 @@
-type Offset = u16;
+use super::SignedU16;
+
+type Offset = SignedU16;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IndexedAddressingTypes {
