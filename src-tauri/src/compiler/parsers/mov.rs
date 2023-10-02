@@ -521,6 +521,14 @@ mod tests {
         ",
         |compiled_instructions: &Vec<u8>| { assert_eq!(compiled_instructions, &[0x8B, 0x00]) }
     );
+
+    test_compile!(
+        test_mov_ax_ref_bx_plus_di,
+        "
+        mov ax, [bx + di + 0x20
+        ",
+        |compiled_instructions: &Vec<u8>| { assert_eq!(compiled_instructions, &[0x8B, 0x41, 0x20]) }
+    );
 }
 
 #[cfg(test)]
