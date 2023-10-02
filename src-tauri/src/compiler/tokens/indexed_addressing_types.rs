@@ -29,4 +29,18 @@ impl IndexedAddressingTypes {
             IndexedAddressingTypes::Offset(_) => Err("Offset is not a valid index register"),
         }
     }
+
+    pub fn get_offset(&self) -> Option<Offset>{
+        match self {
+            IndexedAddressingTypes::BxSi(offset) => offset.clone(),
+            IndexedAddressingTypes::BxDi(offset) => offset.clone(),
+            IndexedAddressingTypes::BpSi(offset) => offset.clone(),
+            IndexedAddressingTypes::BpDi(offset) => offset.clone(),
+            IndexedAddressingTypes::SI(offset) => offset.clone(),
+            IndexedAddressingTypes::DI(offset) => offset.clone(),
+            IndexedAddressingTypes::BP(offset) => offset.clone(),
+            IndexedAddressingTypes::BX(offset) => offset.clone(),
+            IndexedAddressingTypes::Offset(offset) => Some(offset.clone()),
+        }
+    }
 }
