@@ -83,28 +83,44 @@ pub(super) fn get_idx_from_token(token: &Token) -> Result<u8, CompilationError> 
     get_idx_from_reg(token, reg)
 }
 
+pub(super) fn check_token<'a>(
+    tokenized_line: &'a TokenizedLine<'a>,
+    previous_token: &'a Token,
+    i: usize,
+    expected_token: &Assembly8086Tokens,
+) -> Result<(), CompilationError> {
+    let token = tokenized_line.get(
+        i,
+        format!(
+            "Expected {:?} after {:?} got nothing",
+            expected_token, previous_token
+        )
+        .to_string(),
+        None,
+    )?;
+
+    if &token.token_type != expected_token {
+        return Err(CompilationError::new_without_suggestions(
+            token.line_number,
+            token.column_number,
+            token.token_length,
+            &format!(
+                "Expected {:?} after {:?} got {:?}",
+                expected_token, previous_token.token_type, token.token_type
+            ),
+        ));
+    }
+
+
+    Ok(())
+}
+
 pub(super) fn check_comma<'a>(
     tokenized_line: &'a TokenizedLine<'a>,
     previous_token: &'a Token,
     i: usize,
 ) -> Result<(), CompilationError> {
-    let sepertor_token = tokenized_line.get(
-        i,
-        format!("Expected , after {:?} got nothing", previous_token).to_string(),
-        None,
-    )?;
-    if sepertor_token.token_type != Assembly8086Tokens::Comma {
-        return Err(CompilationError::new_without_suggestions(
-            sepertor_token.line_number,
-            sepertor_token.column_number,
-            sepertor_token.token_length,
-            &format!(
-                "Expected , after {:?} got {:?}",
-                previous_token.token_type, sepertor_token
-            ),
-        ));
-    }
-    Ok(())
+    check_token(tokenized_line, previous_token, i, &Assembly8086Tokens::Comma)
 }
 
 pub(super) fn get_token_as_label(token: &Token) -> &Label {
@@ -149,4 +165,36 @@ pub(super) fn get_label_address_or_push_into_ref(
             placeholder
         }
     }
+}
+
+pub(super) fn iterate_with_seperator(
+    start_index: usize,
+    end_index: usize,
+    tokenized_line: &TokenizedLine,
+    seperator: &Assembly8086Tokens,
+    mut callback: impl FnMut(&Token) -> Result<(), CompilationError>,
+) -> Result<usize, CompilationError> {
+    let mut i = start_index;
+    while i < end_index {
+        let token = tokenized_line.get(
+            i,
+            "This shouldn't happen, Report this! Err: iterate_with_seperator:174".to_string(),
+            None,
+        );
+        match token {
+            Ok(token) => {
+                callback(token)?;
+                i += 1;
+                if i < end_index {
+                    check_token(tokenized_line, token, i, seperator)?;
+                    i += 1;
+                }
+            }
+            Err(err) => {
+                return Err(err);
+            }
+        }
+    }
+
+    Ok(i)
 }

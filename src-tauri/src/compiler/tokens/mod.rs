@@ -8,6 +8,21 @@ pub mod instructions;
 pub mod registers16bit;
 pub mod registers8bit;
 
+type Offset = u16;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum IndexedAddressingTypes{
+      BX(Option<Offset>),
+      BP(Option<Offset>),
+      SI(Option<Offset>),
+      DI(Option<Offset>),
+    BxSi(Option<Offset>),
+    BxDi(Option<Offset>),
+    BpSi(Option<Offset>),
+    BpDi(Option<Offset>),
+    Offset(Offset)
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Assembly8086Tokens {
     // Resisters
@@ -53,6 +68,15 @@ pub(crate) enum Assembly8086Tokens {
     Space,
     Comma,
     Colon,
+    OpenSquareBracket,
+    CloseSquareBracket,
+    Plus,
+
+    // i.e this like this 
+    // [bx]
+    // [bx + si]
+    // [bx + si + 0x10]
+    IndexedAddressing(IndexedAddressingTypes),
 
     // Define data
     Data(data::DefineData),
@@ -77,6 +101,10 @@ impl std::fmt::Display for Assembly8086Tokens {
             Assembly8086Tokens::Character(character) => write!(f, "{}", character),
             Assembly8086Tokens::Data(data) => write!(f, "{}", data),
             Assembly8086Tokens::AssemblerDirectives(directive) => write!(f, "{}", directive),
+            Assembly8086Tokens::OpenSquareBracket => write!(f, "["),
+            Assembly8086Tokens::CloseSquareBracket => write!(f, "]"),
+            Assembly8086Tokens::Plus => write!(f, "+"),
+            Assembly8086Tokens::IndexedAddressing(_) => write!(f, "IndexedAddressing"),
         }
     }
 }

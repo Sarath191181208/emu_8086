@@ -1,3 +1,5 @@
+use serde_with::As;
+
 use crate::{
     compiler::{
         compilation_error::CompilationError,
@@ -9,71 +11,324 @@ use crate::{
         },
         tokenized_line::TokenizedLine,
         tokens::{
-            registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
+            registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
+            IndexedAddressingTypes, Token,
         },
         types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
     },
     utils::Either,
 };
 
-use super::utils::{check_comma, get_label_address_or_push_into_ref};
+use super::utils::{check_comma, get_label_address_or_push_into_ref, iterate_with_seperator};
 
-pub(crate) enum AddressingMode<'a> {
+pub(crate) enum AddressingMode {
     Registers16bit {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
     },
     Registers8bit {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
     },
     Registers16bitNumber {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
         num: Either<u8, u16>,
     },
     Register8bitNumber {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
         num: u8,
     },
 
     Register16bitAndAddress {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
         address_bytes: [u8; 2],
         register_type: Registers16bit,
     },
     AddressAnd16bitRegister {
-        high_token: &'a Token,
+        high_token: Token,
         low_token: Token,
         address_bytes: [u8; 2],
         register_type: Registers16bit,
     },
     AddressAnd16bitNumber {
-        high_token: &'a Token,
+        high_token: Token,
         low_token: Token,
         address_bytes: [u8; 2],
         num: u16,
     },
     Register8bitAndAddress {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
         address_bytes: [u8; 2],
         register_type: Registers8bit,
     },
     AddressAnd8bitRegister {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
         address_bytes: [u8; 2],
         register_type: Registers8bit,
     },
     AddressAnd8bitNumber {
-        high_token: &'a Token,
-        low_token: &'a Token,
+        high_token: Token,
+        low_token: Token,
         address_bytes: [u8; 2],
         num: u8,
     },
+}
+
+fn get_compact_ins<'a>(
+    start_index: usize,
+    end_index: usize,
+    tokenized_line: &'a TokenizedLine<'a>,
+) -> Result<Option<Token>, CompilationError> {
+    if start_index >= tokenized_line.len()
+        || start_index == end_index
+        || end_index > tokenized_line.len()
+    {
+        return Ok(None);
+    }
+    // if the start index and end index have difference 1 then it means that the instruction is compact
+    if (end_index - start_index) == 1 {
+        return Ok(None);
+    }
+    // check if there is an openSquareBracket in tokenized_line[start_index..end_index] use iter()
+    let open_sqaure_bracket_exists = tokenized_line
+        .slice(start_index, end_index)
+        .iter()
+        .any(|token| token.token_type == Assembly8086Tokens::OpenSquareBracket);
+
+    // possible patterns are
+    // bx + si ; bx + di ; bp + si ; bp + di ; si ; di ; bp ; bx  all with offsets
+
+    let mut is_bx_in_line = (false, 0 as u32);
+    let mut is_bp_in_line = (false, 0 as u32);
+    let mut is_si_in_line = (false, 0 as u32);
+    let mut is_di_in_line = (false, 0 as u32);
+    let mut offset: Option<u16> = None;
+
+    iterate_with_seperator(
+        start_index,
+        end_index,
+        tokenized_line,
+        &Assembly8086Tokens::Plus,
+        |token| match token.token_type {
+            Assembly8086Tokens::Register16bit(Registers16bit::BX) => {
+                is_bx_in_line = (true, token.column_number);
+                Ok(())
+            }
+            Assembly8086Tokens::Register16bit(Registers16bit::BP) => {
+                is_bp_in_line = (true, token.column_number);
+                Ok(())
+            }
+            Assembly8086Tokens::Register16bit(Registers16bit::SI) => {
+                is_si_in_line = (true, token.column_number);
+                Ok(())
+            }
+            Assembly8086Tokens::Register16bit(Registers16bit::DI) => {
+                is_di_in_line = (true, token.column_number);
+                Ok(())
+            }
+
+            Assembly8086Tokens::Number16bit(num) => {
+                // add to offset if overflow return error
+                let (val, overflow) = offset.unwrap_or(0).overflowing_add(num);
+                offset = Some(val);
+                if overflow {
+                    Err(CompilationError::new_without_suggestions(
+                        token.line_number,
+                        token.column_number,
+                        token.token_length,
+                        "Offset overflowed",
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+
+            Assembly8086Tokens::Number8bit(num) => {
+                // add to offset if overflow return error
+                let (val, overflow) = offset.unwrap_or(0).overflowing_add(num as u16);
+                offset = Some(val);
+                if overflow {
+                    Err(CompilationError::new_without_suggestions(
+                        token.line_number,
+                        token.column_number,
+                        token.token_length,
+                        "Offset overflowed",
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+
+            Assembly8086Tokens::Register16bit(_) => Err(CompilationError::new_without_suggestions(
+                token.line_number,
+                token.column_number,
+                token.token_length,
+                &format!(
+                    "Expected a 16bit register of types {{ BX, BP, SI, DI }} got {:?} insted",
+                    token.token_type
+                ),
+            )),
+
+            Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {
+                Ok(())
+            }
+
+            _ => Err(CompilationError::new_without_suggestions(
+                token.line_number,
+                token.column_number,
+                token.token_length,
+                &format!(
+                    "Expected a 16bit register got {:?} insted",
+                    token.token_type
+                ),
+            )),
+        },
+    )?;
+
+    if is_bx_in_line.0 && is_bp_in_line.0 {
+        let token = tokenized_line.get(
+            is_bx_in_line.1 as usize,
+            "This shouldn't happen, Please report this".to_string(),
+            None,
+        )?;
+        return Err(CompilationError::new_without_suggestions(
+            token.line_number,
+            token.column_number,
+            token.token_length,
+            "Expected either bx or bp got both",
+        ));
+    }
+
+    if is_si_in_line.0 && is_di_in_line.0 {
+        let token = tokenized_line.get(
+            is_si_in_line.1 as usize,
+            "This shouldn't happen, Please report this".to_string(),
+            None,
+        )?;
+        return Err(CompilationError::new_without_suggestions(
+            token.line_number,
+            token.column_number,
+            token.token_length,
+            "Expected either si or di got both",
+        ));
+    }
+
+    let first_ins = tokenized_line.get(
+        start_index,
+        "This shouldn't happen, Please report this".to_string(),
+        None,
+    )?;
+
+    let last_ins = tokenized_line.get(
+        end_index - 1,
+        "This shouldn't happen, Please report this".to_string(),
+        None,
+    )?;
+
+    let line_number = first_ins.line_number;
+    let column_number = first_ins.column_number;
+    let token_length = last_ins.column_number + last_ins.token_length - first_ins.column_number;
+
+    if !is_bx_in_line.0
+        && !is_bp_in_line.0
+        && !is_si_in_line.0
+        && !is_di_in_line.0
+        && offset.is_some()
+    {
+        if open_sqaure_bracket_exists {
+            return Ok(Some(Token {
+                line_number,
+                column_number,
+                token_length,
+                token_type: Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::Offset(
+                    offset.unwrap(),
+                )),
+            }));
+        }
+        return Ok(Some(Token {
+            line_number,
+            column_number,
+            token_length,
+            token_type: Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::Offset(
+                offset.unwrap(),
+            )),
+        }));
+    }
+
+    if is_bx_in_line.0 {
+        return Ok(Some(Token {
+            token_type: match compressed_ins(is_si_in_line.0, is_di_in_line.0, offset) {
+                Some(token_type) => token_type,
+                None => Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BX(offset)),
+            },
+            line_number,
+            column_number,
+            token_length,
+        }));
+    }
+
+    if is_bp_in_line.0 {
+        return Ok(Some(Token {
+            token_type: match compressed_ins(is_si_in_line.0, is_di_in_line.0, offset) {
+                Some(token_type) => token_type,
+                None => Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BP(offset)),
+            },
+            line_number,
+            column_number,
+            token_length,
+        }));
+    }
+
+    if is_si_in_line.0 {
+        return Ok(Some(Token {
+            token_type: Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::SI(offset)),
+            line_number,
+            column_number,
+            token_length,
+        }));
+    }
+
+    if is_di_in_line.0 {
+        return Ok(Some(Token {
+            token_type: Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::DI(offset)),
+            line_number,
+            column_number,
+            token_length,
+        }));
+    }
+
+    Err(CompilationError::new_without_suggestions(
+        line_number,
+        column_number,
+        token_length,
+        "The given argument can't be compiled, Please check the syntax",
+    ))
+}
+
+fn compressed_ins(
+    is_si_in_line: bool,
+    is_di_in_line: bool,
+    offset: Option<u16>,
+) -> Option<Assembly8086Tokens> {
+    match (is_si_in_line, is_di_in_line) {
+        (false, false) => None,
+
+        (true, false) => Some(Assembly8086Tokens::IndexedAddressing(
+            IndexedAddressingTypes::BxSi(offset),
+        )),
+
+        (false, true) => Some(Assembly8086Tokens::IndexedAddressing(
+            IndexedAddressingTypes::BxDi(offset),
+        )),
+
+        // (true, true) => Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BpSi(offset)),
+        (true, true) => panic!("This shouldn't happen, Please report this"),
+    }
 }
 
 pub(crate) fn parse_two_arguments_line<'a>(
@@ -82,13 +337,14 @@ pub(crate) fn parse_two_arguments_line<'a>(
     ins: &'a str,
     variable_ref_map: &mut VariableReferenceMap,
     variable_abs_address_map: &VariableAddressMap,
-) -> Result<AddressingMode<'a>, CompilationError> {
+) -> Result<AddressingMode, CompilationError> {
     let len_lexed_strings = tokenized_line.get_len_lexed_strings();
     let token = tokenized_line.get(
         i,
         "This shouldn't happen, Please report this".to_string(),
         None,
     )?;
+
     let high_token = tokenized_line.get(
         i + 1,
         format!("Expected arguments after {} got nothing", ins).to_string(),
@@ -97,7 +353,20 @@ pub(crate) fn parse_two_arguments_line<'a>(
         ))]),
     )?;
 
-    match &high_token.token_type {
+    
+    let comma_pos = tokenized_line.find_comma();
+    let compact_high_until = match comma_pos {
+        Some(pos) => pos,
+        None => tokenized_line.len(),
+    };
+
+    let compact_high_token =
+        get_compact_ins(i + 1, compact_high_until, tokenized_line)?.unwrap_or(high_token.clone());
+    let high_token = &compact_high_token;
+    let compact_low_token =
+        get_compact_ins(compact_high_until+1, tokenized_line.len(), tokenized_line)?;
+
+    match &high_token.token_type.clone() {
         Assembly8086Tokens::Register16bit(register_type) => {
             check_comma(tokenized_line, high_token, i + 2)?;
             let low_token = tokenized_line.get(
@@ -110,24 +379,28 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     get_16bit_number_suggestion(),
                 ]),
             )?;
-            match &low_token.token_type {
+            let low_token = match compact_low_token {
+                Some(low_token) => low_token,
+                None => low_token.clone(),
+            };
+            match &low_token.token_type.clone() {
                 Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::Registers16bitNumber {
-                    high_token,
+                    high_token: compact_high_token,
                     low_token,
                     num: Either::Right(*num),
                 }),
                 Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::Registers16bitNumber {
-                    high_token,
+                    high_token: compact_high_token,
                     low_token,
                     num: Either::Left(*num),
                 }),
                 Assembly8086Tokens::Register16bit(_) => Ok(AddressingMode::Registers16bit {
-                    high_token,
+                    high_token: compact_high_token,
                     low_token,
                 }),
                 Assembly8086Tokens::Character(label) => {
                     Ok(AddressingMode::Register16bitAndAddress {
-                        high_token,
+                        high_token: compact_high_token,
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 3,
@@ -181,10 +454,14 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     },
                 ),
             )?;
-            match &low_token.token_type {
+            let low_token = match compact_low_token {
+                Some(low_token) => low_token,
+                None => low_token.clone(),
+            };
+            match &low_token.token_type.clone() {
                 Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::AddressAnd16bitNumber {
-                    high_token,
-                    low_token: low_token.clone(),
+                    high_token: compact_high_token,
+                    low_token,
                     address_bytes: get_label_address_or_push_into_ref(
                         i + 1,
                         label,
@@ -196,8 +473,8 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 }),
                 Assembly8086Tokens::Register16bit(low_token_register_type) => {
                     Ok(AddressingMode::AddressAnd16bitRegister {
-                        high_token,
-                        low_token: low_token.clone(),
+                        high_token: compact_high_token,
+                        low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 1,
                             label,
@@ -209,7 +486,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     })
                 }
                 Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::AddressAnd8bitNumber {
-                    high_token,
+                    high_token: compact_high_token,
                     low_token,
                     address_bytes: get_label_address_or_push_into_ref(
                         i + 1,
@@ -222,7 +499,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 }),
                 Assembly8086Tokens::Register8bit(low_token_reg_type) => {
                     Ok(AddressingMode::AddressAnd8bitRegister {
-                        high_token,
+                        high_token: compact_high_token,
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 1,
@@ -257,19 +534,23 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     get_8bit_number_suggestion(),
                 ]),
             )?;
-            match &low_token.token_type {
+            let low_token = match compact_low_token {
+                Some(low_token) => low_token,
+                None => low_token.clone(),
+            };
+            match &low_token.token_type.clone() {
                 Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::Register8bitNumber {
-                    high_token,
+                    high_token: compact_high_token,
                     low_token,
                     num: *num,
                 }),
                 Assembly8086Tokens::Register8bit(_) => Ok(AddressingMode::Registers8bit {
-                    high_token,
+                    high_token: compact_high_token,
                     low_token,
                 }),
                 Assembly8086Tokens::Character(label) => {
                     Ok(AddressingMode::Register8bitAndAddress {
-                        high_token,
+                        high_token: compact_high_token,
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 3,

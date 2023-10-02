@@ -10,7 +10,7 @@ use crate::{
     convert_and_push_instructions,
 };
 
-use super::utils::{check_comma, get_token_as_label, if_num_8bit_to_16bit};
+use super::utils::{check_comma, get_token_as_label, if_num_8bit_to_16bit, iterate_with_seperator};
 
 fn to_bytes(
     i: usize,
@@ -18,13 +18,12 @@ fn to_bytes(
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
 ) -> Result<usize, CompilationError> {
-    let mut j = i;
     let last_token = tokenized_line.get(
         tokenized_line.len() - 1,
         "This shouldn't happen, Please report this".to_string(),
         None,
     )?;
-    if j > tokenized_line.len() {
+    if i > tokenized_line.len() {
         return Err(CompilationError::new_with_suggestions(
             last_token.line_number,
             last_token.column_number,
@@ -33,40 +32,31 @@ fn to_bytes(
             vec![get_8bit_number_suggestion()],
         ));
     }
-    while j < tokenized_line.len() {
-        let data_token = tokenized_line.get(
-            j,
-            "This shouldn't happen, Please report this".to_string(),
-            None,
-        )?;
-        match data_token.token_type {
+    let j = iterate_with_seperator(
+        i,
+        tokenized_line.len(),
+        tokenized_line,
+        &Assembly8086Tokens::Comma,
+        |token| match token.token_type {
             Assembly8086Tokens::Number8bit(number) => {
                 convert_and_push_instructions!(
                     compiled_bytes,
                     compiled_bytes_ref,
                     (
-                        data_token => vec![number]
+                        token => vec![number]
                     )
                 );
-                j += 1;
-                if j < tokenized_line.len() - 1 {
-                    check_comma(tokenized_line, data_token, j)?;
-                    j += 1;
-                }
+                Ok(())
             }
-            _ => {
-                return Err(CompilationError::new_without_suggestions(
-                    data_token.line_number,
-                    data_token.column_number,
-                    data_token.column_number + data_token.token_length,
-                    &format!(
-                        "Expected 8 bit number, Got {}, Insted",
-                        data_token.token_type
-                    ),
-                ))
-            }
-        }
-    }
+            _ => Err(CompilationError::new_without_suggestions(
+                token.line_number,
+                token.column_number,
+                token.token_length,
+                &format!("Expected 8 bit number, Got {}, Insted", token.token_type),
+            )),
+        },
+    )?;
+
     Ok(j)
 }
 

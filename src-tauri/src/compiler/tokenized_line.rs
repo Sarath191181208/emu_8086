@@ -1,4 +1,4 @@
-use super::{compilation_error::CompilationError, suggestions::SuggestionType, tokens::Token};
+use super::{compilation_error::CompilationError, suggestions::SuggestionType, tokens::{Token, Assembly8086Tokens}};
 
 pub struct TokenizedLine<'a> {
     tokens: &'a Vec<&'a Token>,
@@ -19,6 +19,16 @@ impl<'a> TokenizedLine<'a> {
 
     pub fn get_len_lexed_strings(&self) -> u32 {
         self.len_lexed_strings
+    }
+
+    pub(in crate::compiler) fn slice(&self, start: usize, end: usize) -> &[&Token] {
+        &self.tokens[start..end]
+    }
+
+    pub(crate) fn find_comma(&self) -> Option<usize> {
+        self.tokens
+            .iter()
+            .position(|token| token.token_type == Assembly8086Tokens::Comma)
     }
 
     pub(crate) fn get(

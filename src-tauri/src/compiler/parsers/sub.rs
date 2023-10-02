@@ -38,22 +38,22 @@ pub(in crate::compiler) fn parse_sub(
             high_token,
             low_token,
         } => {
-            let high_reg_idx = get_idx_from_token(high_token)?;
-            let low_reg_idx = get_idx_from_token(low_token)?;
+            let high_reg_idx = get_idx_from_token(&high_token)?;
+            let low_reg_idx = get_idx_from_token(&low_token)?;
             let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
             push_instruction(compiled_bytes, vec![0x2B], token, compiled_bytes_ref);
-            push_instruction(compiled_bytes, vec![ins], low_token, compiled_bytes_ref);
+            push_instruction(compiled_bytes, vec![ins], &low_token, compiled_bytes_ref);
             Ok(i + 3)
         }
         AddressingMode::Registers8bit {
             high_token,
             low_token,
         } => {
-            let high_reg = get_8bit_register(high_token);
-            let low_reg = get_8bit_register(low_token);
+            let high_reg = get_8bit_register(&high_token);
+            let low_reg = get_8bit_register(&low_token);
             let ins = get_as_0xc0_0xff_pattern(high_reg.get_as_idx(), low_reg.get_as_idx());
             push_instruction(compiled_bytes, vec![0x2A], token, compiled_bytes_ref);
-            push_instruction(compiled_bytes, vec![ins], low_token, compiled_bytes_ref);
+            push_instruction(compiled_bytes, vec![ins], &low_token, compiled_bytes_ref);
             Ok(i + 3)
         }
         AddressingMode::Registers16bitNumber {
@@ -61,7 +61,7 @@ pub(in crate::compiler) fn parse_sub(
             low_token,
             num,
         } => {
-            let high_reg_idx = get_idx_from_token(high_token)?;
+            let high_reg_idx = get_idx_from_token(&high_token)?;
             let is_ax = high_reg_idx == 0;
             if is_ax {
                 let number = num.get_as_u16();
@@ -69,7 +69,7 @@ pub(in crate::compiler) fn parse_sub(
                 push_instruction(
                     compiled_bytes,
                     vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                    low_token,
+                    &low_token,
                     compiled_bytes_ref,
                 );
             } else {
@@ -88,8 +88,8 @@ pub(in crate::compiler) fn parse_sub(
                     compiled_bytes_ref,
                     (
                         token => vec![sub_ins],
-                        high_token => vec![0xE8 + high_reg_idx],
-                        low_token => data_ins
+                       &high_token=> vec![0xE8 + high_reg_idx],
+                       &low_token=> data_ins
                     )
                 );
             }
@@ -101,7 +101,7 @@ pub(in crate::compiler) fn parse_sub(
             low_token,
             num: number,
         } => {
-            let high_reg = get_8bit_register(high_token);
+            let high_reg = get_8bit_register(&high_token);
             let is_al = high_reg.get_as_idx() == 0;
             if is_al {
                 convert_and_push_instructions!(
@@ -109,7 +109,7 @@ pub(in crate::compiler) fn parse_sub(
                     compiled_bytes_ref,
                     (
                         token => vec![0x2C],
-                        low_token => vec![number]
+                       &low_token=> vec![number]
                     )
                 );
             } else {
@@ -118,8 +118,8 @@ pub(in crate::compiler) fn parse_sub(
                     compiled_bytes_ref,
                     (
                         token => vec![0x80],
-                        high_token => vec![0xE8 + high_reg.get_as_idx()],
-                        low_token => vec![number]
+                       &high_token=> vec![0xE8 + high_reg.get_as_idx()],
+                       &low_token=> vec![number]
                     )
                 );
             }
@@ -131,14 +131,14 @@ pub(in crate::compiler) fn parse_sub(
             address_bytes,
             register_type,
         } => {
-            let reg_idx = get_idx_from_reg(high_token, &register_type)?;
+            let reg_idx = get_idx_from_reg(&high_token, &register_type)?;
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
                     token => vec![0x2B],
-                    high_token => vec![0x06 | reg_idx << 3],
-                    low_token => address_bytes.to_vec()
+                   &high_token=> vec![0x06 | reg_idx << 3],
+                   &low_token=> address_bytes.to_vec()
                 )
             );
             Ok(i + 3)
@@ -149,14 +149,14 @@ pub(in crate::compiler) fn parse_sub(
             address_bytes,
             register_type,
         } => {
-            let reg_idx = get_idx_from_reg(high_token, &register_type)?;
+            let reg_idx = get_idx_from_reg(&high_token, &register_type)?;
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
                     token => vec![0x29],
                     &low_token => vec![0x06 | reg_idx << 3],
-                    high_token => address_bytes.to_vec()
+                   &high_token=> address_bytes.to_vec()
                 )
             );
             Ok(i + 3)
@@ -172,7 +172,7 @@ pub(in crate::compiler) fn parse_sub(
                 compiled_bytes_ref,
                 (
                     token => vec![0x81, 0x2E],
-                    high_token => address_bytes.to_vec(),
+                   &high_token=> address_bytes.to_vec(),
                     &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
                 )
             );
@@ -190,8 +190,8 @@ pub(in crate::compiler) fn parse_sub(
                 compiled_bytes_ref,
                 (
                     token => vec![0x2A],
-                    high_token => vec![0x06 | reg_idx << 3],
-                    low_token => address_bytes.to_vec()
+                   &high_token=> vec![0x06 | reg_idx << 3],
+                   &low_token=> address_bytes.to_vec()
                 )
             );
             Ok(i + 3)
@@ -208,8 +208,8 @@ pub(in crate::compiler) fn parse_sub(
                 compiled_bytes_ref,
                 (
                     token => vec![0x28],
-                    high_token => vec![0x06 | reg_idx << 3],
-                    low_token => address_bytes.to_vec()
+                   &high_token=> vec![0x06 | reg_idx << 3],
+                   &low_token=> address_bytes.to_vec()
                 )
             );
             Ok(i + 3)
@@ -222,7 +222,7 @@ pub(in crate::compiler) fn parse_sub(
         } => {
             let add_ins = if is_variable_defined_as_16bit(
                 &variable_abs_offset_map,
-                get_token_as_label(high_token),
+                get_token_as_label(&high_token),
             ) {
                 0x83
             } else {
@@ -234,8 +234,8 @@ pub(in crate::compiler) fn parse_sub(
                 compiled_bytes_ref,
                 (
                     token => vec![add_ins, 0x2E],
-                    high_token => address_bytes.to_vec(),
-                    low_token => vec![num]
+                   &high_token=> address_bytes.to_vec(),
+                   &low_token=> vec![num]
                 )
             );
             Ok(i + 3)
