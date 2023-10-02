@@ -1,7 +1,7 @@
 type Offset = u16;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum IndexedAddressingTypes {
+pub enum IndexedAddressingTypes {
     BX(Option<Offset>),
     BP(Option<Offset>),
     SI(Option<Offset>),
