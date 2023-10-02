@@ -16,7 +16,7 @@ use crate::{
 
 use super::{
     pattern_extractors::{parse_two_arguments_line, AddressingMode},
-    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction, get_as_0x00_0x3f_pattern},
 };
 
 pub(in crate::compiler) fn parse_mov(
@@ -277,7 +277,7 @@ pub(in crate::compiler) fn parse_mov(
         } => {
             let high_reg_idx = get_idx_from_token(&high_token)?;
             let low_reg_idx = get_index_addr_as_idx(&low_token)?;
-            let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
+            let ins = get_as_0x00_0x3f_pattern(high_reg_idx, low_reg_idx);
             match &low_token.token_type {
                 Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BP(_)) => {
                     convert_and_push_instructions!(
@@ -288,7 +288,7 @@ pub(in crate::compiler) fn parse_mov(
                            &high_token=> vec![46, 0x00]
                         )
                     );
-                    Ok(i + 3)
+                    Ok(tokenized_line.len())
                 }
                 _ => {
                     convert_and_push_instructions!(
@@ -299,7 +299,7 @@ pub(in crate::compiler) fn parse_mov(
                            &low_token=> vec![ins]
                         )
                     );
-                    Ok(i + 3)
+                    Ok(tokenized_line.len())
                 }
             }
         }
@@ -475,7 +475,7 @@ mod tests {
         ", |compiled_instructions: &Vec<u8>| {
             assert_eq!(
                 compiled_instructions,
-                &[0x8B, 0x04]
+                &[0x8B, 0x00]
             )
         }
     );
