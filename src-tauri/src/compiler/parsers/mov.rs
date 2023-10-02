@@ -3,8 +3,11 @@ use std::{collections::HashMap, vec};
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        parsers::utils::{get_token_as_label, is_variable_defined_as_16bit},
-        tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
+        parsers::utils::{get_index_addr_as_idx, get_token_as_label, is_variable_defined_as_16bit},
+        tokens::{
+            indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
+            registers8bit::Registers8bit, Assembly8086Tokens,
+        },
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference, TokenizedLine,
     },
@@ -43,14 +46,7 @@ pub(in crate::compiler) fn parse_mov(
             let high_reg_idx = get_idx_from_token(&high_token)?;
             let low_reg_idx = get_idx_from_token(&low_token)?;
             let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x8B],
-                   &low_token=> vec![ins]
-                )
-            );
+
             Ok(i + 3)
         }
         AddressingMode::Registers8bit {
@@ -275,6 +271,38 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(i + 3)
         }
+        AddressingMode::Register16bitAndIndexedAddress {
+            high_token,
+            low_token,
+        } => {
+            let high_reg_idx = get_idx_from_token(&high_token)?;
+            let low_reg_idx = get_index_addr_as_idx(&low_token)?;
+            let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
+            match &low_token.token_type {
+                Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BP(_)) => {
+                    convert_and_push_instructions!(
+                        compiled_bytes,
+                        compiled_bytes_ref,
+                        (
+                            token => vec![0x8B],
+                           &high_token=> vec![46, 0x00]
+                        )
+                    );
+                    Ok(i + 3)
+                }
+                _ => {
+                    convert_and_push_instructions!(
+                        compiled_bytes,
+                        compiled_bytes_ref,
+                        (
+                            token => vec![0x8B],
+                           &low_token=> vec![ins]
+                        )
+                    );
+                    Ok(i + 3)
+                }
+            }
+        }
     }
 }
 
@@ -436,6 +464,18 @@ mod tests {
             assert_eq!(
                 compiled_instructions,
                 &[0xEB, 0x02, 0x10, 0x00, 0xC7, 0x06, 0x02, 0x01, 0x01]
+            )
+        }
+    );
+
+    test_compile!(
+        test_mov_ax_ref_bx_plus_si,
+        "
+        mov ax, [bx + si]
+        ", |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0x8B, 0x04]
             )
         }
     );
