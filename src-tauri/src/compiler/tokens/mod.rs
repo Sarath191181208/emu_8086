@@ -77,7 +77,6 @@ pub(crate) enum Assembly8086Tokens {
     Character(UniCase<String>),
 }
 
-
 // impl the Display trait for Assembly8086Tokens
 impl std::fmt::Display for Assembly8086Tokens {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -202,7 +201,7 @@ impl SignedU16 {
             }
         }
         if self.is_negative && self.val <= 0x80 {
-             Ok(Either::Left(0xFF - (self.val as u8) + 1_u8))
+            Ok(Either::Left(0xFF - (self.val as u8) + 1_u8))
         } else if self.val < 0x7FFF {
             Ok(Either::Right(0xFFFF - (self.val) + 1_u16))
         } else {

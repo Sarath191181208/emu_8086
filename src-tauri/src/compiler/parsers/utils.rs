@@ -289,7 +289,7 @@ impl SignedU16 {
     }
 
     pub(super) fn as_u16(&self) -> u16 {
-        if self.is_negative{
+        if self.is_negative {
             return 0xFFFF - self.val + 1;
         }
         self.val

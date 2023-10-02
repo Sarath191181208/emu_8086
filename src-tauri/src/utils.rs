@@ -12,7 +12,7 @@ impl Either<u8, u16> {
         }
     }
 
-    pub fn get_as_bytes(&self) -> Vec<u8>{
+    pub fn get_as_bytes(&self) -> Vec<u8> {
         match &self {
             Either::Left(x) => vec![*x],
             Either::Right(x) => x.to_le_bytes().to_vec(),

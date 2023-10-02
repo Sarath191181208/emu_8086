@@ -527,7 +527,9 @@ mod tests {
         "
         mov ax, [bx + di + 0x20
         ",
-        |compiled_instructions: &Vec<u8>| { assert_eq!(compiled_instructions, &[0x8B, 0x41, 0x20]) }
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0x8B, 0x41, 0x20])
+        }
     );
 }
 

@@ -1,4 +1,8 @@
-use super::{compilation_error::CompilationError, suggestions::SuggestionType, tokens::{Token, Assembly8086Tokens}};
+use super::{
+    compilation_error::CompilationError,
+    suggestions::SuggestionType,
+    tokens::{Assembly8086Tokens, Token},
+};
 
 pub struct TokenizedLine<'a> {
     tokens: &'a Vec<&'a Token>,
