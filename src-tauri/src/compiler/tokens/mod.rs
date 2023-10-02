@@ -1,13 +1,17 @@
 use unicase::UniCase;
 
-use self::{assembler_directives::AssemblerDirectives, indexed_addressing_types::IndexedAddressingTypes};
+use crate::utils::Either;
+
+use self::{
+    assembler_directives::AssemblerDirectives, indexed_addressing_types::IndexedAddressingTypes,
+};
 
 pub mod assembler_directives;
 pub mod data;
+pub mod indexed_addressing_types;
 pub mod instructions;
 pub mod registers16bit;
 pub mod registers8bit;
-pub mod indexed_addressing_types;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Assembly8086Tokens {
@@ -59,7 +63,7 @@ pub(crate) enum Assembly8086Tokens {
     Plus,
     Minus,
 
-    // i.e this like this 
+    // i.e this like this
     // [bx], [dx], [si], [di]
     // [bx|dx + si|di]
     // [bx|dx + si|di + 0x10]
@@ -73,11 +77,11 @@ pub(crate) enum Assembly8086Tokens {
     Character(UniCase<String>),
 }
 
-impl Assembly8086Tokens{
-    pub(crate) fn convert_to_min_num_type(num: u16) -> Self{
-        // check if the number could be u8 
-        if num <= u8::MAX as u16{
-            return  Assembly8086Tokens::Number8bit(num as u8);
+impl Assembly8086Tokens {
+    pub(crate) fn convert_to_min_num_type(num: u16) -> Self {
+        // check if the number could be u8
+        if num <= u8::MAX as u16 {
+            return Assembly8086Tokens::Number8bit(num as u8);
         }
         Assembly8086Tokens::Number16bit(num)
     }
@@ -133,10 +137,10 @@ impl Token {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone,Copy, Eq, PartialEq)]
 pub struct SignedU16 {
-    val: u16,
-    is_negative: bool,
+    pub val: u16,
+    pub is_negative: bool,
 }
 
 impl SignedU16 {
@@ -187,7 +191,35 @@ impl SignedU16 {
         }
     }
 
-    pub fn as_num(self) -> Assembly8086Tokens{
-        Assembly8086Tokens::convert_to_min_num_type(self.val)
+    pub(crate) fn as_num_token(self) -> Result<Assembly8086Tokens, &'static str> {
+        match self.as_num() {
+            Ok(num) => match num {
+                Either::Left(num) => Ok(Assembly8086Tokens::Number8bit(num)),
+                Either::Right(num) => Ok(Assembly8086Tokens::Number16bit(num)),
+            },
+            Err(err) => Err(err),
+        }
+    }
+
+    pub(crate) fn as_num(self) -> Result<Either<u8, u16>, &'static str> {
+        // check if less than u8::MAX
+        if !self.is_negative {
+            if self.val < 0x80 {
+                return Ok(Either::Left(self.val as u8));
+            } else {
+                return Ok(Either::Right( self.val as u16));
+            }
+        }
+        if self.is_negative && self.val <= 0x80 {
+            return Ok(Either::Left( 0xFF - (self.val as u8) + 1 as u8));
+        } else {
+            if self.val < 0x7FFF {
+                return Ok(Either::Right(
+                    0xFFFF - (self.val as u16) + 1 as u16,
+                ));
+            } else {
+                return Err("Number is too big to be converted to 16 bit, Because the number is negative and the number is greater than 0x7FFF");
+            }
+        }
     }
 }
