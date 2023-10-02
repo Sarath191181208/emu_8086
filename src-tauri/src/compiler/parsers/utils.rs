@@ -198,3 +198,18 @@ pub(super) fn iterate_with_seperator(
 
     Ok(i)
 }
+
+pub(super) fn get_index_addr_as_idx(token: &Token) -> Result<u8, CompilationError> {
+    match &token.token_type {
+        Assembly8086Tokens::IndexedAddressing(idx) => match idx.get_as_idx(){
+            Ok(idx) => Ok(idx),
+            Err(err) => Err(CompilationError::new_without_suggestions(
+                token.line_number,
+                token.column_number,
+                token.token_length,
+                err,
+            )),
+        },
+        _ => unreachable!(),
+    }
+}
