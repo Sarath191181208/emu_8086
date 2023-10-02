@@ -1,23 +1,33 @@
-use crate::compiler::{
+use crate::{compiler::{
     compilation_error::CompilationError,
     tokenized_line::TokenizedLine,
     tokens::{
-        registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
+        registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token, SignedU16,
     },
     types_structs::{ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType},
     CompiledBytesReference,
-};
+}, utils::Either};
 
-pub fn get_as_0x00_0x3f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8{
-    let ins = (0x00) | (high_reg_idx / 2) << 4;
+fn get_as_0xnf_in_0x3f_increment_pattern(n: u8, high_reg_idx: u8, low_reg_idx: u8) -> u8{
+    let ins = n | (high_reg_idx / 2) << 4;
     let ins2 = low_reg_idx | (high_reg_idx % 2) << 3;
     ins | ins2
 }
 
+pub fn get_as_0x00_0x3f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8{
+    get_as_0xnf_in_0x3f_increment_pattern(0x00, high_reg_idx, low_reg_idx)
+}
+
+pub fn get_as_0x3f_0x7f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8{
+    get_as_0xnf_in_0x3f_increment_pattern(0x3F, high_reg_idx, low_reg_idx)
+}
+
+pub fn get_as_0x80_0xbf_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8{
+    get_as_0xnf_in_0x3f_increment_pattern(0x80, high_reg_idx, low_reg_idx)
+}
+
 pub fn get_as_0xc0_0xff_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
-    let ins = (0xC0) | (high_reg_idx / 2) << 4;
-    let ins2 = low_reg_idx | (high_reg_idx % 2) << 3;
-    ins | ins2
+    get_as_0xnf_in_0x3f_increment_pattern(0xC0, high_reg_idx, low_reg_idx)
 }
 
 pub(super) fn get_idx_from_reg(
@@ -246,5 +256,22 @@ impl CompilationError{
             0,
             "This shouldn't happen, Please report this!",
         )
+    }
+}
+
+impl SignedU16{
+    pub(super) fn as_either_u8_or_u16(&self, token: &Token) -> Result<Either<u8, u16>, CompilationError>{
+        match self.as_num() {
+            Ok(num) => match num {
+                Either::Left(num) => Ok(Either::Left(num)),
+                Either::Right(num) => Ok(Either::Right(num)),
+            },
+            Err(err) => Err(CompilationError::new_without_suggestions(
+                token.line_number,
+                token.column_number,
+                token.token_length,
+                err,
+            )),
+        }
     }
 }
