@@ -77,15 +77,6 @@ pub(crate) enum Assembly8086Tokens {
     Character(UniCase<String>),
 }
 
-impl Assembly8086Tokens {
-    pub(crate) fn convert_to_min_num_type(num: u16) -> Self {
-        // check if the number could be u8
-        if num <= u8::MAX as u16 {
-            return Assembly8086Tokens::Number8bit(num as u8);
-        }
-        Assembly8086Tokens::Number16bit(num)
-    }
-}
 
 // impl the Display trait for Assembly8086Tokens
 impl std::fmt::Display for Assembly8086Tokens {
@@ -137,7 +128,7 @@ impl Token {
     }
 }
 
-#[derive(Debug, Clone,Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct SignedU16 {
     pub val: u16,
     pub is_negative: bool,
@@ -207,19 +198,15 @@ impl SignedU16 {
             if self.val < 0x80 {
                 return Ok(Either::Left(self.val as u8));
             } else {
-                return Ok(Either::Right( self.val as u16));
+                return Ok(Either::Right(self.val));
             }
         }
         if self.is_negative && self.val <= 0x80 {
-            return Ok(Either::Left( 0xFF - (self.val as u8) + 1 as u8));
+             Ok(Either::Left(0xFF - (self.val as u8) + 1_u8))
+        } else if self.val < 0x7FFF {
+            Ok(Either::Right(0xFFFF - (self.val) + 1_u16))
         } else {
-            if self.val < 0x7FFF {
-                return Ok(Either::Right(
-                    0xFFFF - (self.val as u16) + 1 as u16,
-                ));
-            } else {
-                return Err("Number is too big to be converted to 16 bit, Because the number is negative and the number is greater than 0x7FFF");
-            }
+            Err("Number is too big to be converted to 16 bit, Because the number is negative and the number is greater than 0x7FFF")
         }
     }
 }

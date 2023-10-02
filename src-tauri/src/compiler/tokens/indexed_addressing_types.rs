@@ -30,17 +30,17 @@ impl IndexedAddressingTypes {
         }
     }
 
-    pub fn get_offset(&self) -> Option<Offset>{
+    pub fn get_offset(&self) -> Option<Offset> {
         match self {
-            IndexedAddressingTypes::BxSi(offset) => offset.clone(),
-            IndexedAddressingTypes::BxDi(offset) => offset.clone(),
-            IndexedAddressingTypes::BpSi(offset) => offset.clone(),
-            IndexedAddressingTypes::BpDi(offset) => offset.clone(),
-            IndexedAddressingTypes::SI(offset) => offset.clone(),
-            IndexedAddressingTypes::DI(offset) => offset.clone(),
-            IndexedAddressingTypes::BP(offset) => offset.clone(),
-            IndexedAddressingTypes::BX(offset) => offset.clone(),
-            IndexedAddressingTypes::Offset(offset) => Some(offset.clone()),
+            IndexedAddressingTypes::BxSi(offset) => *offset,
+            IndexedAddressingTypes::BxDi(offset) => *offset,
+            IndexedAddressingTypes::BpSi(offset) => *offset,
+            IndexedAddressingTypes::BpDi(offset) => *offset,
+            IndexedAddressingTypes::SI(offset) => *offset,
+            IndexedAddressingTypes::DI(offset) => *offset,
+            IndexedAddressingTypes::BP(offset) => *offset,
+            IndexedAddressingTypes::BX(offset) => *offset,
+            IndexedAddressingTypes::Offset(offset) => Some(*offset),
         }
     }
 }

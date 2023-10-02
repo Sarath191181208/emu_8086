@@ -1,5 +1,5 @@
-use serde_json::value::Index;
-use serde_with::As;
+
+
 
 use crate::{
     compiler::{
@@ -20,7 +20,7 @@ use crate::{
     utils::Either,
 };
 
-use super::utils::{check_comma, check_token, get_label_address_or_push_into_ref};
+use super::utils::{check_comma, get_label_address_or_push_into_ref};
 
 pub(crate) enum AddressingMode {
     Registers16bit {
@@ -115,10 +115,10 @@ fn get_compact_ins<'a>(
     // possible patterns are
     // bx + si ; bx + di ; bp + si ; bp + di ; si ; di ; bp ; bx  all with offsets
 
-    let mut is_bx_in_line = (false, 0 as u32);
-    let mut is_bp_in_line = (false, 0 as u32);
-    let mut is_si_in_line = (false, 0 as u32);
-    let mut is_di_in_line = (false, 0 as u32);
+    let mut is_bx_in_line = (false, 0_u32);
+    let mut is_bp_in_line = (false, 0_u32);
+    let mut is_si_in_line = (false, 0_u32);
+    let mut is_di_in_line = (false, 0_u32);
     let mut offset: Option<SignedU16> = None;
 
     // use stack to convert the expression into a postifx one
@@ -199,7 +199,7 @@ fn get_compact_ins<'a>(
             }
         }
 
-        if stack.len() == 2 && operator_stack.len() < 1 {
+        if stack.len() == 2 && operator_stack.is_empty() {
             let token = match stack.get(0).unwrap() {
                 StackItem::Register16bit(token) => token,
                 StackItem::Number(token, _) => token,
@@ -213,7 +213,7 @@ fn get_compact_ins<'a>(
             ));
         }
 
-        if stack.len() == 2 && operator_stack.len() >= 1 {
+        if stack.len() == 2 && !operator_stack.is_empty() {
             let operator = operator_stack.pop().unwrap();
             let high_item = stack.pop().unwrap();
             let low_item = stack.pop().unwrap();
@@ -261,7 +261,7 @@ fn get_compact_ins<'a>(
         }
     }
 
-    if stack.len() > 0 {
+    if !stack.is_empty() {
         let item = stack.pop().unwrap();
         match item {
             StackItem::Register16bit(_) => {}
@@ -317,39 +317,36 @@ fn get_compact_ins<'a>(
     let column_number = first_ins.column_number;
     let token_length = last_ins.column_number + last_ins.token_length - first_ins.column_number;
 
-    if !is_bx_in_line.0
-        && !is_bp_in_line.0
-        && !is_si_in_line.0
-        && !is_di_in_line.0
-        && offset.is_some()
-    {
-        if open_sqaure_bracket_exists {
+    if !is_bx_in_line.0 && !is_bp_in_line.0 && !is_si_in_line.0 && !is_di_in_line.0 {
+        if let Some(num_type) = offset {
+            if open_sqaure_bracket_exists {
+                return Ok(Some(Token {
+                    line_number,
+                    column_number,
+                    token_length,
+                    token_type: Assembly8086Tokens::IndexedAddressing(
+                        IndexedAddressingTypes::Offset(num_type),
+                    ),
+                }));
+            }
+            let num_type = match num_type.as_num_token() {
+                Ok(tt) => tt,
+                Err(err) => {
+                    return Err(CompilationError::new_without_suggestions(
+                        line_number,
+                        column_number,
+                        token_length,
+                        err,
+                    ))
+                }
+            };
             return Ok(Some(Token {
                 line_number,
                 column_number,
                 token_length,
-                token_type: Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::Offset(
-                    offset.unwrap(),
-                )),
+                token_type: num_type,
             }));
         }
-        let num_type = match offset.unwrap().as_num_token() {
-            Ok(tt) => tt,
-            Err(err) => {
-                return Err(CompilationError::new_without_suggestions(
-                    line_number,
-                    column_number,
-                    token_length,
-                    err,
-                ))
-            }
-        };
-        return Ok(Some(Token {
-            line_number,
-            column_number,
-            token_length,
-            token_type: num_type,
-        }));
     }
 
     if is_bx_in_line.0 {
