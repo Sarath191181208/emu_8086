@@ -12,13 +12,14 @@ use crate::{
         CompiledBytesReference, TokenizedLine,
     },
     convert_and_push_instructions,
+    utils::Either,
 };
 
 use super::{
     pattern_extractors::{parse_two_arguments_line, AddressingMode},
     utils::{
-        get_8bit_register, get_as_0x00_0x3f_pattern, get_as_0xc0_0xff_pattern, get_idx_from_token,
-        push_instruction,
+        get_8bit_register, get_as_0x00_0x3f_pattern, get_as_0x40_0x7f_pattern,
+        get_as_0x80_0xbf_pattern, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction,
     },
 };
 
@@ -42,6 +43,7 @@ pub(in crate::compiler) fn parse_mov(
         variable_ref_map,
         variable_abs_offset_map.unwrap_or(&HashMap::new()),
     )? {
+        // MOV AX..DI, AX..DI
         AddressingMode::Registers16bit {
             high_token,
             low_token,
@@ -59,6 +61,7 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(i + 3)
         }
+        // MOV AL..BH, AL..BH
         AddressingMode::Registers8bit {
             high_token,
             low_token,
@@ -66,8 +69,6 @@ pub(in crate::compiler) fn parse_mov(
             let high_reg = get_8bit_register(&high_token);
             let low_reg = get_8bit_register(&low_token);
             let ins = get_as_0xc0_0xff_pattern(high_reg.get_as_idx(), low_reg.get_as_idx());
-            // push_instruction(compiled_bytes, vec![0x8A], token, compiled_bytes_ref);
-            // push_instruction(compiled_bytes, vec![ins], high_token, compiled_bytes_ref);
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
@@ -78,6 +79,7 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(i + 3)
         }
+        // MOV AX..DI, 0x00..0xFF | 0x0000..0xFFFF
         AddressingMode::Registers16bitNumber {
             high_token,
             low_token,
@@ -97,6 +99,7 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(i + 3)
         }
+        // MOV AL..BH, 0x00..0xFF
         AddressingMode::Register8bitNumber {
             high_token,
             low_token,
@@ -114,6 +117,7 @@ pub(in crate::compiler) fn parse_mov(
 
             Ok(i + 3)
         }
+        // MOV AX..DI, 0x100
         AddressingMode::Register16bitAndAddress {
             high_token,
             low_token,
@@ -145,6 +149,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
+        // MOV 0x100, AX..DI
         AddressingMode::AddressAnd16bitRegister {
             high_token,
             low_token,
@@ -177,6 +182,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
+        // MOV AX..DI, var
         AddressingMode::AddressAnd16bitNumber {
             high_token,
             low_token,
@@ -194,6 +200,7 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(i + 3)
         }
+        // MOV AL..BH, 0x100
         AddressingMode::Register8bitAndAddress {
             high_token,
             low_token,
@@ -225,6 +232,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
+        // MOV 0x100, AL..BH
         AddressingMode::AddressAnd8bitRegister {
             high_token,
             low_token,
@@ -256,6 +264,7 @@ pub(in crate::compiler) fn parse_mov(
                 Ok(i + 3)
             }
         },
+        // 0x100, 0x20
         AddressingMode::AddressAnd8bitNumber {
             high_token,
             low_token,
@@ -281,6 +290,7 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(i + 3)
         }
+        // MOV AX..DI, [BX] | [BP] | [SI] | [DI] | [BX + SI] | [BX + DI] | [BP + SI] | [BP + DI]
         AddressingMode::Register16bitAndIndexedAddress {
             high_token,
             low_token,
@@ -312,6 +322,32 @@ pub(in crate::compiler) fn parse_mov(
                     Ok(tokenized_line.len())
                 }
             }
+        }
+        AddressingMode::Register16bitAndIndexedAddressWithOffset {
+            high_token,
+            low_token,
+            offset,
+        } => {
+            let offset = offset.as_either_u8_or_u16(&low_token)?;
+            let high_reg_idx = get_idx_from_token(&high_token)?;
+            let low_reg_idx = get_index_addr_as_idx(&low_token)?;
+            let ins = match &offset {
+                Either::Left(_) => vec![get_as_0x40_0x7f_pattern(high_reg_idx, low_reg_idx)],
+                Either::Right(_) => vec![get_as_0x80_0xbf_pattern(high_reg_idx, low_reg_idx)],
+            };
+            let offset_bytes = offset.get_as_bytes();
+
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0x8B],
+                    &high_token=> ins,
+                    &low_token=> offset_bytes
+                )
+            );
+
+            Ok(tokenized_line.len())
         }
     }
 }
