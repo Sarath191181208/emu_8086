@@ -13,16 +13,14 @@ use crate::{
         tokenized_line::TokenizedLine,
         tokens::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
-            registers8bit::Registers8bit, Assembly8086Tokens, Token,
+            registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
         types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
     },
     utils::Either,
 };
 
-use super::utils::{
-    check_comma, check_token, get_label_address_or_push_into_ref, iterate_with_seperator,
-};
+use super::utils::{check_comma, check_token, get_label_address_or_push_into_ref};
 
 pub(crate) enum AddressingMode {
     Registers16bit {
@@ -54,6 +52,13 @@ pub(crate) enum AddressingMode {
         high_token: Token,
         low_token: Token,
     },
+
+    Register16bitAndIndexedAddressWithOffset {
+        high_token: Token,
+        low_token: Token,
+        offset: SignedU16,
+    },
+
     AddressAnd16bitRegister {
         high_token: Token,
         low_token: Token,
@@ -114,75 +119,72 @@ fn get_compact_ins<'a>(
     let mut is_bp_in_line = (false, 0 as u32);
     let mut is_si_in_line = (false, 0 as u32);
     let mut is_di_in_line = (false, 0 as u32);
-    let mut offset: Option<u16> = None;
+    let mut offset: Option<SignedU16> = None;
 
-    let mut i = start_index;
-    let mut while_limit = 1000;
-    while i < end_index && while_limit > 0 {
-        while_limit += 1;
+    // use stack to convert the expression into a postifx one
+
+    enum StackItem<'a> {
+        Register16bit(&'a Token),
+        Number(&'a Token, SignedU16),
+    }
+
+    enum StackOperator {
+        Plus,
+        Minus,
+    }
+
+    let mut stack = Vec::<StackItem>::new();
+    let mut operator_stack = Vec::<StackOperator>::new();
+    for i in start_index..end_index {
         let token = tokenized_line.get(
             i,
-            "This shouldn't happen, Report this! Err: iterate_with_seperator:174".to_string(),
+            "This shouldn't happen, Please report this".to_string(),
             None,
         )?;
-        match token.token_type {
-            Assembly8086Tokens::Register16bit(Registers16bit::BX) => {
-                is_bx_in_line = (true, token.column_number);
-            }
-            Assembly8086Tokens::Register16bit(Registers16bit::BP) => {
-                is_bp_in_line = (true, token.column_number);
-            }
-            Assembly8086Tokens::Register16bit(Registers16bit::SI) => {
-                is_si_in_line = (true, token.column_number);
-            }
-            Assembly8086Tokens::Register16bit(Registers16bit::DI) => {
-                is_di_in_line = (true, token.column_number);
-            }
 
-            Assembly8086Tokens::Number16bit(num) => {
-                // add to offset if overflow return error
-                let (val, overflow) = offset.unwrap_or(0).overflowing_add(num);
-                offset = Some(val);
-                if overflow {
+        match &token.token_type {
+            Assembly8086Tokens::Register16bit(reg) => match reg {
+                Registers16bit::BX => {
+                    is_bx_in_line = (true, token.column_number);
+                    stack.push(StackItem::Register16bit(token))
+                }
+                Registers16bit::SI => {
+                    is_si_in_line = (true, token.column_number);
+                    stack.push(StackItem::Register16bit(token))
+                }
+                Registers16bit::DI => {
+                    is_di_in_line = (true, token.column_number);
+                    stack.push(StackItem::Register16bit(token))
+                }
+                Registers16bit::BP => {
+                    is_bp_in_line = (true, token.column_number);
+                    stack.push(StackItem::Register16bit(token));
+                }
+                _ => {
                     return Err(CompilationError::new_without_suggestions(
                         token.line_number,
                         token.column_number,
                         token.token_length,
-                        "Offset overflowed",
+                        &format!(
+                            "Expected a 16bit register got {:?} insted",
+                            token.token_type
+                        ),
                     ));
                 }
+            },
+            Assembly8086Tokens::Number8bit(val) => {
+                stack.push(StackItem::Number(token, SignedU16::new(*val as u16)));
             }
-
-            Assembly8086Tokens::Number8bit(num) => {
-                // add to offset if overflow return error
-                let (val, overflow) = offset.unwrap_or(0).overflowing_add(num as u16);
-                offset = Some(val);
-                if overflow {
-                    return Err(CompilationError::new_without_suggestions(
-                        token.line_number,
-                        token.column_number,
-                        token.token_length,
-                        "Offset overflowed",
-                    ));
-                }
+            Assembly8086Tokens::Number16bit(val) => {
+                stack.push(StackItem::Number(token, SignedU16::new(*val)));
             }
-
-            Assembly8086Tokens::Register16bit(_) => {
-                return Err(CompilationError::new_without_suggestions(
-                    token.line_number,
-                    token.column_number,
-                    token.token_length,
-                    &format!(
-                        "Expected a 16bit register of types {{ BX, BP, SI, DI }} got {:?} insted",
-                        token.token_type
-                    ),
-                ));
+            Assembly8086Tokens::Plus => {
+                operator_stack.push(StackOperator::Plus);
             }
-
-            Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {
-                i += 1;
-                continue;
+            Assembly8086Tokens::Minus => {
+                operator_stack.push(StackOperator::Minus);
             }
+            Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {}
 
             _ => {
                 return Err(CompilationError::new_without_suggestions(
@@ -196,24 +198,107 @@ fn get_compact_ins<'a>(
                 ));
             }
         }
-        i += 1;
-        if i < end_index {
-            let temp_token = tokenized_line.get(
-                i,
-                "This shouldn't happen, Report this! Err: iterate_with_seperator:174".to_string(),
-                None,
-            )?;
-            match temp_token.token_type {
-                Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {}
-                _ => check_token(tokenized_line, token, i, &Assembly8086Tokens::Plus)?,
+
+        if stack.len() == 2 && operator_stack.len() < 1 {
+            let token = match stack.get(0).unwrap() {
+                StackItem::Register16bit(token) => token,
+                StackItem::Number(token, _) => token,
+            };
+            return Err(CompilationError::error_with_token(
+                token,
+                &format!(
+                    "Expected an operator after {:?} got nothing",
+                    token.token_type
+                ),
+            ));
+        }
+
+        if stack.len() == 2 && operator_stack.len() > 1 {
+            let operator = operator_stack.pop().unwrap();
+            let high_item = stack.pop().unwrap();
+            let low_item = stack.pop().unwrap();
+
+            match (high_item, operator, low_item) {
+                (
+                    StackItem::Register16bit(reg1),
+                    StackOperator::Plus,
+                    StackItem::Register16bit(reg2),
+                )
+                | (
+                    StackItem::Register16bit(reg1),
+                    StackOperator::Minus,
+                    StackItem::Register16bit(reg2),
+                ) => {}
+
+                (
+                    StackItem::Number(token, num),
+                    StackOperator::Minus,
+                    StackItem::Register16bit(_),
+                )
+                | (
+                    StackItem::Number(token, num),
+                    StackOperator::Plus,
+                    StackItem::Register16bit(_),
+                )
+                | (
+                    StackItem::Register16bit(_),
+                    StackOperator::Plus,
+                    StackItem::Number(token, num),
+                )
+                | (
+                    StackItem::Register16bit(_),
+                    StackOperator::Minus,
+                    StackItem::Number(token, num),
+                ) => {
+                    stack.push(StackItem::Number(token, num));
+                }
+
+                (
+                    StackItem::Number(high_token, val_high),
+                    StackOperator::Plus,
+                    StackItem::Number(low_token, val_low),
+                ) => {
+                    let (res, overflow) = val_high.overflowing_add(val_low);
+                    if overflow {
+                        return Err(CompilationError::error_between_tokens(
+                            high_token,
+                            low_token,
+                            "The sum of the values overflows",
+                        ));
+                    }
+                    stack.push(StackItem::Number(low_token, res));
+                }
+                (
+                    StackItem::Number(high_token, val_high),
+                    StackOperator::Minus,
+                    StackItem::Number(low_token, val_low),
+                ) => {
+                    let (res, overflow) = val_high.overflowing_sub(val_low);
+                    if overflow {
+                        return Err(CompilationError::error_between_tokens(
+                            high_token,
+                            low_token,
+                            "The sum of the values overflows",
+                        ));
+                    }
+                    stack.push(StackItem::Number(low_token, res));
+                }
             }
-            i += 1;
         }
     }
 
-    if while_limit == 0 {
-        panic!("While limit reached");
+    if stack.len() > 1 {
+        let item = stack.pop().unwrap();
+        match item {
+            StackItem::Register16bit(_) => {}
+            StackItem::Number(_, num) => {
+                if num.val != 0 {
+                    offset = Some(num);
+                }
+            }
+        }
     }
+
     if is_bx_in_line.0 && is_bp_in_line.0 {
         let token = tokenized_line.get(
             is_bx_in_line.1 as usize,
@@ -274,11 +359,22 @@ fn get_compact_ins<'a>(
                 )),
             }));
         }
+        let num_type = match offset.unwrap().as_num_token() {
+            Ok(tt) => tt,
+            Err(err) => {
+                return Err(CompilationError::new_without_suggestions(
+                    line_number,
+                    column_number,
+                    token_length,
+                    err,
+                ))
+            }
+        };
         return Ok(Some(Token {
             line_number,
             column_number,
             token_length,
-            token_type: Assembly8086Tokens::convert_to_min_num_type(offset.unwrap()),
+            token_type: num_type,
         }));
     }
 
@@ -294,7 +390,7 @@ fn get_compact_ins<'a>(
                 (false, true) => {
                     Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BxDi(offset))
                 }
-                (true, true) => panic!("This shouldn't happen, Please report this"),
+                (true, true) => return Err(CompilationError::default()),
             },
             line_number,
             column_number,
@@ -314,7 +410,7 @@ fn get_compact_ins<'a>(
                 (false, true) => {
                     Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BpDi(offset))
                 }
-                (true, true) => panic!("This shouldn't happen, Please report this"),
+                (true, true) => return Err(CompilationError::default()),
             },
             line_number,
             column_number,
@@ -414,12 +510,28 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     high_token: compact_high_token,
                     low_token,
                 }),
-                Assembly8086Tokens::IndexedAddressing(_) => {
-                    Ok(AddressingMode::Register16bitAndIndexedAddress {
+                Assembly8086Tokens::IndexedAddressing(field) => match field.get_offset() {
+                    Some(offset) => match field {
+                        IndexedAddressingTypes::Offset(offset) => {
+                            let offset_val = offset.as_u16();
+                            Ok(AddressingMode::Register16bitAndAddress {
+                                high_token: compact_high_token,
+                                low_token,
+                                address_bytes: offset_val.to_le_bytes(),
+                                register_type: register_type.clone(),
+                            })
+                        }
+                        _ => Ok(AddressingMode::Register16bitAndIndexedAddressWithOffset {
+                            high_token: compact_high_token,
+                            low_token,
+                            offset,
+                        }),
+                    },
+                    None => Ok(AddressingMode::Register16bitAndIndexedAddress {
                         high_token: compact_high_token,
                         low_token,
-                    })
-                }
+                    }),
+                },
                 Assembly8086Tokens::Character(label) => {
                     Ok(AddressingMode::Register16bitAndAddress {
                         high_token: compact_high_token,
