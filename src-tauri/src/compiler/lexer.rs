@@ -101,7 +101,7 @@ impl Lexer {
                         let mut i = iterating_col_num;
                         while i < line.len() {
                             let c = line_chars[i];
-                            if c.is_whitespace() || c == ',' || c == ';' || c == ':' {
+                            if c.is_whitespace() || c == ',' || c == ';' || c == ':' || c == '[' || c == ']' || c == '+'{
                                 break;
                             }
                             i += 1;
