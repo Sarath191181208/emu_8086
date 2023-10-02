@@ -153,7 +153,11 @@ mod tests {
 
     test_compile!(
         test_jmp_label,
-        "MOV BX, CX\nlabel1: \nSUB CX, AX \n\nJMP label1",
+        "MOV BX, CX
+        label1: 
+        SUB CX, AX 
+        JMP label1
+        ",
         |compiled_instructions: &Vec<u8>| {
             assert_eq!(compiled_instructions, &[139, 217, 43, 200, 235, 252]);
         }
