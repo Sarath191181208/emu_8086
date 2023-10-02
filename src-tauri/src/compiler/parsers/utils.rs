@@ -1,28 +1,34 @@
-use crate::{compiler::{
-    compilation_error::CompilationError,
-    tokenized_line::TokenizedLine,
-    tokens::{
-        registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token, SignedU16,
+use crate::{
+    compiler::{
+        compilation_error::CompilationError,
+        tokenized_line::TokenizedLine,
+        tokens::{
+            registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
+            SignedU16, Token,
+        },
+        types_structs::{
+            ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType,
+        },
+        CompiledBytesReference,
     },
-    types_structs::{ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType},
-    CompiledBytesReference,
-}, utils::Either};
+    utils::Either,
+};
 
-fn get_as_0xnf_in_0x3f_increment_pattern(n: u8, high_reg_idx: u8, low_reg_idx: u8) -> u8{
+fn get_as_0xnf_in_0x3f_increment_pattern(n: u8, high_reg_idx: u8, low_reg_idx: u8) -> u8 {
     let ins = n | (high_reg_idx / 2) << 4;
     let ins2 = low_reg_idx | (high_reg_idx % 2) << 3;
     ins | ins2
 }
 
-pub fn get_as_0x00_0x3f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8{
+pub fn get_as_0x00_0x3f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
     get_as_0xnf_in_0x3f_increment_pattern(0x00, high_reg_idx, low_reg_idx)
 }
 
-pub fn get_as_0x3f_0x7f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8{
+pub fn get_as_0x40_0x7f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
     get_as_0xnf_in_0x3f_increment_pattern(0x3F, high_reg_idx, low_reg_idx)
 }
 
-pub fn get_as_0x80_0xbf_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8{
+pub fn get_as_0x80_0xbf_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
     get_as_0xnf_in_0x3f_increment_pattern(0x80, high_reg_idx, low_reg_idx)
 }
 
@@ -127,7 +133,6 @@ pub(super) fn check_token<'a>(
         ));
     }
 
-
     Ok(())
 }
 
@@ -136,7 +141,12 @@ pub(super) fn check_comma<'a>(
     previous_token: &'a Token,
     i: usize,
 ) -> Result<(), CompilationError> {
-    check_token(tokenized_line, previous_token, i, &Assembly8086Tokens::Comma)
+    check_token(
+        tokenized_line,
+        previous_token,
+        i,
+        &Assembly8086Tokens::Comma,
+    )
 }
 
 pub(super) fn get_token_as_label(token: &Token) -> &Label {
@@ -217,7 +227,7 @@ pub(super) fn iterate_with_seperator(
 
 pub(super) fn get_index_addr_as_idx(token: &Token) -> Result<u8, CompilationError> {
     match &token.token_type {
-        Assembly8086Tokens::IndexedAddressing(idx) => match idx.get_as_idx(){
+        Assembly8086Tokens::IndexedAddressing(idx) => match idx.get_as_idx() {
             Ok(idx) => Ok(idx),
             Err(err) => Err(CompilationError::new_without_suggestions(
                 token.line_number,
@@ -230,8 +240,8 @@ pub(super) fn get_index_addr_as_idx(token: &Token) -> Result<u8, CompilationErro
     }
 }
 
-impl CompilationError{
-    pub(super) fn error_with_token(token: &Token, msg: &str) -> Self{
+impl CompilationError {
+    pub(super) fn error_with_token(token: &Token, msg: &str) -> Self {
         CompilationError::new_without_suggestions(
             token.line_number,
             token.column_number,
@@ -240,7 +250,7 @@ impl CompilationError{
         )
     }
 
-    pub(super) fn error_between_tokens(token1: &Token, token2: &Token, msg: &str) -> Self{
+    pub(super) fn error_between_tokens(token1: &Token, token2: &Token, msg: &str) -> Self {
         CompilationError::new_without_suggestions(
             token1.line_number,
             token1.column_number,
@@ -249,7 +259,7 @@ impl CompilationError{
         )
     }
 
-    pub(super) fn default() -> Self{
+    pub(super) fn default() -> Self {
         CompilationError::new_without_suggestions(
             0,
             0,
@@ -259,12 +269,15 @@ impl CompilationError{
     }
 }
 
-impl SignedU16{
-    pub(super) fn as_either_u8_or_u16(&self, token: &Token) -> Result<Either<u8, u16>, CompilationError>{
-        match self.as_num() {
+impl SignedU16 {
+    pub(super) fn as_either_u8_or_u16(
+        &self,
+        token: &Token,
+    ) -> Result<Either<u8, u16>, CompilationError> {
+        match &self.as_num() {
             Ok(num) => match num {
-                Either::Left(num) => Ok(Either::Left(num)),
-                Either::Right(num) => Ok(Either::Right(num)),
+                Either::Left(num) => Ok(Either::Left(*num)),
+                Either::Right(num) => Ok(Either::Right(*num)),
             },
             Err(err) => Err(CompilationError::new_without_suggestions(
                 token.line_number,
@@ -273,5 +286,12 @@ impl SignedU16{
                 err,
             )),
         }
+    }
+
+    pub(super) fn as_u16(&self) -> u16 {
+        if self.is_negative{
+            return 0xFFFF - self.val + 1;
+        }
+        self.val
     }
 }
