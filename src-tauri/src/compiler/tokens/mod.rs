@@ -57,6 +57,7 @@ pub(crate) enum Assembly8086Tokens {
     OpenSquareBracket,
     CloseSquareBracket,
     Plus,
+    Minus,
 
     // i.e this like this 
     // [bx], [dx], [si], [di]
@@ -102,6 +103,7 @@ impl std::fmt::Display for Assembly8086Tokens {
             Assembly8086Tokens::CloseSquareBracket => write!(f, "]"),
             Assembly8086Tokens::Plus => write!(f, "+"),
             Assembly8086Tokens::IndexedAddressing(_) => write!(f, "IndexedAddressing"),
+            Assembly8086Tokens::Minus => write!(f, "-"),
         }
     }
 }

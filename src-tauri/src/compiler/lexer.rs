@@ -76,7 +76,7 @@ impl Lexer {
                             1,
                         ));
                         iterating_col_num += 1;
-                    },
+                    }
                     ']' => {
                         temp_vec.push(Token::new(
                             Assembly8086Tokens::CloseSquareBracket,
@@ -85,10 +85,19 @@ impl Lexer {
                             1,
                         ));
                         iterating_col_num += 1;
-                    },
+                    }
                     '+' => {
                         temp_vec.push(Token::new(
                             Assembly8086Tokens::Plus,
+                            line_number,
+                            iterating_col_num as u32,
+                            1,
+                        ));
+                        iterating_col_num += 1;
+                    }
+                    '-' => {
+                        temp_vec.push(Token::new(
+                            Assembly8086Tokens::Minus,
                             line_number,
                             iterating_col_num as u32,
                             1,
@@ -101,7 +110,15 @@ impl Lexer {
                         let mut i = iterating_col_num;
                         while i < line.len() {
                             let c = line_chars[i];
-                            if c.is_whitespace() || c == ',' || c == ';' || c == ':' || c == '[' || c == ']' || c == '+'{
+                            if c.is_whitespace()
+                                || c == ','
+                                || c == ';'
+                                || c == ':'
+                                || c == '['
+                                || c == ']'
+                                || c == '+'
+                                || c == '-'
+                            {
                                 break;
                             }
                             i += 1;
