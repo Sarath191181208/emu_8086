@@ -213,43 +213,17 @@ fn get_compact_ins<'a>(
             ));
         }
 
-        if stack.len() == 2 && operator_stack.len() > 1 {
+        if stack.len() == 2 && operator_stack.len() >= 1 {
             let operator = operator_stack.pop().unwrap();
             let high_item = stack.pop().unwrap();
             let low_item = stack.pop().unwrap();
 
             match (high_item, operator, low_item) {
-                (
-                    StackItem::Register16bit(reg1),
-                    StackOperator::Plus,
-                    StackItem::Register16bit(reg2),
-                )
-                | (
-                    StackItem::Register16bit(reg1),
-                    StackOperator::Minus,
-                    StackItem::Register16bit(reg2),
-                ) => {}
-
-                (
-                    StackItem::Number(token, num),
-                    StackOperator::Minus,
-                    StackItem::Register16bit(_),
-                )
-                | (
-                    StackItem::Number(token, num),
-                    StackOperator::Plus,
-                    StackItem::Register16bit(_),
-                )
-                | (
-                    StackItem::Register16bit(_),
-                    StackOperator::Plus,
-                    StackItem::Number(token, num),
-                )
-                | (
-                    StackItem::Register16bit(_),
-                    StackOperator::Minus,
-                    StackItem::Number(token, num),
-                ) => {
+                (StackItem::Register16bit(_), _, StackItem::Register16bit(reg2)) => {
+                    stack.push(StackItem::Register16bit(reg2));
+                }
+                (StackItem::Number(token, num), _, StackItem::Register16bit(_))
+                | (StackItem::Register16bit(_), _, StackItem::Number(token, num)) => {
                     stack.push(StackItem::Number(token, num));
                 }
 
@@ -287,7 +261,7 @@ fn get_compact_ins<'a>(
         }
     }
 
-    if stack.len() > 1 {
+    if stack.len() > 0 {
         let item = stack.pop().unwrap();
         match item {
             StackItem::Register16bit(_) => {}
