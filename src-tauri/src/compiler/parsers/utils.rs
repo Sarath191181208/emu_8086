@@ -25,7 +25,7 @@ pub fn get_as_0x00_0x3f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
 }
 
 pub fn get_as_0x40_0x7f_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
-    get_as_0xnf_in_0x3f_increment_pattern(0x3F, high_reg_idx, low_reg_idx)
+    get_as_0xnf_in_0x3f_increment_pattern(0x40, high_reg_idx, low_reg_idx)
 }
 
 pub fn get_as_0x80_0xbf_pattern(high_reg_idx: u8, low_reg_idx: u8) -> u8 {
