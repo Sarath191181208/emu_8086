@@ -16,7 +16,10 @@ use crate::{
 
 use super::{
     pattern_extractors::{parse_two_arguments_line, AddressingMode},
-    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction, get_as_0x00_0x3f_pattern},
+    utils::{
+        get_8bit_register, get_as_0x00_0x3f_pattern, get_as_0xc0_0xff_pattern, get_idx_from_token,
+        push_instruction,
+    },
 };
 
 pub(in crate::compiler) fn parse_mov(
@@ -46,7 +49,14 @@ pub(in crate::compiler) fn parse_mov(
             let high_reg_idx = get_idx_from_token(&high_token)?;
             let low_reg_idx = get_idx_from_token(&low_token)?;
             let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
-
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0x8B],
+                   &low_token=> vec![ins]
+                )
+            );
             Ok(i + 3)
         }
         AddressingMode::Registers8bit {
@@ -472,12 +482,8 @@ mod tests {
         test_mov_ax_ref_bx_plus_si,
         "
         mov ax, [bx + si]
-        ", |compiled_instructions: &Vec<u8>| {
-            assert_eq!(
-                compiled_instructions,
-                &[0x8B, 0x00]
-            )
-        }
+        ",
+        |compiled_instructions: &Vec<u8>| { assert_eq!(compiled_instructions, &[0x8B, 0x00]) }
     );
 }
 
