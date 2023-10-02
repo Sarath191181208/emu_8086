@@ -1,27 +1,13 @@
 use unicase::UniCase;
 
-use self::assembler_directives::AssemblerDirectives;
+use self::{assembler_directives::AssemblerDirectives, indexed_addressing_types::IndexedAddressingTypes};
 
 pub mod assembler_directives;
 pub mod data;
 pub mod instructions;
 pub mod registers16bit;
 pub mod registers8bit;
-
-type Offset = u16;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum IndexedAddressingTypes{
-      BX(Option<Offset>),
-      BP(Option<Offset>),
-      SI(Option<Offset>),
-      DI(Option<Offset>),
-    BxSi(Option<Offset>),
-    BxDi(Option<Offset>),
-    BpSi(Option<Offset>),
-    BpDi(Option<Offset>),
-    Offset(Offset)
-}
+pub mod indexed_addressing_types;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Assembly8086Tokens {
@@ -73,9 +59,10 @@ pub(crate) enum Assembly8086Tokens {
     Plus,
 
     // i.e this like this 
-    // [bx]
-    // [bx + si]
-    // [bx + si + 0x10]
+    // [bx], [dx], [si], [di]
+    // [bx|dx + si|di]
+    // [bx|dx + si|di + 0x10]
+    // [0x1234]
     IndexedAddressing(IndexedAddressingTypes),
 
     // Define data
@@ -83,6 +70,16 @@ pub(crate) enum Assembly8086Tokens {
 
     // Error
     Character(UniCase<String>),
+}
+
+impl Assembly8086Tokens{
+    pub(crate) fn convert_to_min_num_type(num: u16) -> Self{
+        // check if the number could be u8 
+        if num <= u8::MAX as u16{
+            return  Assembly8086Tokens::Number8bit(num as u8);
+        }
+        Assembly8086Tokens::Number16bit(num)
+    }
 }
 
 // impl the Display trait for Assembly8086Tokens
