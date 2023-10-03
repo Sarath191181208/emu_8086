@@ -356,9 +356,9 @@ impl CPU {
         mem.read_word_with_u20(offset)
     }
 
-    fn read_byte_from_u20(&self, mem: &Memory, offset: U20) -> Byte{
-        mem.read_byte_with_u20(offset)
-    }
+    // fn read_byte_from_u20(&self, mem: &Memory, offset: U20) -> Byte{
+    //     mem.read_byte_with_u20(offset)
+    // }
 
     fn read_word_from_pointer(&self, mem: &Memory, pointer: Word) -> Word {
         mem.read_word(self.data_segment, pointer)
@@ -368,13 +368,13 @@ impl CPU {
         mem.read_byte(self.data_segment, pointer)
     }
 
-    fn write_byte_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Byte) {
-        mem.write_byte_with_u20(offset, data);
-    }
+    // fn write_byte_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Byte) {
+    //     mem.write_byte_with_u20(offset, data);
+    // }
 
-    fn write_word_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Word) {
-        mem.write_word_with_u20(offset, data);
-    }
+    // fn write_word_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Word) {
+    //     mem.write_word_with_u20(offset, data);
+    // }
 
     fn write_byte_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Byte) {
         mem.write_byte(self.data_segment, pointer, data);
