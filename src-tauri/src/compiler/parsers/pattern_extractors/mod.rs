@@ -144,19 +144,19 @@ fn get_compact_ins<'a>(
         match &token.token_type {
             Assembly8086Tokens::Register16bit(reg) => match reg {
                 Registers16bit::BX => {
-                    is_bx_in_line = (true, token.column_number);
+                    is_bx_in_line = (true, i as u32);
                     stack.push(StackItem::Register16bit(token))
                 }
                 Registers16bit::SI => {
-                    is_si_in_line = (true, token.column_number);
+                    is_si_in_line = (true, i as u32);
                     stack.push(StackItem::Register16bit(token))
                 }
                 Registers16bit::DI => {
-                    is_di_in_line = (true, token.column_number);
+                    is_di_in_line = (true, i as u32);
                     stack.push(StackItem::Register16bit(token))
                 }
                 Registers16bit::BP => {
-                    is_bp_in_line = (true, token.column_number);
+                    is_bp_in_line = (true, i as u32);
                     stack.push(StackItem::Register16bit(token));
                 }
                 _ => {
@@ -186,15 +186,23 @@ fn get_compact_ins<'a>(
             Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {}
 
             _ => {
-                return Err(CompilationError::new_without_suggestions(
-                    token.line_number,
-                    token.column_number,
-                    token.token_length,
-                    &format!(
-                        "Expected a 16bit register got {:?} insted",
-                        token.token_type
-                    ),
-                ));
+                if operator_stack.is_empty() && !stack.is_empty() {
+                    return Err(CompilationError::error_with_token(
+                        token,
+                        &format!(
+                            "Expected an operator got {:?} insted",
+                            token.token_type
+                        ),
+                    ));
+                }else {
+                    return Err(CompilationError::error_with_token(
+                        token,
+                        &format!(
+                            "Expected a 16bit register or a number got {:?} insted",
+                            token.token_type
+                        ),
+                    ));
+                }
             }
         }
 
