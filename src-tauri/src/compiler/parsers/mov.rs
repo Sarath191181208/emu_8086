@@ -305,7 +305,7 @@ pub(in crate::compiler) fn parse_mov(
                         compiled_bytes_ref,
                         (
                             token => vec![0x8B],
-                           &high_token=> vec![46, 0x00]
+                           &high_token=> vec![ 0x46 | (high_reg_idx << 3), 0x00]
                         )
                     );
                     Ok(tokenized_line.len())
@@ -511,6 +511,14 @@ mod tests {
                 compiled_instructions,
                 &[0xEB, 0x02, 0x10, 0x00, 0xC7, 0x06, 0x02, 0x01, 0x01]
             )
+        }
+    );
+
+    test_compile!(
+        test_mov_bx_bp,
+        "mov bx, [bp]",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0x8B, 0x5E, 0x00]);
         }
     );
 
