@@ -189,12 +189,9 @@ fn get_compact_ins<'a>(
                 if operator_stack.is_empty() && !stack.is_empty() {
                     return Err(CompilationError::error_with_token(
                         token,
-                        &format!(
-                            "Expected an operator got {:?} insted",
-                            token.token_type
-                        ),
+                        &format!("Expected an operator got {:?} insted", token.token_type),
                     ));
-                }else {
+                } else {
                     return Err(CompilationError::error_with_token(
                         token,
                         &format!(
