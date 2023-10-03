@@ -34,6 +34,18 @@ impl From<u32> for U20 {
     }
 }
 
+impl From<u16> for U20 {
+    fn from(value: u16) -> Self {
+        U20::new(value as u32)
+    }
+}
+
+impl From<u8> for U20 {
+    fn from(value: u8) -> Self {
+        U20::new(value as u32)
+    }
+}
+
 impl From<U20> for u32 {
     fn from(value: U20) -> Self {
         value.get()
