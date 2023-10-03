@@ -4,7 +4,9 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         parsers::utils::{get_token_as_label, is_variable_defined_as_16bit},
-        tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
+        tokens::{
+            registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
+        },
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference, TokenizedLine,
     },
@@ -512,7 +514,27 @@ mod tests {
     );
 
     test_compile!(
-        test_mov_ax_ref_0x1000,
+        test_mov_ax_ref_0x3020,
+        "
+        mov AX, [0x3020]
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0xA1, 0x20, 0x30])
+        }
+    );
+
+    test_compile!(
+        test_mov_ax_ref_0x30,
+        "
+        mov AX, [0x30]
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0xA1, 0x30, 0x00])
+        }
+    );
+
+    test_compile!(
+        test_mov_bp_ref_0x1000,
         "
         mov bp, [0x1000]
         ",
