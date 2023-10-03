@@ -25,6 +25,17 @@ impl U20 {
         let offset = (value & 0xFFFF) as u16;
         (segment, offset)
     }
+
+    fn is_negative(&self) -> bool{
+        // check if the num is u8 
+        if self.0 <= 0xFF && self.0 > 0x80 {
+            return true;
+        }
+        if self.0 <= 0xFFFF && self.0 > 0x8000 {
+            return true;
+        }
+        false
+    }
 }
 
 impl From<u32> for U20 {
@@ -55,7 +66,18 @@ impl std::ops::Add for U20 {
     type Output = U20;
 
     fn add(self, other: U20) -> U20 {
-        U20::new(self.0 + other.0)
+        match (self.is_negative(), other.is_negative()){
+            (true, true) |
+            (false, false) => {
+                let (res, _) = self.0.overflowing_add(other.0);
+                U20::new(res)
+            },
+            (true, false)|
+            (false, true) =>{
+                let (res, _) = self.0.overflowing_sub(other.0);
+                U20::new(res)
+            },
+        }
     }
 }
 
