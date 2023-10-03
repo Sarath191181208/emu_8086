@@ -2,12 +2,16 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         parsers::utils::{
-            get_as_0x00_0x3f_pattern, get_idx_from_token, get_index_addr_as_idx, push_instruction, get_as_0x40_0x7f_pattern, get_as_0x80_0xbf_pattern,
+            get_as_0x00_0x3f_pattern, get_as_0x40_0x7f_pattern, get_as_0x80_0xbf_pattern,
+            get_idx_from_token, get_index_addr_as_idx, push_instruction,
         },
-        tokens::{indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, Token, SignedU16},
+        tokens::{
+            indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, SignedU16, Token,
+        },
         types_structs::CompiledBytesReference,
     },
-    convert_and_push_instructions, utils::Either,
+    convert_and_push_instructions,
+    utils::Either,
 };
 
 pub(crate) fn parse_register_16bit_and_indexed_registers_without_offset(

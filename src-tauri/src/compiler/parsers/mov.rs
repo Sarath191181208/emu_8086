@@ -4,10 +4,7 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         parsers::utils::{get_token_as_label, is_variable_defined_as_16bit},
-        tokens::{
-            registers16bit::Registers16bit,
-            registers8bit::Registers8bit,
-        },
+        tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference, TokenizedLine,
     },
@@ -22,9 +19,7 @@ use super::{
         },
         parse_two_arguments_line, AddressingMode,
     },
-    utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction,
-    },
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
 pub(in crate::compiler) fn parse_mov(
