@@ -1,8 +1,17 @@
+use strum_macros::Display;
+
 pub type Byte = u8;
 pub type Word = u16;
 
+#[derive(Debug )]
 #[repr(transparent)]
 pub struct U20(u32);
+
+impl std::fmt::Display for U20 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:#06x}", self.0)
+    }
+}
 
 impl U20 {
     pub const MIN: U20 = U20(0);
@@ -26,8 +35,8 @@ impl U20 {
         (segment, offset)
     }
 
-    fn is_negative(&self) -> bool{
-        // check if the num is u8 
+    fn is_negative(&self) -> bool {
+        // check if the num is u8
         if self.0 <= 0xFF && self.0 > 0x80 {
             return true;
         }
@@ -66,17 +75,21 @@ impl std::ops::Add for U20 {
     type Output = U20;
 
     fn add(self, other: U20) -> U20 {
-        match (self.is_negative(), other.is_negative()){
-            (true, true) |
-            (false, false) => {
+        match (self.is_negative(), other.is_negative()) {
+            (true, true) | (false, false) => {
+                print!("--------------------");
+                print!("Add: {} + {}", self.0, other.0);
+                print!("--------------------");
                 let (res, _) = self.0.overflowing_add(other.0);
                 U20::new(res)
-            },
-            (true, false)|
-            (false, true) =>{
+            }
+            (true, false) | (false, true) => {
+                print!("--------------------");
+                print!("Sub: {} + {}", self.0, other.0);
+                print!("--------------------");
                 let (res, _) = self.0.overflowing_sub(other.0);
                 U20::new(res)
-            },
+            }
         }
     }
 }
