@@ -1,20 +1,10 @@
 use crate::{consts::Byte, cpu::CPU, Memory};
 
 impl CPU {
-    fn mov_16bit_register_addressing(&mut self, instruction: Byte) {
+    pub(super) fn mov_16bit_register_addressing(&mut self, instruction: Byte) {
         let (source_index, write_index) = self.get_index_from_c0_ff_pattern(instruction);
         let reg = self.get_16bit_register_by_index(source_index % 8);
         self.set_16bit_register_by_index(write_index, reg);
-    }
-
-    pub(in crate::cpu) fn execute_mov_register_word(&mut self, mem: &mut Memory) {
-        let instruction = self.consume_instruction(mem);
-        match instruction {
-            0xC0..=0xFF => {
-                self.mov_16bit_register_addressing(instruction);
-            }
-            x => panic!("MOV instruction not implemented! for {}", x),
-        }
     }
 
     fn mov_8bit_register_addressing(&mut self, instruction: Byte) {
