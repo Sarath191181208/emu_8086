@@ -147,7 +147,7 @@ pub(in crate::compiler) fn parse_sub(
                    &low_token=> address_bytes.to_vec()
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::AddressAnd16bitRegister {
             high_token,
