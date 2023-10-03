@@ -70,51 +70,49 @@ impl CPU {
         }
     }
 
-    pub(in crate::cpu) fn get_offset_from_index_of_indexed_registers(
-        &self,
-        index: u8,
-    ) -> U20 {
-        let ds = (self.data_segment*0x10) as u32;
+    pub(in crate::cpu) fn get_offset_from_index_of_indexed_registers(&self, index: u8) -> U20 {
+        let ds = (self.data_segment * 0x10) as u32;
         match index {
-            0x00 => { // bx + si
+            0x00 => {
+                // bx + si
                 let sum = sum!(ds, self.bx, self.source_index);
                 U20::from(sum)
             }
             0x01 => {
-                 // bx + di
+                // bx + di
                 let sum = sum!(ds, self.bx, self.destination_index);
                 U20::from(sum)
-            },
-            0x02 =>{
-                 // bp + si
+            }
+            0x02 => {
+                // bp + si
                 let sum = sum!(ds, self.base_pointer, self.source_index);
                 U20::from(sum)
-            },
-            0x03 =>{
-                 // bp + di
+            }
+            0x03 => {
+                // bp + di
                 let sum = sum!(ds, self.base_pointer, self.destination_index);
                 U20::from(sum)
-            },
-            0x04 =>{
-                // si 
+            }
+            0x04 => {
+                // si
                 let sum = sum!(ds, self.source_index);
                 U20::from(sum)
-            },
+            }
             0x05 => {
                 // di
                 let sum = sum!(ds, self.destination_index);
                 U20::from(sum)
-            },
-            0x07 =>{
+            }
+            0x07 => {
                 // bx
                 let sum = sum!(ds, self.bx);
                 U20::from(sum)
-            },
+            }
             0x06 => {
-                // bp 
+                // bp
                 let sum = sum!(ds, self.base_pointer);
                 U20::from(sum)
-            },
+            }
             _ => panic!("Invalid register index! This can't happen!"),
         }
     }
@@ -145,19 +143,23 @@ impl CPU {
         (source_idx, write_idx)
     }
 
-    pub(in crate::cpu) fn get_index_from_0x40_0x7f_pattern(&self, ins: Byte) -> (u8, u8){
+    pub(in crate::cpu) fn get_index_from_0x40_0x7f_pattern(&self, ins: Byte) -> (u8, u8) {
         self.get_low_high_from_0x3f_difference(0x40, ins)
     }
 
-    pub(in crate::cpu) fn get_index_from_0x80_0xbf_pattern(&self, ins: Byte) -> (u8, u8){
+    pub(in crate::cpu) fn get_index_from_0x80_0xbf_pattern(&self, ins: Byte) -> (u8, u8) {
         self.get_low_high_from_0x3f_difference(0x80, ins)
     }
 
-    pub(in crate::cpu) fn get_index_from_0x00_0x3f_pattern(&self, ins: Byte) -> (u8, u8){
+    pub(in crate::cpu) fn get_index_from_0x00_0x3f_pattern(&self, ins: Byte) -> (u8, u8) {
         self.get_low_high_from_0x3f_difference(0x00, ins)
     }
 
-    pub(in crate::cpu) fn get_low_high_from_0x3f_difference(&self, start: Byte, ins: Byte) -> (u8, u8){
+    pub(in crate::cpu) fn get_low_high_from_0x3f_difference(
+        &self,
+        start: Byte,
+        ins: Byte,
+    ) -> (u8, u8) {
         let low = ins & 0x0f;
         let high_idx = (ins & 0b_0111_1000) >> 3;
         let high = high_idx ^ start;

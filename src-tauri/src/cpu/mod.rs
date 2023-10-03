@@ -352,7 +352,7 @@ impl CPU {
 }
 
 impl CPU {
-    fn read_word_from_u20(&self, mem: &Memory, offset: U20) -> Word{
+    fn read_word_from_u20(&self, mem: &Memory, offset: U20) -> Word {
         mem.read_word_with_u20(offset)
     }
 

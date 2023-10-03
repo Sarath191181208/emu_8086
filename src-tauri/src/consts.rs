@@ -1,7 +1,6 @@
 pub type Byte = u8;
 pub type Word = u16;
 
-
 #[repr(transparent)]
 pub struct U20(u32);
 
@@ -23,7 +22,7 @@ impl U20 {
         // i.e value = 0x000F_FFFF
         // segment = 0x000F, offset = 0xFFFF
         let segment = (value >> 16) as u16;
-        let offset= (value & 0xFFFF) as u16;
+        let offset = (value & 0xFFFF) as u16;
         (segment, offset)
     }
 }

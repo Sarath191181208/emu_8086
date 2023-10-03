@@ -74,7 +74,13 @@ impl Memory {
         }
     }
 
-    fn write_byte_with_a_time_stamp(&mut self, segment: u16, offset: u16, new_data: Byte, time: usize) {
+    fn write_byte_with_a_time_stamp(
+        &mut self,
+        segment: u16,
+        offset: u16,
+        new_data: Byte,
+        time: usize,
+    ) {
         let address = self.get_addr(segment, offset);
         let prev_data = self.mem[address];
         self.push_history(time, vec![(address, prev_data, new_data)]);
@@ -89,26 +95,26 @@ impl Memory {
         let time = self.history.len();
         let low_byte = (data & 0xFF) as Byte;
         let high_byte = ((data >> 8) & 0xFF) as Byte;
-        self.write_byte_with_a_time_stamp(segment, offset, low_byte,  time);
+        self.write_byte_with_a_time_stamp(segment, offset, low_byte, time);
         self.write_byte_with_a_time_stamp(segment, offset, high_byte, time);
     }
 
-    pub fn read_word_with_u20(&self, offset: U20) -> Word{
+    pub fn read_word_with_u20(&self, offset: U20) -> Word {
         let (segment, offset) = offset.as_segment_offset();
         self.read_word(segment, offset)
     }
 
-    pub fn read_byte_with_u20(&self, offset: U20) -> Byte{
+    pub fn read_byte_with_u20(&self, offset: U20) -> Byte {
         let (segment, offset) = offset.as_segment_offset();
         self.read_byte(segment, offset)
     }
 
-    pub fn write_word_with_u20(&mut self, offset: U20, data: Word){
+    pub fn write_word_with_u20(&mut self, offset: U20, data: Word) {
         let (segment, offset) = offset.as_segment_offset();
         self.write_word(segment, offset, data);
     }
 
-    pub fn write_byte_with_u20(&mut self, offset: U20, data: Byte){
+    pub fn write_byte_with_u20(&mut self, offset: U20, data: Byte) {
         let (segment, offset) = offset.as_segment_offset();
         self.write_byte(segment, offset, data);
     }
