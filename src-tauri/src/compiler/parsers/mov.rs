@@ -539,7 +539,7 @@ mod tests {
         mov bp, [0x1000]
         ",
         |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[0x8B, 0x41, 0x20])
+            assert_eq!(compiled_instructions, &[0x8B, 0x2E, 0x00, 0x10])
         }
     );
 }
