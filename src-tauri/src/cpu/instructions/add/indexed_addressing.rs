@@ -13,7 +13,7 @@ impl CPU {
                 self.add_16bit_reg_direct_address(mem, high_reg_idx);
             }
             _ => {
-                // get offset 
+                // get offset
                 let memory_offset = self.get_offset_from_index_of_indexed_registers(low_reg_idx);
                 // read the data from memeory
                 let data = self.read_word_from_u20(mem, memory_offset);

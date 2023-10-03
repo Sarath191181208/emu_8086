@@ -4,9 +4,7 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         parsers::utils::{get_token_as_label, is_variable_defined_as_16bit},
-        tokens::{
-            registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
-        },
+        tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference, TokenizedLine,
     },

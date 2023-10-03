@@ -226,12 +226,28 @@ fn get_compact_ins<'a>(
                 (StackItem::Register16bit(_), _, StackItem::Register16bit(reg2)) => {
                     stack.push(StackItem::Register16bit(reg2));
                 }
-                (StackItem::Number(token, num), StackOperator::Plus, StackItem::Register16bit(_))
-                | (StackItem::Register16bit(_), StackOperator::Plus, StackItem::Number(token, num)) => {
+                (
+                    StackItem::Number(token, num),
+                    StackOperator::Plus,
+                    StackItem::Register16bit(_),
+                )
+                | (
+                    StackItem::Register16bit(_),
+                    StackOperator::Plus,
+                    StackItem::Number(token, num),
+                ) => {
                     stack.push(StackItem::Number(token, num));
                 }
-                (StackItem::Number(token, num), StackOperator::Minus, StackItem::Register16bit(_))
-                | (StackItem::Register16bit(_), StackOperator::Minus, StackItem::Number(token, num)) => {
+                (
+                    StackItem::Number(token, num),
+                    StackOperator::Minus,
+                    StackItem::Register16bit(_),
+                )
+                | (
+                    StackItem::Register16bit(_),
+                    StackOperator::Minus,
+                    StackItem::Number(token, num),
+                ) => {
                     stack.push(StackItem::Number(token, num.negate()));
                 }
                 (
