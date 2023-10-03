@@ -58,7 +58,7 @@ function App() {
                 langConfiguration
               );
             }}
-            onChange={tryCompile}
+            onChange={tryCompile} 
             height="100%"
             defaultLanguage="assembly"
             theme="assembly-dark"

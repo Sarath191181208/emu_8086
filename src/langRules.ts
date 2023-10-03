@@ -47,6 +47,7 @@ export const langConfiguration: languages.LanguageConfiguration = {
   comments: {
     lineComment: ";",
   },
+  colorizedBracketPairs: [["{", "}"], ["[", "]"], ["(", ")"]],
 };
 
 export const langTheme: editor.IStandaloneThemeData = {
