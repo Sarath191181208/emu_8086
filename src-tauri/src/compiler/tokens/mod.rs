@@ -174,7 +174,7 @@ impl SignedU16 {
         self.overflowing_add(other.negate())
     }
 
-    fn negate(self) -> Self {
+    pub(crate) fn negate(self) -> Self {
         Self {
             val: self.val,
             is_negative: !self.is_negative,
