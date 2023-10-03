@@ -1,9 +1,8 @@
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        parsers::utils::{get_idx_from_reg, get_as_0x40_0x7f_pattern, get_as_0x80_0xbf_pattern},
+        parsers::utils::{get_idx_from_reg},
         tokenized_line::TokenizedLine,
-        tokens::{indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens},
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference,
     },
@@ -14,8 +13,7 @@ use crate::{
 use super::{
     pattern_extractors::{parse_two_arguments_line, AddressingMode, compile_two_arguments_patterns::{parse_register_16bit_and_indexed_registers_without_offset, parse_register_16bit_and_indexed_registers_with_offset}},
     utils::{
-        get_8bit_register, get_as_0x00_0x3f_pattern, get_as_0xc0_0xff_pattern, get_idx_from_token,
-        get_index_addr_as_idx, get_token_as_label, is_variable_defined_as_16bit, push_instruction,
+        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, get_token_as_label, is_variable_defined_as_16bit, push_instruction,
     },
 };
 

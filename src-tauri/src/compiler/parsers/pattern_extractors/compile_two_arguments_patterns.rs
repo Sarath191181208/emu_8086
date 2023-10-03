@@ -28,7 +28,7 @@ pub(crate) fn parse_register_16bit_and_indexed_registers_without_offset(
                 compiled_bytes_ref,
                 (
                     token => vec![base_instruction],
-                   &high_token=> vec![0x46 | (high_reg_idx << 3), 0x00]
+                   high_token=> vec![0x46 | (high_reg_idx << 3), 0x00]
                 )
             );
             Ok(())
@@ -39,7 +39,7 @@ pub(crate) fn parse_register_16bit_and_indexed_registers_without_offset(
                 compiled_bytes_ref,
                 (
                     token => vec![base_instruction],
-                   &low_token=> vec![ins]
+                   low_token=> vec![ins]
                 )
             );
             Ok(())
@@ -56,9 +56,9 @@ pub(crate) fn parse_register_16bit_and_indexed_registers_with_offset(
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
 ) -> Result<(), CompilationError> {
-    let offset = offset.as_either_u8_or_u16(&low_token)?;
-    let high_reg_idx = get_idx_from_token(&high_token)?;
-    let low_reg_idx = get_index_addr_as_idx(&low_token)?;
+    let offset = offset.as_either_u8_or_u16(low_token)?;
+    let high_reg_idx = get_idx_from_token(high_token)?;
+    let low_reg_idx = get_index_addr_as_idx(low_token)?;
     let ins = match &offset {
         Either::Left(_) => vec![get_as_0x40_0x7f_pattern(high_reg_idx, low_reg_idx)],
         Either::Right(_) => vec![get_as_0x80_0xbf_pattern(high_reg_idx, low_reg_idx)],
@@ -70,8 +70,8 @@ pub(crate) fn parse_register_16bit_and_indexed_registers_with_offset(
         compiled_bytes_ref,
         (
             token => vec![base_instruction],
-            &high_token=> ins,
-            &low_token=> offset_bytes
+            high_token=> ins,
+            low_token=> offset_bytes
         )
     );
 

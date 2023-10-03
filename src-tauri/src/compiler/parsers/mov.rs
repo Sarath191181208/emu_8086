@@ -3,17 +3,15 @@ use std::{collections::HashMap, vec};
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        parsers::utils::{get_index_addr_as_idx, get_token_as_label, is_variable_defined_as_16bit},
-        tokenized_line,
+        parsers::utils::{get_token_as_label, is_variable_defined_as_16bit},
         tokens::{
-            indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
-            registers8bit::Registers8bit, Assembly8086Tokens,
+            registers16bit::Registers16bit,
+            registers8bit::Registers8bit,
         },
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference, TokenizedLine,
     },
     convert_and_push_instructions,
-    utils::Either,
 };
 
 use super::{
@@ -25,8 +23,7 @@ use super::{
         parse_two_arguments_line, AddressingMode,
     },
     utils::{
-        get_8bit_register, get_as_0x00_0x3f_pattern, get_as_0x40_0x7f_pattern,
-        get_as_0x80_0xbf_pattern, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction,
+        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction,
     },
 };
 
