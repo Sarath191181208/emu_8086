@@ -1,15 +1,19 @@
-use strum_macros::Display;
-
 pub type Byte = u8;
 pub type Word = u16;
 
-#[derive(Debug )]
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct U20(u32);
 
 impl std::fmt::Display for U20 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#06x}", self.0)
+        let is_negative = self.is_negative();
+        let value = self.get_value();
+        if is_negative {
+            write!(f, "-{:#06x}", value)
+        } else {
+            write!(f, "{:#6x}", value)
+        }
     }
 }
 
@@ -45,6 +49,17 @@ impl U20 {
         }
         false
     }
+
+    fn get_value(&self) -> u32 {
+        if self.is_negative() {
+            match self.0 {
+                0x80..=0xFF => return 0xFF - self.0 + 1,
+                0x8000..=0xFFFF => return 0xFFFF - self.0 + 1,
+                _ => return self.0,
+            }
+        }
+        self.0
+    }
 }
 
 impl From<u32> for U20 {
@@ -77,17 +92,11 @@ impl std::ops::Add for U20 {
     fn add(self, other: U20) -> U20 {
         match (self.is_negative(), other.is_negative()) {
             (true, true) | (false, false) => {
-                print!("--------------------");
-                print!("Add: {} + {}", self.0, other.0);
-                print!("--------------------");
-                let (res, _) = self.0.overflowing_add(other.0);
+                let (res, _) = self.get_value().overflowing_add(other.get_value());
                 U20::new(res)
             }
             (true, false) | (false, true) => {
-                print!("--------------------");
-                print!("Sub: {} + {}", self.0, other.0);
-                print!("--------------------");
-                let (res, _) = self.0.overflowing_sub(other.0);
+                let (res, _) = self.get_value().overflowing_sub(other.get_value());
                 U20::new(res)
             }
         }
