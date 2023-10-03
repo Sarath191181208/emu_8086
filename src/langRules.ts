@@ -47,6 +47,11 @@ export const langConfiguration: languages.LanguageConfiguration = {
   comments: {
     lineComment: ";",
   },
+  brackets: [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"],
+  ],
   colorizedBracketPairs: [["{", "}"], ["[", "]"], ["(", ")"]],
 };
 
