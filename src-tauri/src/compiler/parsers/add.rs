@@ -1,8 +1,9 @@
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        parsers::utils::get_idx_from_reg,
+        parsers::utils::{get_idx_from_reg, get_as_0x40_0x7f_pattern, get_as_0x80_0xbf_pattern},
         tokenized_line::TokenizedLine,
+        tokens::{indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens},
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference,
     },
@@ -11,10 +12,10 @@ use crate::{
 };
 
 use super::{
-    pattern_extractors::{parse_two_arguments_line, AddressingMode},
+    pattern_extractors::{parse_two_arguments_line, AddressingMode, compile_two_arguments_patterns::{parse_register_16bit_and_indexed_registers_without_offset, parse_register_16bit_and_indexed_registers_with_offset}},
     utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, get_token_as_label,
-        is_variable_defined_as_16bit, push_instruction,
+        get_8bit_register, get_as_0x00_0x3f_pattern, get_as_0xc0_0xff_pattern, get_idx_from_token,
+        get_index_addr_as_idx, get_token_as_label, is_variable_defined_as_16bit, push_instruction,
     },
 };
 
@@ -236,6 +237,36 @@ pub(in crate::compiler) fn parse_add(
             );
             Ok(i + 3)
         }
+        AddressingMode::Register16bitAndIndexedAddress {
+            high_token,
+            low_token,
+        } => {
+            parse_register_16bit_and_indexed_registers_without_offset(
+                0x03,
+                token,
+                &high_token,
+                &low_token,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
+        AddressingMode::Register16bitAndIndexedAddressWithOffset {
+            high_token,
+            low_token,
+            offset,
+        } => {
+            parse_register_16bit_and_indexed_registers_with_offset(
+                0x03,
+                token,
+                &high_token,
+                &low_token,
+                &offset,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -325,6 +356,26 @@ mod tests16bit {
                 instructions,
                 &[0xEB, 0x02, 0x12, 0x00, 0x83, 0x06, 0x02, 0x01, 0x10]
             );
+        }
+    );
+
+    test_compile!(add_dx_di_ref, "ADD DX, [DI", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x03, 0x15]);
+    });
+
+    test_compile!(
+        add_dx_di_bx_ref_0x70,
+        "ADD DX, Di + 0x20 + 0x30 + BX + 0x10 + BX []+ 0x10",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x03, 0x51, 0x70]);
+        }
+    );
+
+    test_compile!(
+        add_dx_si_value_ref,
+        "ADD DX, SI + 0x2000",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x03, 0x94, 0x00, 0x20]);
         }
     );
 }

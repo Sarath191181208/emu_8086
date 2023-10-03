@@ -19,6 +19,8 @@ use crate::{
 
 use super::utils::{check_comma, get_label_address_or_push_into_ref};
 
+pub(in super::super) mod compile_two_arguments_patterns;
+
 pub(crate) enum AddressingMode {
     Registers16bit {
         high_token: Token,

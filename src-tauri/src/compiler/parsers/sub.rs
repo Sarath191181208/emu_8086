@@ -10,7 +10,7 @@ use crate::{
 };
 
 use super::{
-    pattern_extractors::{parse_two_arguments_line, AddressingMode},
+    pattern_extractors::{parse_two_arguments_line, AddressingMode, compile_two_arguments_patterns::{parse_register_16bit_and_indexed_registers_without_offset, parse_register_16bit_and_indexed_registers_with_offset}},
     utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
@@ -240,6 +240,36 @@ pub(in crate::compiler) fn parse_sub(
             );
             Ok(i + 3)
         }
+        AddressingMode::Register16bitAndIndexedAddress {
+            high_token,
+            low_token,
+        } => {
+            parse_register_16bit_and_indexed_registers_without_offset(
+                0x2B,
+                token,
+                &high_token,
+                &low_token,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
+        AddressingMode::Register16bitAndIndexedAddressWithOffset {
+            high_token,
+            low_token,
+            offset,
+        } => {
+            parse_register_16bit_and_indexed_registers_with_offset(
+                0x2B,
+                token,
+                &high_token,
+                &low_token,
+                &offset,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -335,6 +365,20 @@ mod tests16bit {
                 instructions,
                 &[0xEB, 0x02, 0x34, 0x12, 0x81, 0x2E, 0x02, 0x01, 0x34, 0x12]
             );
+        }
+    );
+
+    test_compile!(sub_dx_bp_di, "SUB DX, [BP] + DI]]", |instructions: &Vec<
+        u8,
+    >| {
+        assert_eq!(instructions, &[0x2B, 0x13]);
+    });
+
+    test_compile!(
+        sub_dx_bp_di_offset,
+        "SUB DX, [BP] + [0x10] + DI + 0x20 + 0x30",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x2B, 0x53, 0x60]);
         }
     );
 }
