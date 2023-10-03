@@ -96,7 +96,7 @@ impl Memory {
         let low_byte = (data & 0xFF) as Byte;
         let high_byte = ((data >> 8) & 0xFF) as Byte;
         self.write_byte_with_a_time_stamp(segment, offset, low_byte, time);
-        self.write_byte_with_a_time_stamp(segment, offset, high_byte, time);
+        self.write_byte_with_a_time_stamp(segment, offset+1, high_byte, time);
     }
 
     pub fn read_word_with_u20(&self, offset: U20) -> Word {
