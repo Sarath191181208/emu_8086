@@ -1,6 +1,17 @@
 use crate::{consts::U20, cpu::CPU, memory::Memory};
 
 impl CPU {
+    fn add_8_bit_register_and_mem_offset(&mut self, mem: &mut Memory, reg_idx: u8, offset: U20) {
+        // read the data from memory ex:
+        let data = self.read_byte_from_u20(mem, offset);
+        // read the value of the register
+        let reg_val = self.get_8bit_register_by_index(reg_idx);
+        // sub the values with the overflows and set the flags
+        let (result, _) = self.add_8bit_with_overflow_and_set_flags(reg_val, data);
+        // set the value in the respective register
+        self.set_8bit_register_by_index(reg_idx, result);
+    }
+
     pub(super) fn add_16bit_register_indexed_registers_without_offset(
         &mut self,
         mem: &mut Memory,
@@ -27,6 +38,25 @@ impl CPU {
         }
     }
 
+    pub(super) fn add_8bit_register_indexed_registers_without_offset(
+        &mut self,
+        mem: &mut Memory,
+        ins: u8,
+    ) {
+        let (low_reg_idx, high_reg_idx) = self.get_index_from_0x00_0x3f_pattern(ins);
+        match low_reg_idx {
+            0x06 => {
+                // add reg, [0x1234]
+                self.add_8bit_register_direct_address(mem, high_reg_idx);
+            }
+            _ => {
+                // get offset
+                let memory_offset = self.get_offset_from_index_of_indexed_registers(low_reg_idx);
+                self.add_8_bit_register_and_mem_offset(mem, high_reg_idx, memory_offset);
+            }
+        }
+    }
+
     pub(super) fn add_16bit_register_indexed_registers_with_8bit_offset(
         &mut self,
         mem: &mut Memory,
@@ -42,6 +72,20 @@ impl CPU {
         self.set_16bit_register_by_index(high_reg_idx, res);
     }
 
+    pub(super) fn add_8bit_register_indexed_registers_with_8bit_offset(
+        &mut self,
+        mem: &mut Memory,
+        ins: u8,
+    ) {
+        let (low_reg_idx, high_reg_idx) = self.get_index_from_0x40_0x7f_pattern(ins);
+        // getting the offset defined in ins i.e 0x20
+        let offset = U20::from(self.consume_byte(mem));
+        // getting the offset from the index of indexed registers i.e from [bx+si] | [bx]
+        let memory_offset = self.get_offset_from_index_of_indexed_registers(low_reg_idx);
+        // perform SUB AL..BH, [BX+SI]...[Bx] + 8bit-Offset
+        self.add_8_bit_register_and_mem_offset(mem, high_reg_idx, memory_offset + offset);
+    }
+
     pub(super) fn add_16bit_register_indexed_registers_with_16bit_offset(
         &mut self,
         mem: &mut Memory,
@@ -52,6 +96,21 @@ impl CPU {
         let memory_offset = self.get_offset_from_index_of_indexed_registers(low_reg_idx);
         let data = self.read_word_from_u20(mem, memory_offset + offset);
         self.set_16bit_register_by_index(high_reg_idx, data);
+    }
+
+    pub(super) fn add_8bit_register_indexed_registers_with_16bit_offset(
+        &mut self,
+        mem: &mut Memory,
+        ins: u8,
+    ) {
+        // getting the register index from the ins go to def to understand more
+        let (low_reg_idx, high_reg_idx) = self.get_index_from_0x80_0xbf_pattern(ins);
+        // getting the offset defined in ins i.e 0x100
+        let offset = U20::from(self.consume_word(mem));
+        // getting the offset from the index of indexed registers i.e from [bx+si] | [bx]
+        let memory_offset: U20 = self.get_offset_from_index_of_indexed_registers(low_reg_idx);
+        // perform SUB AL..DH, [BX+SI]...[Bx] + 16bit-Offset
+        self.add_8_bit_register_and_mem_offset(mem, high_reg_idx, memory_offset + offset);
     }
 }
 
@@ -130,6 +189,73 @@ mod tests {
             4,
             |cpu: &CPU, _: &Memory| {
                 assert_eq!(cpu.ax, 0x1234);
+            },
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests_8bit {
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        memory::Memory,
+    };
+
+    #[test]
+
+    fn offset_8bit_register_and_offset() {
+        compile_and_test_str(
+            "
+    org 100h
+    .data
+    _var db 0x20
+    var db 0x12
+    code:
+    add al, [0x102]
+    ",
+            4,
+            |cpu: &CPU, _: &Memory| {
+                assert_eq!(cpu.get_ax_low(), 0x20);
+            },
+        );
+    }
+
+    #[test]
+    fn offset_8bit_index_add_8bit() {
+        compile_and_test_str(
+            "
+    org 100h
+    .data
+    _var db 0x20
+    var db 0x12
+    code:
+    mov bx, 0x100
+    mov si, 0x05
+    add al, [bx+si-0x02]
+    ",
+            4,
+            |cpu: &CPU, _: &Memory| {
+                assert_eq!(cpu.get_ax_low(), 0x12);
+            },
+        );
+    }
+
+    #[test]
+    fn offset_16bit_index_add_8bit() {
+        compile_and_test_str(
+            "
+    org 100h
+    .data
+    _var dw 0x20
+    var db 0x12
+    code:
+    mov bx, 0x02
+    mov si, 0x02
+    add al, [bx+si+0x100]
+    ",
+            4,
+            |cpu: &CPU, _: &Memory| {
+                assert_eq!(cpu.get_ax_low(), 0x12);
             },
         );
     }
