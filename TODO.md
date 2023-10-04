@@ -2,7 +2,11 @@
 - [x] add the labels into the symbol table
 - [x] add calc offset in compile itself 
 - [x] parse the data segments
-- [ ] 🐞: Compiling doesn't change the after ward ins. 
+- [ ] Make `loop` ins work.
+- [ ] Make Different `JMP` work.
+- [ ] Support Some `interrupts`.
+- [ ] 🐞: Data in memeory doesn't change after second compilation.
+- [ ] Create a commmit interface for timestamp making mem and cpu work easily.
 - [ ] support bin numbers
 - [ ] support var ptr declearation
 - [ ] Look into the .CODE crash
