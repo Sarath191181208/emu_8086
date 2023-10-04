@@ -6,7 +6,7 @@ pub mod mov;
 pub mod mul;
 pub mod sub;
 
-pub mod test_macro;
 pub mod loop_ins;
+pub mod test_macro;
 
 pub(in crate::cpu::instructions) mod utils;

@@ -114,7 +114,7 @@ impl CPU {
         self.instruction_pointer
     }
 
-    pub(self) fn set_instruction_pointer(&mut self, value: Word){
+    pub(self) fn set_instruction_pointer(&mut self, value: Word) {
         self.instruction_pointer = value;
     }
 
