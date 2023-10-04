@@ -20,6 +20,8 @@ use compilation_error::CompilationError;
 use lexer::Lexer;
 use tokens::instructions::Instructions;
 
+use crate::compiler::utils::get_label_token_from_line;
+
 use self::{
     compilation_utils::{
         check_is_label,
@@ -470,14 +472,13 @@ fn get_err_if_already_defined_label<T>(
         .iter()
         .position(|_token| _token.token_type == Assembly8086Tokens::Character(label_key.clone()))
         .unwrap();
+    let token = &line[idx];
     if label_addr_map.contains_key(&label_key) {
-        return Some(CompilationError::new_without_suggestions(
-            line[idx].line_number,
-            line[idx].column_number,
-            line[idx].token_length,
+        return Some(CompilationError::error_with_token(
+            token,
             &format!(
                 "The label \"{}\" is already defined in line {}, Please use a different name.",
-                label_key, already_defined_line_number
+                label_key, (already_defined_line_number+1)
             ),
         ));
     }
@@ -544,7 +545,6 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
     label_ref: &mut LabelRefrenceList,
     var_addr_def_map: &mut VariableAddressDefinitionMap,
     var_ref: &mut VariableReferenceList,
-    // ) -> Result<(Vec<u8>, Vec<CompiledBytesReference>, bool), Vec<CompilationError>> {
 ) -> Option<bool> {
     let is_org_defined = match is_org_defined(&lexer.tokens) {
         Ok(is_org_defined) => is_org_defined,
@@ -554,7 +554,9 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     };
 
-    let mut label_line_number_map = HashMap::<UniCase<String>, LineNumber>::new();
+    type CompiledBytesIndexedLineNumber = LineNumber;
+    let mut label_compiled_bytes_line_number_map = HashMap::<Label, CompiledBytesIndexedLineNumber>::new();
+    let mut var_compiled_bytes_line_number_map = HashMap::<Label, (VariableType, CompiledBytesIndexedLineNumber)>::new();
 
     for (i, line) in lexer.tokens.iter().enumerate() {
         match compile(line, is_org_defined, None, None) {
@@ -577,16 +579,16 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                         continue;
                     }
                     // push the label into the label_addr_map if it's not already defined
-                    label_addr_map.insert(
+                    label_compiled_bytes_line_number_map.insert(
                         label_key.clone(),
-                        compiled_bytes_lines_vec.len() as LineNumber,
+                        compiled_bytes_lines_vec.len() as CompiledBytesIndexedLineNumber,
                     );
-                    label_line_number_map.insert(label_key, i as LineNumber);
+                    label_addr_map.insert(label_key, i as LineNumber);
                 }
 
                 // Pushing all the variables into a map after checking if they are already defined
-                for (label_str, (label_type, _)) in compiled_line.variable_abs_address_map {
-                    let label_key = UniCase::new(label_str.to_string().clone());
+                for (var_str, (variable_type, _)) in compiled_line.variable_abs_address_map {
+                    let label_key = UniCase::new(var_str.to_string().clone());
                     // get the line number of the already defined label if it exists
                     let already_defined_line_number = var_addr_def_map
                         .get(&label_key)
@@ -604,8 +606,12 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                     }
                     // push the label into the label_addr_map if it's not already defined
                     var_addr_def_map.insert(
-                        label_str,
-                        (label_type, compiled_bytes_lines_vec.len() as LineNumber),
+                        var_str,
+                        (variable_type, i as LineNumber),
+                    );
+                    var_compiled_bytes_line_number_map.insert(
+                        label_key.clone(),
+                        (variable_type, compiled_bytes_lines_vec.len() as CompiledBytesIndexedLineNumber),
                     );
                 }
 
@@ -641,77 +647,62 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
     }
 
     // check if all the variables are defined
+    // check if all the variables are defined
     let mut var_errors = false;
-    for (_i, (var, used_as_type, line_number, tokenized_line_number)) in var_ref.iter().enumerate()
+    for (_i, (var, used_as_type, _, tokenized_line_number)) in var_ref.iter().enumerate()
     {
         let line = &lexer.tokens[*tokenized_line_number];
         let idx = line
             .iter()
             .position(|_token| _token.token_type == Assembly8086Tokens::Character(var.clone()))
             .unwrap();
-        if !var_addr_def_map.contains_key(var) {
-            var_errors = true;
-            compilation_errors.push(CompilationError::new_without_suggestions(
-                *line_number as u32,
-                line[idx].column_number,
-                line[idx].token_length,
-                &format!("The variable \"{}\" is Undefined, Please define it.", var),
-            ));
-        } else if *used_as_type == VariableType::Word
-            && var_addr_def_map.get(var).unwrap().0 == VariableType::Byte
-        {
-            var_errors = true;
-            compilation_errors.push(CompilationError::new_without_suggestions(
-                *line_number as u32,
-                line[idx].column_number,
-                line[idx].token_length,
-                &format!(
-                    "The variable \"{}\" is defined as {:?}, but used as {:?}.",
-                    var,
-                    var_addr_def_map.get(var).unwrap().0,
-                    used_as_type
-                ),
-            ));
+        let token = &line[idx];
+        match &var_addr_def_map.get(var){
+            None => {
+                var_errors = true;
+                compilation_errors.push(CompilationError::error_with_token(
+                    token,
+                    &format!("The variable \"{}\" is Undefined, Please define it.", var),
+                ));
+            }
+            &Some((var_type, _))=> {
+                if used_as_type == &VariableType::Word && var_type == &VariableType::Byte{
+                    var_errors = true;
+                    compilation_errors.push(CompilationError::error_with_token(
+                        token,
+                        &format!(
+                            "The variable \"{}\" is defined as {:?}, but used as {:?}.",
+                            var,
+                            var_type,
+                            used_as_type
+                        ),
+                    ));
+                }
+            }
         }
     }
 
     // check between labels and variables
     for (label, (_, line_number)) in var_addr_def_map.iter() {
-        let line: &Vec<Token> = &lexer.tokens[*line_number];
-        if label_line_number_map.contains_key(label) {
-            let var_idx = line
-                .iter()
-                .position(|_token| {
-                    _token.token_type == Assembly8086Tokens::Character(label.clone())
-                })
-                .unwrap();
-            let label_line_number = *label_line_number_map.get(label).unwrap();
-            let label_line = &lexer.tokens[label_line_number];
-            let label_idx = label_line
-                .iter()
-                .position(|_token| {
-                    _token.token_type == Assembly8086Tokens::Character(label.clone())
-                })
-                .unwrap();
-            let label_token = &label_line[label_idx];
-            compilation_errors.push(CompilationError::new_without_suggestions(
-                *line_number as u32,
-                line[var_idx].column_number,
-                line[var_idx].token_length,
+        let line_number = *line_number;
+        if label_addr_map.contains_key(label) {
+            let var_token = get_label_token_from_line(lexer, line_number, label).unwrap();
+            let label_line_number = *label_addr_map.get(label).unwrap();
+            let label_token =  get_label_token_from_line(lexer, label_line_number, label).unwrap();
+            compilation_errors.push(CompilationError::error_with_token(
+                var_token,
                 &format!(
                     "The variable \"{}\" is defined as a label on Line: {}, Please use a different name.",
                     label,
                     label_line_number+1
                 ),
             ));
-            compilation_errors.push(CompilationError::new_without_suggestions(
-                label_line_number as u32,
-                label_token.column_number,
-                label_token.token_length,
+            compilation_errors.push(CompilationError::error_with_token(
+                label_token,
                 &format!(
                     "The variable \"{}\" is defined as a variable on Line: {}, Please use a different name.",
                     label,
-                    *line_number+1
+                    line_number+1
                 ),
             ));
         }
@@ -719,35 +710,24 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
 
     // check if all flags are defined
     let mut label_errors = false;
-    for (label, token, line_number, tokenized_line_number) in &mut *label_ref {
-        let line = &lexer.tokens[*tokenized_line_number];
-        let idx = line
-            .iter()
-            .position(|_token| {
-                _token.line_number == token.line_number
-                    && _token.column_number == token.column_number
-            })
-            .unwrap();
+    for (label, token, _, _) in &mut *label_ref {
         if !label_addr_map.contains_key(label) && !var_addr_def_map.contains_key(label) {
             label_errors = true;
-            compilation_errors.push(CompilationError::new_without_suggestions(
-                *line_number as u32,
-                line[idx].column_number,
-                line[idx].token_length,
+            compilation_errors.push(CompilationError::error_with_token(
+                token,
                 &format!("The label \"{}\" is Undefined, Please define it.", label),
             ));
         }
-        if var_addr_def_map.contains_key(label) {
-            // check if the label is defined as a 16bit
-            if var_addr_def_map.get(label).unwrap().0 == VariableType::Byte {
-                label_errors = true;
-                compilation_errors.push(CompilationError::new_without_suggestions(
-                    *line_number as u32,
-                    line[idx].column_number,
-                    line[idx].token_length,
-                    &format!("The label \"{}\" is defined as a 8-bit variable, Please use a 16-bit variable to use it in JMP instruction.", label),
-                ));
-            }
+        if let Some((VariableType::Byte, line_number)) = var_addr_def_map.get(label) {
+            label_errors = true;
+            let var_token = get_label_token_from_line(lexer, *line_number, label).unwrap();
+            compilation_errors.push(CompilationError::error_with_token(
+                var_token,
+                &format!("The label \"{}\" is defined as a 8-bit variable, Please use a 16-bit variable to use it in JMP instruction.", label),
+            ));
+            compilation_errors.push(CompilationError::error_with_token(token, 
+                &format!("The label \"{}\" is defined as a 8-bit variable, Please use a 16-bit variable to use it in JMP instruction.", label),
+            ));
         }
     }
 
@@ -762,7 +742,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         compiled_bytes_ref_lines_vec,
         &lexer.tokens,
         var_ref,
-        var_addr_def_map,
+        &var_compiled_bytes_line_number_map,
         &mut var_abs_addr_map,
         is_org_defined,
     ) {
@@ -777,7 +757,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         &lexer.tokens,
         compiled_bytes_lines_vec,
         compiled_bytes_ref_lines_vec,
-        label_addr_map,
+        &label_compiled_bytes_line_number_map,
         &var_abs_addr_map,
         is_org_defined,
         0,

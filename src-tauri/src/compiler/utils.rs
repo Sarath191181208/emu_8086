@@ -1,6 +1,6 @@
 use unicase::UniCase;
 
-use super::{tokens::{instructions::Instructions, Assembly8086Tokens, Token}, compilation_error::CompilationError};
+use super::{tokens::{instructions::Instructions, Assembly8086Tokens, Token}, compilation_error::CompilationError, types_structs::Label, lexer::Lexer};
 
 pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Token> {
     [
@@ -39,4 +39,21 @@ impl CompilationError{
             msg,
         )
     }
+}
+
+pub(super) fn get_label_token_from_line<'a>(
+    lexer: &'a Lexer,
+    line_number: usize,
+    label: &Label
+) -> Option<&'a Token>{
+    let label_line = &lexer.tokens[line_number];
+
+    label_line.iter().find(|token| {
+        match &token.token_type {
+            Assembly8086Tokens::Character(label_token) => {
+                label_token.eq_ignore_ascii_case(label)
+            },
+            _ => false
+        }
+    })
 }
