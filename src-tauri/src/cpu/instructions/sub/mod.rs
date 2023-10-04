@@ -28,13 +28,18 @@ impl CPU {
     pub(in crate::cpu) fn execute_sub_register_byte(&mut self, mem: &mut Memory) {
         let instruction = self.consume_instruction(mem);
         match instruction {
-            0x06..=0x3E => {
-                self.sub_8bit_register_direct_address(mem, instruction);
+            0x00..=0x3F => {
+                self.sub_8bit_register_indexed_registers_without_offset(mem, instruction)
+            }
+            0x40..=0x7F => {
+                self.sub_8bit_register_indexed_registers_with_8bit_offset(mem, instruction)
+            }
+            0x80..=0xBF => {
+                self.sub_8bit_register_indexed_registers_with_16bit_offset(mem, instruction)
             }
             0xC0..=0xFF => {
                 self.sub_8bit_register_addressing(instruction);
             }
-            x => panic!("SUB instruction not implemented! for {}", x),
         }
     }
 }

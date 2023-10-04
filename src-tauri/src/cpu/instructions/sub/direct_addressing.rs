@@ -13,9 +13,7 @@ impl CPU {
         self.set_16bit_register_by_index(reg_index, result);
     }
 
-    pub(super) fn sub_8bit_register_direct_address(&mut self, mem: &mut Memory, ins: Byte) {
-        // prase the instruction to get the register index
-        let reg_index = self.get_index_from_06_e6_pattern(ins);
+    pub(super) fn sub_8bit_register_direct_address(&mut self, mem: &mut Memory, reg_index: u8) {
         // read the data from memeory
         let data_addr = self.consume_word(mem);
         let data = self.read_byte_from_pointer(mem, data_addr);
