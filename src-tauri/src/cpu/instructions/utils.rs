@@ -1,4 +1,8 @@
-use crate::{consts::{Word, U20}, cpu::CPU, memory::Memory};
+use crate::{
+    consts::{Word, U20},
+    cpu::CPU,
+    memory::Memory,
+};
 
 impl CPU {
     fn set_16bit_flags(&mut self, a: u16, b: u16, result: u16, overflow: bool) {
@@ -74,19 +78,27 @@ impl CPU {
         val
     }
 
-    pub(super) fn consume_byte_and_get_cummulative_offset(&mut self, mem: &mut Memory, reg_idx: u8) -> U20 {
+    pub(super) fn consume_byte_and_get_cummulative_offset(
+        &mut self,
+        mem: &mut Memory,
+        reg_idx: u8,
+    ) -> U20 {
         // getting the offset defined in ins i.e 0x20
         let offset = U20::from(self.consume_byte(mem));
         // getting the offset from the index of indexed registers i.e from [bx+si] | [bx]
         let memory_offset = self.get_offset_from_index_of_indexed_registers(reg_idx);
-        return offset + memory_offset;
+        offset + memory_offset
     }
 
-    pub(super) fn consume_word_and_get_cummulative_offset(&mut self, mem: &mut Memory, reg_idx: u8) -> U20 {
+    pub(super) fn consume_word_and_get_cummulative_offset(
+        &mut self,
+        mem: &mut Memory,
+        reg_idx: u8,
+    ) -> U20 {
         // getting the offset defined in ins i.e 0x20
         let offset = U20::from(self.consume_word(mem));
         // getting the offset from the index of indexed registers i.e from [bx+si] | [bx]
         let memory_offset = self.get_offset_from_index_of_indexed_registers(reg_idx);
-        return offset + memory_offset;
+        offset + memory_offset
     }
 }

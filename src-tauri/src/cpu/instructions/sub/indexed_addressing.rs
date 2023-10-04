@@ -200,7 +200,10 @@ mod tests {
 
 #[cfg(test)]
 mod tests_8bit {
-    use crate::{cpu::{CPU, instructions::test_macro::compile_and_test_str}, memory::Memory};
+    use crate::{
+        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        memory::Memory,
+    };
 
     #[test]
     fn offset_8bit_index_sub_8bit() {

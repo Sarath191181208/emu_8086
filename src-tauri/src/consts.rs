@@ -25,7 +25,7 @@ impl U20 {
         U20(value as i32)
     }
 
-    fn from_i32(value: i32) -> U20{
+    fn from_i32(value: i32) -> U20 {
         assert!(
             value <= Self::MAX.0,
             "The value provided {:#06x} is greater than the max value {:#06x}",
