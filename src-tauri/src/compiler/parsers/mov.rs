@@ -329,6 +329,7 @@ pub(in crate::compiler) fn parse_mov(
             high_token,
             low_token,
             offset,
+            register_type,
         } => todo!(),
     }
 }

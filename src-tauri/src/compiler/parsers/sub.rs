@@ -285,6 +285,7 @@ pub(in crate::compiler) fn parse_sub(
             high_token,
             low_token,
             offset,
+            register_type,
         } => todo!(),
     }
 }
