@@ -198,7 +198,7 @@ pub(in crate::compiler) fn parse_add(
                     &low_token => address_bytes.to_vec()
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::AddressAnd8bitRegister {
             high_token,
@@ -497,6 +497,10 @@ mod test8bit {
             );
         }
     );
+
+    test_compile!(add_dl_0x100_ref, "ADD DL, [0x100]", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x02, 0x16, 0x00, 0x10]);
+    });
 
     test_compile!(add_dx_di_ref, "ADD DL, [DI", |instructions: &Vec<u8>| {
         assert_eq!(instructions, &[0x02, 0x15]);
