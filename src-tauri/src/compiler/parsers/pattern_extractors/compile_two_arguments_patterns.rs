@@ -103,7 +103,7 @@ pub(in super::super) fn parse_register_and_indexed_registers_with_offset(
     offset: &SignedU16,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-)-> Result<(), CompilationError>  {
+) -> Result<(), CompilationError> {
     let offset = offset.as_either_u8_or_u16(low_token)?;
     let low_reg_idx = get_index_addr_as_idx(low_token)?;
     let ins = match &offset {

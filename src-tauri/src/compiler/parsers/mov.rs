@@ -15,7 +15,9 @@ use super::{
     pattern_extractors::{
         compile_two_arguments_patterns::{
             parse_register_16bit_and_indexed_registers_with_offset,
-            parse_register_16bit_and_indexed_registers_without_offset, parse_register_8bit_and_indexed_registers_without_offset, parse_register_8bit_and_indexed_registers_with_offset,
+            parse_register_16bit_and_indexed_registers_without_offset,
+            parse_register_8bit_and_indexed_registers_with_offset,
+            parse_register_8bit_and_indexed_registers_without_offset,
         },
         parse_two_arguments_line, AddressingMode,
     },
