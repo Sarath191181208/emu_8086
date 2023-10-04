@@ -297,7 +297,7 @@ impl CPU {
                 }
             }
 
-            0xE2 => self.execute_loop(mem),
+            0xE2 => self.execute_loop_8bit(mem),
 
             // JMP 16bit register
             0xE9 => self.execute_jmp_16bit(mem),
