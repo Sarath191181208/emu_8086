@@ -3,6 +3,7 @@ pub mod dec;
 pub mod directives;
 pub mod inc;
 pub mod jmp;
+pub mod loop_ins;
 pub mod mov;
 pub mod mul;
 pub mod sub;

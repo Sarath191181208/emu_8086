@@ -1,7 +1,10 @@
 use super::{
     suggestions::SuggestionType,
     tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
-    types_structs::{VariableAddressMap, VariableType, LabelAddressMap},
+    types_structs::{
+        VariableAddressMap,
+        VariableType, // , LabelAddressMap
+    },
 };
 use strum::IntoEnumIterator;
 
@@ -23,12 +26,12 @@ pub(super) fn get_16bit_number_suggestion() -> Vec<SuggestionType> {
     vec![SuggestionType::Constant16bit(0)]
 }
 
-pub(super) fn get_all_labels_suggestions(label_line_num_map: &LabelAddressMap) -> Vec<SuggestionType>{
-    label_line_num_map
-        .iter()
-        .map(|(x, _)| SuggestionType::Label(x.clone()))
-        .collect()
-}
+// pub(super) fn get_all_labels_suggestions(label_line_num_map: &LabelAddressMap) -> Vec<SuggestionType>{
+//     label_line_num_map
+//         .iter()
+//         .map(|(x, _)| SuggestionType::Label(x.clone()))
+//         .collect()
+// }
 
 pub(super) fn get_all_registers_and_variable_suggestions(
     variable_address_map: Option<&VariableAddressMap>,

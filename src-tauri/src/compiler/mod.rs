@@ -28,8 +28,8 @@ use self::{
         is_org_defined,
     },
     parsers::{
-        add::parse_add, dec::parse_dec, inc::parse_inc, jmp::parse_jmp, mov::parse_mov,
-        mul::parse_mul, sub::parse_sub, var::parse_var_declaration,
+        add::parse_add, dec::parse_dec, inc::parse_inc, jmp::parse_jmp, loop_ins::parse_loop,
+        mov::parse_mov, mul::parse_mul, sub::parse_sub, var::parse_var_declaration,
     },
     tokenized_line::TokenizedLine,
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
@@ -230,6 +230,20 @@ fn compile(
                     variable_address_map,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MUL", 1)?;
+                Ok(compiled_line)
+            }
+
+            Instructions::Loop => {
+                let i = parse_loop(
+                    &tokenized_line,
+                    i,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    &mut compiled_line.label_idx_map,
+                    offset_bytes_from_line_and_is_label_before_ref,
+                )?;
+                // compiled_line.extend(_compliled_line);
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LOOP", 1)?;
                 Ok(compiled_line)
             }
 
