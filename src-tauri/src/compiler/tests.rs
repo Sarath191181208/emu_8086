@@ -22,6 +22,7 @@ macro_rules! test_compile {
     };
 }
 
+#[allow(dead_code)]
 pub(super) fn generate_num_ins(size: u16) -> String {
     let mut ins = String::new();
     for _ in 0..size {
