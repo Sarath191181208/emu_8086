@@ -499,7 +499,7 @@ mod test8bit {
     );
 
     test_compile!(add_dl_0x100_ref, "ADD DL, [0x100]", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x02, 0x16, 0x00, 0x10]);
+        assert_eq!(instructions, &[0x02, 0x16, 0x00, 0x01]);
     });
 
     test_compile!(add_dx_di_ref, "ADD DL, [DI", |instructions: &Vec<u8>| {
@@ -507,8 +507,8 @@ mod test8bit {
     });
 
     test_compile!(
-        add_dx_di_bx_ref_0x70,
-        "ADD DX, Di + 0x20 + 0x30 + BX + 0x10 + BX []+ 0x10",
+        add_dl_di_bx_ref_0x70,
+        "ADD Dl, Di + 0x20 + 0x30 + BX + 0x10 + BX []+ 0x10",
         |instructions: &Vec<u8>| {
             assert_eq!(instructions, &[0x02, 0x51, 0x70]);
         }
