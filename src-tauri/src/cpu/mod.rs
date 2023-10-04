@@ -114,6 +114,10 @@ impl CPU {
         self.instruction_pointer
     }
 
+    pub(self) fn set_instruction_pointer(&self, value: Word){
+        self.instruction_pointer = value;
+    }
+
     pub fn get_code_segment(&self) -> Word {
         self.code_segment
     }
@@ -292,6 +296,8 @@ impl CPU {
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xC7", ins),
                 }
             }
+
+            0xE2 => self.execute_loop(mem),
 
             // JMP 16bit register
             0xE9 => self.execute_jmp_16bit(mem),
