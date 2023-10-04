@@ -6,7 +6,8 @@ use crate::{
             get_idx_from_token, get_index_addr_as_idx, push_instruction,
         },
         tokens::{
-            indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, SignedU16, Token,
+            indexed_addressing_types::IndexedAddressingTypes, registers8bit::Registers8bit,
+            Assembly8086Tokens, SignedU16, Token,
         },
         types_structs::CompiledBytesReference,
     },
@@ -51,6 +52,27 @@ fn parse_reg_and_indexed_reg_without_offset(
     }
 }
 
+pub(crate) fn parse_register_8bit_and_indexed_registers_without_offset(
+    base_instruction: u8,
+    register: Registers8bit,
+    token: &Token,
+    high_token: &Token,
+    low_token: &Token,
+    compiled_bytes: &mut Vec<u8>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+) -> Result<(), CompilationError> {
+    let high_reg_idx = register.get_as_idx();
+    parse_reg_and_indexed_reg_without_offset(
+        high_reg_idx,
+        base_instruction,
+        token,
+        high_token,
+        low_token,
+        compiled_bytes,
+        compiled_bytes_ref,
+    )
+}
+
 pub(crate) fn parse_register_16bit_and_indexed_registers_without_offset(
     base_instruction: u8,
     token: &Token,
@@ -71,17 +93,17 @@ pub(crate) fn parse_register_16bit_and_indexed_registers_without_offset(
     )
 }
 
-pub(crate) fn parse_register_16bit_and_indexed_registers_with_offset(
+pub(crate) fn parse_register_and_indexed_registers_with_offset(
     base_instruction: u8,
+    high_reg_idx: u8,
     token: &Token,
     high_token: &Token,
     low_token: &Token,
     offset: &SignedU16,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-) -> Result<(), CompilationError> {
+)-> Result<(), CompilationError>  {
     let offset = offset.as_either_u8_or_u16(low_token)?;
-    let high_reg_idx = get_idx_from_token(high_token)?;
     let low_reg_idx = get_index_addr_as_idx(low_token)?;
     let ins = match &offset {
         Either::Left(_) => vec![get_as_0x40_0x7f_pattern(high_reg_idx, low_reg_idx)],
@@ -100,4 +122,49 @@ pub(crate) fn parse_register_16bit_and_indexed_registers_with_offset(
     );
 
     Ok(())
+}
+
+pub(crate) fn parse_register_8bit_and_indexed_registers_with_offset(
+    base_instruction: u8,
+    register: Registers8bit,
+    token: &Token,
+    high_token: &Token,
+    low_token: &Token,
+    offset: &SignedU16,
+    compiled_bytes: &mut Vec<u8>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+) -> Result<(), CompilationError> {
+    let high_reg_idx = register.get_as_idx();
+    parse_register_and_indexed_registers_with_offset(
+        base_instruction,
+        high_reg_idx,
+        token,
+        high_token,
+        low_token,
+        offset,
+        compiled_bytes,
+        compiled_bytes_ref,
+    )
+}
+
+pub(crate) fn parse_register_16bit_and_indexed_registers_with_offset(
+    base_instruction: u8,
+    token: &Token,
+    high_token: &Token,
+    low_token: &Token,
+    offset: &SignedU16,
+    compiled_bytes: &mut Vec<u8>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+) -> Result<(), CompilationError> {
+    let high_reg_idx = get_idx_from_token(high_token)?;
+    parse_register_and_indexed_registers_with_offset(
+        base_instruction,
+        high_reg_idx,
+        token,
+        high_token,
+        low_token,
+        offset,
+        compiled_bytes,
+        compiled_bytes_ref,
+    )
 }
