@@ -5,12 +5,14 @@ export function MemoryBottomBar({
   prevMemAddrValueMap,
   showMemoryBottomBar,
   setIsMemoryShown,
+  memoryIndex,
   className = "",
 }: {
   memAddrValueMap: Map<ArrayIndex, Byte>;
   prevMemAddrValueMap: Map<ArrayIndex, Byte>;
   showMemoryBottomBar: boolean;
   setIsMemoryShown: (showMemoryBottomBar: boolean) => void;
+    memoryIndex: ArrayIndex;
   className?: string;
 }) {
   const [start, setStart] = useState(0x1000);
@@ -66,6 +68,8 @@ export function MemoryBottomBar({
     }, 400);
     return () => clearTimeout(timeoutId);
   }, [memAddrValueMap]);
+
+  "bg-[#fddf47]";
 
   return (
     <div className={"absolute w-full " + className}>
@@ -152,8 +156,9 @@ export function MemoryBottomBar({
                       className={
                         "text-slate-400 dark:text-slate-200 text-center p-1 " +
                         (indicesToAnimate.includes(start + i)
-                          ? `animate-val-change`
-                          : "")
+                          ? `animate-val-change `
+                          : " ") +
+                        (((start + i) === memoryIndex) ? "bg-[#fddf47] bg-opacity-20 rounded-sm" : " ")
                       }
                     >
                       {getValOrZero(start + i)

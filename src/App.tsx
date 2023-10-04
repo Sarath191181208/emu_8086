@@ -58,7 +58,7 @@ function App() {
                 langConfiguration
               );
             }}
-            onChange={tryCompile} 
+            onChange={tryCompile}
             height="100%"
             defaultLanguage="assembly"
             theme="assembly-dark"
@@ -70,6 +70,7 @@ function App() {
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
           <MemoryBottomBar
             key="memory-bottom-bar"
+            memoryIndex={registers.instruction_pointer + (registers.code_segment*0x10)}
             prevMemAddrValueMap={prevMemoryRef.current}
             memAddrValueMap={memory}
             showMemoryBottomBar={showMemoryBottomBar}
