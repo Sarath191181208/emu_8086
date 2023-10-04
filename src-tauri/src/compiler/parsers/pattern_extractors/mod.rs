@@ -52,9 +52,22 @@ pub(crate) enum AddressingMode {
         low_token: Token,
     },
 
+    Register8bitAndIndexedAddress {
+        high_token: Token,
+        low_token: Token,
+        register_type: Registers8bit,
+    },
+
     Register16bitAndIndexedAddressWithOffset {
         high_token: Token,
         low_token: Token,
+        offset: SignedU16,
+    },
+
+    Register8bitAndIndexedAddressWithOffset {
+        high_token: Token,
+        low_token: Token,
+        register_type: Registers8bit,
         offset: SignedU16,
     },
 
@@ -70,6 +83,7 @@ pub(crate) enum AddressingMode {
         address_bytes: [u8; 2],
         num: u16,
     },
+
     Register8bitAndAddress {
         high_token: Token,
         low_token: Token,
@@ -676,6 +690,34 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     high_token: compact_high_token,
                     low_token,
                 }),
+                Assembly8086Tokens::IndexedAddressing(field) => match field.get_offset() {
+                    Some(offset) => match field {
+                        // if only the offset exists it's a different case
+                        IndexedAddressingTypes::Offset(offset) => {
+                            let offset_val = offset.as_u16();
+                            Ok(AddressingMode::Register8bitAndAddress {
+                                high_token: compact_high_token,
+                                low_token,
+                                address_bytes: offset_val.to_le_bytes(),
+                                register_type: high_token_type.clone(),
+                            })
+                        }
+                        // for the idexed addressing case i.e [bx+0x100]
+                        _ => Ok(AddressingMode::Register8bitAndIndexedAddressWithOffset {
+                            high_token: compact_high_token,
+                            low_token,
+                            offset,
+                            register_type: high_token_type.clone(),
+                        }),
+                    },
+                    // if the offsset doesn't exists case i.e only [bx]
+                    None => Ok(AddressingMode::Register8bitAndIndexedAddress {
+                        high_token: compact_high_token,
+                        low_token,
+                        register_type: high_token_type.clone(),
+                    }),
+                },
+
                 Assembly8086Tokens::Character(label) => {
                     Ok(AddressingMode::Register8bitAndAddress {
                         high_token: compact_high_token,

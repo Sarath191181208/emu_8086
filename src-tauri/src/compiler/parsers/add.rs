@@ -15,6 +15,8 @@ use super::{
         compile_two_arguments_patterns::{
             parse_register_16bit_and_indexed_registers_with_offset,
             parse_register_16bit_and_indexed_registers_without_offset,
+            parse_register_8bit_and_indexed_registers_with_offset,
+            parse_register_8bit_and_indexed_registers_without_offset,
         },
         parse_two_arguments_line, AddressingMode,
     },
@@ -272,6 +274,41 @@ pub(in crate::compiler) fn parse_add(
             )?;
             Ok(tokenized_line.len())
         }
+        AddressingMode::Register8bitAndIndexedAddress {
+            high_token,
+            low_token,
+            register_type,
+        } => {
+            parse_register_8bit_and_indexed_registers_without_offset(
+                0x02,
+                register_type,
+                token,
+                &high_token,
+                &low_token,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+
+            Ok(tokenized_line.len())
+        }
+        AddressingMode::Register8bitAndIndexedAddressWithOffset {
+            high_token,
+            low_token,
+            offset,
+            register_type,
+        } => {
+            parse_register_8bit_and_indexed_registers_with_offset(
+                0x02,
+                register_type,
+                token,
+                &high_token,
+                &low_token,
+                &offset,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -458,6 +495,26 @@ mod test8bit {
                 instructions,
                 &[0xEB, 0x02, 0x12, 0x11, 0x80, 0x06, 0x02, 0x01, 0x20]
             );
+        }
+    );
+
+    test_compile!(add_dx_di_ref, "ADD DL, [DI", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x02, 0x15]);
+    });
+
+    test_compile!(
+        add_dx_di_bx_ref_0x70,
+        "ADD DX, Di + 0x20 + 0x30 + BX + 0x10 + BX []+ 0x10",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x02, 0x51, 0x70]);
+        }
+    );
+
+    test_compile!(
+        add_dx_si_value_ref,
+        "ADD Dh, SI + 0x2000",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x02, 0xB4, 0x00, 0x20]);
         }
     );
 }
