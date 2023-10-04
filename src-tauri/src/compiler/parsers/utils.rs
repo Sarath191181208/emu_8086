@@ -241,24 +241,6 @@ pub(super) fn get_index_addr_as_idx(token: &Token) -> Result<u8, CompilationErro
 }
 
 impl CompilationError {
-    pub(super) fn error_with_token(token: &Token, msg: &str) -> Self {
-        CompilationError::new_without_suggestions(
-            token.line_number,
-            token.column_number,
-            token.token_length,
-            msg,
-        )
-    }
-
-    pub(super) fn error_between_tokens(token1: &Token, token2: &Token, msg: &str) -> Self {
-        CompilationError::new_without_suggestions(
-            token1.line_number,
-            token1.column_number,
-            token2.column_number + token2.token_length - token1.column_number,
-            msg,
-        )
-    }
-
     pub(super) fn default() -> Self {
         CompilationError::new_without_suggestions(
             0,
