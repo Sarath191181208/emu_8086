@@ -3,7 +3,7 @@ import { editor, languages } from "monaco-editor/esm/vs/editor/editor.api";
 export const langRules: languages.IMonarchLanguage = {
   defaultToken: "",
   ignoreCase: true,
-  keywords: ["mov", "add", "sub", "inc", "dec", "mul", "jmp"],
+  keywords: ["mov", "add", "sub", "inc", "dec", "mul", "jmp", "loop"],
   registers16bit: ["ax", "bx", "cx", "dx", "si", "di", "sp", "bp"],
   registers8bit: ["al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"],
   defineData: ["db", "dw"],
