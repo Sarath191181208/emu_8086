@@ -356,9 +356,9 @@ impl CPU {
         mem.read_word_with_u20(offset)
     }
 
-    // fn read_byte_from_u20(&self, mem: &Memory, offset: U20) -> Byte{
-    //     mem.read_byte_with_u20(offset)
-    // }
+    fn read_byte_from_u20(&self, mem: &Memory, offset: U20) -> Byte{
+        mem.read_byte_with_u20(offset)
+    }
 
     fn read_word_from_pointer(&self, mem: &Memory, pointer: Word) -> Word {
         mem.read_word(self.data_segment, pointer)
