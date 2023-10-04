@@ -93,7 +93,8 @@ pub(crate) fn parse_register_16bit_and_indexed_registers_without_offset(
     )
 }
 
-pub(crate) fn parse_register_and_indexed_registers_with_offset(
+#[allow(clippy::too_many_arguments)]
+pub(in super::super) fn parse_register_and_indexed_registers_with_offset(
     base_instruction: u8,
     high_reg_idx: u8,
     token: &Token,
@@ -124,7 +125,8 @@ pub(crate) fn parse_register_and_indexed_registers_with_offset(
     Ok(())
 }
 
-pub(crate) fn parse_register_8bit_and_indexed_registers_with_offset(
+#[allow(clippy::too_many_arguments)]
+pub(in super::super) fn parse_register_8bit_and_indexed_registers_with_offset(
     base_instruction: u8,
     register: Registers8bit,
     token: &Token,
