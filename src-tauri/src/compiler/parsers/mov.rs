@@ -320,6 +320,16 @@ pub(in crate::compiler) fn parse_mov(
             )?;
             Ok(tokenized_line.len())
         }
+        AddressingMode::Register8bitAndIndexedAddress {
+            high_token,
+            low_token,
+            register_type,
+        } => todo!(),
+        AddressingMode::Register8bitAndIndexedAddressWithOffset {
+            high_token,
+            low_token,
+            offset,
+        } => todo!(),
     }
 }
 
@@ -643,6 +653,36 @@ mod tests8bit {
                 compiled_instructions,
                 &[0xEB, 0x02, 0x10, 0x20, 0xC6, 0x06, 0x02, 0x01, 0x08]
             );
+        }
+    );
+
+    test_compile!(
+        test_mov_al_ref_0x3020,
+        "
+        mov AL, [0x3020]
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0xA0, 0x20, 0x30])
+        }
+    );
+
+    test_compile!(
+        test_mov_ah_ref_0x30,
+        "
+        mov AH, [0x30]
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0x8A, 0x26, 0x30, 0x00])
+        }
+    );
+
+    test_compile!(
+        test_mov_bl_ref_0x1000,
+        "
+        mov bl, [0x1000]
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0x8A, 0x1E, 0x00, 0x10])
         }
     );
 }

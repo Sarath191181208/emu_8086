@@ -276,6 +276,16 @@ pub(in crate::compiler) fn parse_sub(
             )?;
             Ok(tokenized_line.len())
         }
+        AddressingMode::Register8bitAndIndexedAddress {
+            high_token,
+            low_token,
+            register_type,
+        } => todo!(),
+        AddressingMode::Register8bitAndIndexedAddressWithOffset {
+            high_token,
+            low_token,
+            offset,
+        } => todo!(),
     }
 }
 
@@ -459,6 +469,20 @@ mod tests8bit {
                 instructions,
                 &[0xEB, 0x01, 0x12, 0x80, 0x2E, 0x02, 0x01, 0x12]
             );
+        }
+    );
+
+    test_compile!(sub_dl_bp_di, "SUB DL, [BP] + DI]]", |instructions: &Vec<
+        u8,
+    >| {
+        assert_eq!(instructions, &[0x2A, 0x13]);
+    });
+
+    test_compile!(
+        sub_bl_bp_di_offset,
+        "SUB BL, [BP] + [0x10] + DI + 0x20 + 0x30",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x2A, 0x5B, 0x60]);
         }
     );
 }
