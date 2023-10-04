@@ -1,6 +1,11 @@
 use unicase::UniCase;
 
-use super::{tokens::{instructions::Instructions, Assembly8086Tokens, Token}, compilation_error::CompilationError, types_structs::Label, lexer::Lexer};
+use super::{
+    compilation_error::CompilationError,
+    lexer::Lexer,
+    tokens::{instructions::Instructions, Assembly8086Tokens, Token},
+    types_structs::Label,
+};
 
 pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Token> {
     [
@@ -20,8 +25,7 @@ pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Toke
     .to_vec()
 }
 
-
-impl CompilationError{
+impl CompilationError {
     pub(super) fn error_with_token(token: &Token, msg: &str) -> Self {
         CompilationError::new_without_suggestions(
             token.line_number,
@@ -44,16 +48,12 @@ impl CompilationError{
 pub(crate) fn get_label_token_from_line<'a>(
     lexer: &'a Lexer,
     line_number: usize,
-    label: &Label
-) -> Option<&'a Token>{
+    label: &Label,
+) -> Option<&'a Token> {
     let label_line = &lexer.tokens[line_number];
 
-    label_line.iter().find(|token| {
-        match &token.token_type {
-            Assembly8086Tokens::Character(label_token) => {
-                label_token.eq_ignore_ascii_case(label)
-            },
-            _ => false
-        }
+    label_line.iter().find(|token| match &token.token_type {
+        Assembly8086Tokens::Character(label_token) => label_token.eq_ignore_ascii_case(label),
+        _ => false,
     })
 }

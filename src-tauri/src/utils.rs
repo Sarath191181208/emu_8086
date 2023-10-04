@@ -25,7 +25,7 @@ impl Either<u8, u16> {
 }
 
 #[derive(Debug, Serialize)]
-pub struct TokenPosition{
+pub struct TokenPosition {
     line_number: usize,
     column_number: usize,
     length: usize,
@@ -41,7 +41,7 @@ impl TokenPosition {
     }
 }
 
-// impl a from Token 
+// impl a from Token
 impl From<&Token> for TokenPosition {
     fn from(token: &Token) -> Self {
         Self {

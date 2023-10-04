@@ -118,7 +118,7 @@ fn get_label_and_var_address_definitions(
         }
     }
 
-    return label_and_var_address_definitions;
+    label_and_var_address_definitions
 }
 
 #[tauri::command]
@@ -126,7 +126,7 @@ fn try_compile_code(code: String) -> Result<(), Vec<CompilationError>> {
     let mut lexer = Lexer::new();
     lexer.tokenize(&code);
 
-    let mut compilation_errors = Vec::new();  
+    let mut compilation_errors = Vec::new();
 
     match compile_lines_perform_var_label_substiution(
         &mut lexer,
