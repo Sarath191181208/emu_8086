@@ -3,9 +3,8 @@ use crate::{cpu::CPU, memory::Memory};
 pub mod jcxz;
 
 impl CPU {
-
-    pub(in self) fn execute_8bit_offset_jmp(&mut self, offset: u8) {
-        match offset{
+    pub(self) fn execute_8bit_offset_jmp(&mut self, offset: u8) {
+        match offset {
             0x80..=0xFF => {
                 let offset = 0xFF - offset + 1;
                 self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset as u16);
