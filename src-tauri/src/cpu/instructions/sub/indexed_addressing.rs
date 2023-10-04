@@ -38,7 +38,7 @@ impl CPU {
         ins: u8,
     ) {
         let (low_reg_idx, high_reg_idx) = self.get_index_from_0x40_0x7f_pattern(ins);
-        // getting the offset defined in ins i.e 0x20 
+        // getting the offset defined in ins i.e 0x20
         let offset = U20::from(self.consume_byte(mem));
         // getting the offset from the index of indexed registers i.e from [bx+si] | [bx]
         let memory_offset = self.get_offset_from_index_of_indexed_registers(low_reg_idx);
