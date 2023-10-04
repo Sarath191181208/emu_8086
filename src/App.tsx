@@ -2,11 +2,7 @@ import "./App.css";
 import "./index.css";
 import { Editor } from "@monaco-editor/react";
 
-import {
-  langConfiguration,
-  langRules,
-  langTheme,
-} from "./langRules";
+import { langConfiguration, langRules, langTheme } from "./langRules";
 import { Navbar } from "./Components/Navbar";
 import { RegistersTableView } from "./Components/RegisterView";
 import { MemoryBottomBar } from "./Components/MemoryBottombar";
@@ -24,6 +20,7 @@ function App() {
     monacoRef,
 
     languageCompletionProvider,
+    langDefinitionProvider,
 
     compileCode,
     nextPressed,
@@ -57,6 +54,8 @@ function App() {
                 "assembly",
                 langConfiguration
               );
+
+              monaco.languages.registerDefinitionProvider("assembly", langDefinitionProvider);
             }}
             onChange={tryCompile}
             height="100%"
@@ -70,7 +69,9 @@ function App() {
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
           <MemoryBottomBar
             key="memory-bottom-bar"
-            memoryIndex={registers.instruction_pointer + (registers.code_segment*0x10)}
+            memoryIndex={
+              registers.instruction_pointer + registers.code_segment * 0x10
+            }
             prevMemAddrValueMap={prevMemoryRef.current}
             memAddrValueMap={memory}
             showMemoryBottomBar={showMemoryBottomBar}
@@ -86,7 +87,5 @@ function App() {
     </>
   );
 }
-
-
 
 export default App;

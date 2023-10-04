@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api";
-import { editor } from "monaco-editor";
+import { Position, editor } from "monaco-editor";
 import { useState, useRef, useEffect } from "react";
 import { CPUData, Flags } from "../types/CPUData/CPUData";
 import { extractCPUData, extractFlags } from "../types/CPUData/extract";
@@ -15,6 +15,7 @@ import {
   compilationErrorToSuggestions,
   suggestionToCompletionProvider,
 } from "../types/compilationError";
+import { Definitions, find_matching_reference_positions } from "../types/token_position";
 
 export function useApp() {
   const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
@@ -231,14 +232,23 @@ export function useApp() {
       }
       itrRef++;
       suggestionsArray.current = tempSuggestions;
-        (isReady = true);
-      console.log(suggestionsArray);
+      isReady = true;
       setTimeout(() => {
-        console.log("trigger");
         editorRef.current?.trigger("some", "editor.action.triggerSuggest", {});
       }, 100);
     }
   };
+
+  const langServer = async (code: string): Promise<Definitions | undefined> => {
+    try {
+      let res = await invoke("get_label_and_var_address_definitions", {
+        code: code,
+      });
+      console.log("computation complete");
+      return res as Definitions;
+    } catch (e) {}
+  };
+
   const languageCompletionProvider: languages.CompletionItemProvider = {
     triggerCharacters: [".", " ", ","],
     provideCompletionItems(model, position) {
@@ -274,6 +284,33 @@ export function useApp() {
     },
   };
 
+  const langDefinitionProvider: languages.DefinitionProvider = {
+    provideDefinition(model: editor.ITextModel, position: Position) {
+      let word = model.getWordUntilPosition(position);
+      return langServer(editorRef.current?.getValue() ?? "").then((val) => {
+        if (val === undefined) return null;
+        console.log(position);
+        console.log(word);
+        let pos = find_matching_reference_positions(val, {
+          column_number: word.startColumn - 1 ,
+          length: word.endColumn - word.startColumn,
+          line_number: position.lineNumber - 1,
+        });
+        if (pos === null) return null;
+        console.log(pos);
+        return {
+          uri: model.uri,
+          range: {
+            startLineNumber: pos.line_number + 1,
+            endLineNumber: pos.line_number + 1,
+            startColumn: pos.column_number + 1,
+            endColumn: pos.column_number + pos.length + 1,
+          },
+        };
+      });
+    },
+  };
+
   return {
     registers,
     flags,
@@ -287,6 +324,7 @@ export function useApp() {
     monacoRef,
 
     languageCompletionProvider,
+    langDefinitionProvider,
 
     compileCode,
     nextPressed,

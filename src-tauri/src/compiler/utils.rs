@@ -41,7 +41,7 @@ impl CompilationError{
     }
 }
 
-pub(super) fn get_label_token_from_line<'a>(
+pub(crate) fn get_label_token_from_line<'a>(
     lexer: &'a Lexer,
     line_number: usize,
     label: &Label

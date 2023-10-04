@@ -9,12 +9,14 @@ pub mod utils;
 
 use compiler::{
     compilation_error::CompilationError, compile_lines, types_structs::CompiledBytesReference,
+    utils::get_label_token_from_line,
 };
 use consts::Byte;
 use cpu::CPU;
 use memory::Memory;
 use std::sync::{Arc, Mutex};
 use tauri::State;
+use utils::TokenPosition;
 
 use crate::compiler::{
     compile_lines_perform_var_label_substiution,
@@ -60,14 +62,15 @@ fn compile_code(
     Ok((*cpu, compiled_bytes_ref, mem.get_recent_new_bytes()))
 }
 
+type DefintionTokenPosition = TokenPosition;
+type ReferenceTokenPosition = TokenPosition;
+
 #[tauri::command]
-fn try_compile_code(code: String) -> Result<(), Vec<CompilationError>> {
+fn get_label_and_var_address_definitions(
+    code: String,
+) -> Vec<(DefintionTokenPosition, ReferenceTokenPosition)> {
     let mut lexer = Lexer::new();
     lexer.tokenize(&code);
-
-    let mut compilation_errors = Vec::new();
-    let mut compiled_bytes_lines_vec = Vec::new();
-    let mut compiled_bytes_ref_lines_vec = Vec::new();
 
     let mut label_addr_map = LabelAddressMap::new();
     let mut label_ref = LabelRefrenceList::new();
@@ -75,15 +78,65 @@ fn try_compile_code(code: String) -> Result<(), Vec<CompilationError>> {
     let mut var_addr_def_map = VariableAddressDefinitionMap::new();
     let mut var_ref = VariableReferenceList::new();
 
-    match compile_lines_perform_var_label_substiution(
+    compile_lines_perform_var_label_substiution(
         &mut lexer,
-        &mut compilation_errors,
-        &mut compiled_bytes_lines_vec,
-        &mut compiled_bytes_ref_lines_vec,
+        &mut Vec::new(),
+        &mut Vec::new(),
+        &mut Vec::new(),
         &mut label_addr_map,
         &mut label_ref,
         &mut var_addr_def_map,
         &mut var_ref,
+    );
+
+    let mut label_and_var_address_definitions = Vec::new();
+
+    for (label, ref_token, _, _) in label_ref {
+        match label_addr_map.get(&label) {
+            Some(line_number) => {
+                let def_token = get_label_token_from_line(&lexer, *line_number, &label).unwrap();
+                label_and_var_address_definitions.push((
+                    DefintionTokenPosition::from(def_token),
+                    ReferenceTokenPosition::from(&ref_token),
+                ));
+            }
+            None => {}
+        }
+    }
+
+    for (label, _, _, tokenized_line_number) in var_ref {
+        let ref_token = get_label_token_from_line(&lexer, tokenized_line_number, &label).unwrap();
+        match var_addr_def_map.get(&label) {
+            Some((_, line_number)) => {
+                let def_token = get_label_token_from_line(&lexer, *line_number, &label).unwrap();
+                label_and_var_address_definitions.push((
+                    DefintionTokenPosition::from(def_token),
+                    ReferenceTokenPosition::from(ref_token),
+                ));
+            }
+            None => {}
+        }
+    }
+
+    return label_and_var_address_definitions;
+}
+
+#[tauri::command]
+fn try_compile_code(code: String) -> Result<(), Vec<CompilationError>> {
+    let mut lexer = Lexer::new();
+    lexer.tokenize(&code);
+
+    let mut compilation_errors = Vec::new();  
+
+    match compile_lines_perform_var_label_substiution(
+        &mut lexer,
+        &mut compilation_errors,
+        &mut Vec::new(),
+        &mut Vec::new(),
+        &mut LabelAddressMap::new(),
+        &mut LabelRefrenceList::new(),
+        &mut VariableAddressDefinitionMap::new(),
+        &mut VariableReferenceList::new(),
     ) {
         Some(_) => Ok(()),
         None => Err(compilation_errors),
@@ -96,6 +149,7 @@ fn main() {
         .manage(MutableMem::default())
         .invoke_handler(tauri::generate_handler![
             try_compile_code,
+            get_label_and_var_address_definitions,
             compile_code,
             next
         ])
