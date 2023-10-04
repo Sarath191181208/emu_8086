@@ -114,8 +114,12 @@ impl CPU {
         self.instruction_pointer
     }
 
-    pub(self) fn set_instruction_pointer(&self, value: Word){
+    pub(self) fn set_instruction_pointer(&mut self, value: Word){
         self.instruction_pointer = value;
+    }
+
+    pub(self) fn set_cx(&mut self, value: Word) {
+        self.cx = value;
     }
 
     pub fn get_code_segment(&self) -> Word {
