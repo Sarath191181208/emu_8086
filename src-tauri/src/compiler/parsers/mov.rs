@@ -15,7 +15,7 @@ use super::{
     pattern_extractors::{
         compile_two_arguments_patterns::{
             parse_register_16bit_and_indexed_registers_with_offset,
-            parse_register_16bit_and_indexed_registers_without_offset,
+            parse_register_16bit_and_indexed_registers_without_offset, parse_register_8bit_and_indexed_registers_without_offset, parse_register_8bit_and_indexed_registers_with_offset,
         },
         parse_two_arguments_line, AddressingMode,
     },
@@ -215,7 +215,7 @@ pub(in crate::compiler) fn parse_mov(
                        &low_token=> address_bytes.to_vec()
                     )
                 );
-                Ok(i + 3)
+                Ok(tokenized_line.len())
             }
             _ => {
                 let reg_idx = get_8bit_register(&high_token).get_as_idx();
@@ -228,7 +228,7 @@ pub(in crate::compiler) fn parse_mov(
                        &low_token=> address_bytes.to_vec()
                     )
                 );
-                Ok(i + 3)
+                Ok(tokenized_line.len())
             }
         },
         // MOV 0x100, AL..BH
@@ -324,13 +324,37 @@ pub(in crate::compiler) fn parse_mov(
             high_token,
             low_token,
             register_type,
-        } => todo!(),
+        } => {
+            parse_register_8bit_and_indexed_registers_without_offset(
+                0x8A,
+                register_type,
+                token,
+                &high_token,
+                &low_token,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+
+            Ok(tokenized_line.len())
+        }
         AddressingMode::Register8bitAndIndexedAddressWithOffset {
             high_token,
             low_token,
             offset,
             register_type,
-        } => todo!(),
+        } => {
+            parse_register_8bit_and_indexed_registers_with_offset(
+                0x8A,
+                register_type,
+                token,
+                &high_token,
+                &low_token,
+                &offset,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -684,6 +708,14 @@ mod tests8bit {
         ",
         |compiled_instructions: &Vec<u8>| {
             assert_eq!(compiled_instructions, &[0x8A, 0x1E, 0x00, 0x10])
+        }
+    );
+
+    test_compile!(
+        test_cl_bx_di_ref_0x10,
+        "mov cl, [bx + di + 0x10]",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0x8A, 0x49, 0x10])
         }
     );
 }
