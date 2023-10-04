@@ -1,9 +1,11 @@
 use crate::{cpu::CPU, memory::Memory};
 
+pub mod jcxz;
+
 impl CPU {
-    pub(in crate::cpu) fn execute_jmp_8bit(&mut self, mem: &mut Memory) {
-        let offset = self.consume_instruction(mem);
-        match offset {
+
+    pub(in self) fn execute_8bit_offset_jmp(&mut self, offset: u8) {
+        match offset{
             0x80..=0xFF => {
                 let offset = 0xFF - offset + 1;
                 self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset as u16);
@@ -12,6 +14,11 @@ impl CPU {
                 self.instruction_pointer = self.instruction_pointer.wrapping_add(offset as u16);
             }
         }
+    }
+
+    pub(in crate::cpu) fn execute_jmp_8bit(&mut self, mem: &mut Memory) {
+        let offset = self.consume_instruction(mem);
+        self.execute_8bit_offset_jmp(offset);
     }
 
     pub(in crate::cpu) fn execute_jmp_16bit(&mut self, mem: &mut Memory) {
