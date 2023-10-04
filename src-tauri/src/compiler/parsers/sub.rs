@@ -14,6 +14,8 @@ use super::{
         compile_two_arguments_patterns::{
             parse_register_16bit_and_indexed_registers_with_offset,
             parse_register_16bit_and_indexed_registers_without_offset,
+            parse_register_8bit_and_indexed_registers_with_offset,
+            parse_register_8bit_and_indexed_registers_without_offset,
         },
         parse_two_arguments_line, AddressingMode,
     },
@@ -200,7 +202,7 @@ pub(in crate::compiler) fn parse_sub(
                    &low_token=> address_bytes.to_vec()
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::AddressAnd8bitRegister {
             high_token,
@@ -280,13 +282,37 @@ pub(in crate::compiler) fn parse_sub(
             high_token,
             low_token,
             register_type,
-        } => todo!(),
+        } => {
+            parse_register_8bit_and_indexed_registers_without_offset(
+                0x2A,
+                register_type,
+                token,
+                &high_token,
+                &low_token,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+
+            Ok(tokenized_line.len())
+        }
         AddressingMode::Register8bitAndIndexedAddressWithOffset {
             high_token,
             low_token,
             offset,
             register_type,
-        } => todo!(),
+        } => {
+            parse_register_8bit_and_indexed_registers_with_offset(
+                0x2A,
+                register_type,
+                token,
+                &high_token,
+                &low_token,
+                &offset,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -470,6 +496,14 @@ mod tests8bit {
                 instructions,
                 &[0xEB, 0x01, 0x12, 0x80, 0x2E, 0x02, 0x01, 0x12]
             );
+        }
+    );
+
+    test_compile!(
+        sub_bl_0x1000_offset,
+        "SUB DL, [0x1000]",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x2A, 0x16, 0x00, 0x10]);
         }
     );
 
