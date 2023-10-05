@@ -11,4 +11,6 @@ pub(crate) enum Instructions {
     Mul,
     Jmp,
     Loop,
+    Hlt,
+    Ret
 }

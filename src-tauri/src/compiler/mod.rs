@@ -20,7 +20,7 @@ use compilation_error::CompilationError;
 use lexer::Lexer;
 use tokens::instructions::Instructions;
 
-use crate::compiler::utils::get_label_token_from_line;
+use crate::{compiler::{utils::get_label_token_from_line, parsers::utils::push_instruction}, convert_and_push_instructions};
 
 use self::{
     compilation_utils::{
@@ -263,6 +263,30 @@ fn compile(
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JMP", 1)?;
                 Ok(compiled_line)
             }
+            Instructions::Hlt => {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                       &token => vec![0xF4]
+                    )
+                );
+                i+=1;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "HLT", 0)?;
+                Ok(compiled_line)
+            },
+            Instructions::Ret => {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                       &token => vec![0xC3]
+                    )
+                );
+                i+=1;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "RET", 0)?;
+                Ok(compiled_line)
+            },
         },
         Assembly8086Tokens::AssemblerDirectives(_) => Ok(compiled_line),
 
