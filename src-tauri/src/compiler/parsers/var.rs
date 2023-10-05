@@ -121,7 +121,7 @@ pub(in crate::compiler) fn parse_var_declaration(
     i: usize,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-    label_abs_address_map: &mut VariableAddressDefinitionMap,
+    var_abs_address_map: &mut VariableAddressDefinitionMap,
 ) -> Result<usize, CompilationError> {
     let variable_token = tokenized_line.get(
         i,
@@ -135,13 +135,13 @@ pub(in crate::compiler) fn parse_var_declaration(
         Assembly8086Tokens::Data(data) => match data {
             DefineData::Db => {
                 let i = to_bytes(i + 2, tokenized_line, compiled_bytes, compiled_bytes_ref)?;
-                label_abs_address_map.insert(var_label.clone(), (VariableType::Byte, 0));
+                var_abs_address_map.insert(var_label.clone(), (VariableType::Byte, 0));
 
                 Ok(i)
             }
             DefineData::Dw => {
                 let i = to_words(i + 2, tokenized_line, compiled_bytes, compiled_bytes_ref)?;
-                label_abs_address_map.insert(var_label.clone(), (VariableType::Word, 0));
+                var_abs_address_map.insert(var_label.clone(), (VariableType::Word, 0));
                 Ok(i)
             }
         },
