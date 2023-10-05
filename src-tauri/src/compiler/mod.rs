@@ -21,8 +21,12 @@ use lexer::Lexer;
 use tokens::instructions::Instructions;
 
 use crate::{
-    compiler::{parsers::utils::push_instruction, utils::get_label_token_from_line},
+    compiler::{
+        parsers::utils::push_instruction, types_structs::ProcDefitionType,
+        utils::get_label_token_from_line,
+    },
     convert_and_push_instructions,
+    utils::Either,
 };
 
 use self::{
@@ -33,15 +37,16 @@ use self::{
         is_org_defined,
     },
     parsers::{
-        add::parse_add, dec::parse_dec, inc::parse_inc, jmp::parse_jmp, loop_ins::parse_loop,
-        mov::parse_mov, mul::parse_mul, sub::parse_sub, var::parse_var_declaration,
+        add::parse_add, call::parse_call, dec::parse_dec, inc::parse_inc, jmp::parse_jmp,
+        loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, sub::parse_sub,
+        var::parse_var_declaration,
     },
     tokenized_line::TokenizedLine,
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
     types_structs::{
         CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap,
-        LabelRefrenceList, LineNumber, VariableAddressDefinitionMap, VariableAddressMap,
-        VariableReferenceList, VariableType,
+        LabelRefrenceList, LineNumber, ProcOffsetDefinitionMap, VariableAddressDefinitionMap,
+        VariableAddressMap, VariableReferenceList, VariableType,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -143,7 +148,7 @@ fn compile(
 
     let offset_bytes_from_line_and_is_label_before_ref =
         unwrap_and_find_offset(&compiled_line_label_ref);
-
+    let proc_offset = find_proc_offset(&compiled_line_label_ref);
     match &token.token_type {
         Assembly8086Tokens::Character(_) => {
             i = parse_var_declaration(
@@ -290,6 +295,66 @@ fn compile(
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "RET", 0)?;
                 Ok(compiled_line)
             }
+            Instructions::Proc => {
+                let proc_name_token = tokenized_line.get(
+                    i + 1,
+                    "Expected a label after PROC, Got nothing!".to_string(),
+                    None,
+                )?;
+                match &proc_name_token.token_type {
+                    Assembly8086Tokens::Character(c) => compiled_line
+                        .proc_definition_map
+                        .insert(c.clone(), types_structs::ProcDefitionType::Proc),
+                    _ => {
+                        return Err(CompilationError::error_with_token(
+                            token,
+                            &format!(
+                                "Expected a label after PROC, Got {} nothing!",
+                                proc_name_token.token_type
+                            ),
+                        ))
+                    }
+                };
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i + 1, "PROC", 1)?;
+                Ok(compiled_line)
+            }
+            Instructions::EndP => {
+                let proc_name_token = tokenized_line.get(
+                    i + 1,
+                    "Expected a label after ENDP, Got nothing!".to_string(),
+                    None,
+                )?;
+                match &proc_name_token.token_type {
+                    Assembly8086Tokens::Character(c) => compiled_line
+                        .proc_definition_map
+                        .insert(c.clone(), types_structs::ProcDefitionType::EndP),
+                    _ => {
+                        return Err(CompilationError::error_with_token(
+                            token,
+                            &format!(
+                                "Expected a label after ENDP, Got {} nothing!",
+                                proc_name_token.token_type
+                            ),
+                        ))
+                    }
+                };
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i + 1, "ENDP", 1)?;
+                Ok(compiled_line)
+            }
+            Instructions::Call => {
+                let i = parse_call(
+                    &tokenized_line,
+                    i,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    &mut compiled_line.proc_reference_map,
+                    proc_offset,
+                    offset_bytes_from_line_and_is_label_before_ref,
+                )?;
+                // compiled_line.extend(_compliled_line);
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JMP", 1)?;
+                Ok(compiled_line)
+            }
         },
         Assembly8086Tokens::AssemblerDirectives(_) => Ok(compiled_line),
 
@@ -310,7 +375,7 @@ struct CompiledLineLabelRef<'a> {
     line_num: LineNumber,
     label: &'a str,
     label_addr_map: &'a HashMap<UniCase<String>, LineNumber>,
-    // is_org_defined: bool,
+    proc_compiled_bytes_line_start_map: &'a ProcDefinitionStartAndEndBytesMap,
 }
 
 fn unwrap_and_find_offset(
@@ -340,6 +405,54 @@ fn unwrap_and_find_offset(
             }
         }
     }
+}
+
+fn find_proc_offset(
+    compiled_line_label_ref: &Option<&CompiledLineLabelRef>,
+) -> Option<i16> {
+    if compiled_line_label_ref.is_none() {
+        return None;
+    }
+
+    let CompiledLineLabelRef {
+        compiled_bytes,
+        line_num,
+        label,
+        proc_compiled_bytes_line_start_map,
+        ..
+    } = compiled_line_label_ref.unwrap();
+
+    let proc_label = UniCase::new(label.to_string());
+    let proc_reference_line_num = *line_num;
+    let proc_defined_line_num = proc_compiled_bytes_line_start_map.get(&proc_label);
+
+    let proc_defined_line_num = match proc_defined_line_num {
+        None => return None,
+        Some(proc_defined_line_num) => proc_defined_line_num.0,
+    };
+
+    let mut offset = 0_i16;
+    if proc_defined_line_num < proc_reference_line_num {
+        // label defined on top of reference
+        for bytes in compiled_bytes
+            .iter()
+            .take(proc_reference_line_num)
+            .skip(proc_defined_line_num)
+        {
+            offset -= bytes.len() as i16;
+        }
+    } else {
+        // defined on bottom
+        for bytes in compiled_bytes
+            .iter()
+            .take(proc_defined_line_num)
+            .skip(proc_reference_line_num + 1)
+        {
+            offset += bytes.len() as i16 ;
+        }
+    }
+
+    Some(offset)
 }
 
 impl Lexer {
@@ -409,6 +522,8 @@ fn mark_labels(
 
     label_addr_map: &LabelAddressMap,
     var_abs_addr_map: &VariableAddressMap,
+    proc_compiled_bytes_line_start_map: &ProcDefinitionStartAndEndBytesMap,
+
     is_org_defined: bool,
     idx: usize,
 ) -> Result<bool, CompilationError> {
@@ -426,6 +541,7 @@ fn mark_labels(
                 line_num: line_number,
                 label,
                 label_addr_map,
+                proc_compiled_bytes_line_start_map,
                 // is_org_defined,
             }),
             Some(var_abs_addr_map),
@@ -447,6 +563,7 @@ fn mark_labels(
             compiled_bytes_ref,
             label_addr_map,
             var_abs_addr_map,
+            proc_compiled_bytes_line_start_map,
             is_org_defined,
             idx + 1,
         )? {
@@ -492,7 +609,7 @@ fn mark_variables(
 fn get_err_if_already_defined_label<T>(
     label_key: UniCase<String>,
     line: &[Token],
-    label_addr_map: &mut HashMap<Label, T>,
+    label_addr_map: &HashMap<Label, T>,
     already_defined_line_number: LineNumber,
 ) -> Option<CompilationError> {
     let idx = line
@@ -563,6 +680,16 @@ pub fn compile_lines(
     }
 }
 
+type StartCompiledBytesIndexedLineNumber = LineNumber;
+type EndCompiledBytesIndexedLineNumber = LineNumber;
+type PlaceHolderVariable = Token;
+type ProcDefinitionStartAndEndBytesMap = HashMap<
+    Label,
+    (
+        StartCompiledBytesIndexedLineNumber,
+        Option<EndCompiledBytesIndexedLineNumber>,
+    ),
+>;
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn compile_lines_perform_var_label_substiution(
     lexer: &mut Lexer,
@@ -587,6 +714,9 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         HashMap::<Label, CompiledBytesIndexedLineNumber>::new();
     let mut var_compiled_bytes_line_number_map =
         HashMap::<Label, (VariableType, CompiledBytesIndexedLineNumber)>::new();
+
+    let mut proc_compiled_bytes_line_number_map = ProcDefinitionStartAndEndBytesMap::new();
+    let mut proc_ref_vec = Vec::<(Label, PlaceHolderVariable, LineNumber, LineNumber)>::new();
 
     for (i, line) in lexer.tokens.iter().enumerate() {
         match compile(line, is_org_defined, None, None) {
@@ -645,13 +775,73 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                     );
                 }
 
+                // pushing all the proc defintions into a map after chacking if they are already defined
+                for (proc_label, proc_type) in compiled_line.proc_definition_map {
+                    let label_key = UniCase::new(proc_label.to_string().clone());
+                    let already_defined_line_number = proc_compiled_bytes_line_number_map
+                        .get(&label_key)
+                        .unwrap_or(&(0, None))
+                        .0;
+                    let line_number =
+                        compiled_bytes_lines_vec.len() as CompiledBytesIndexedLineNumber;
+                    let label_token = get_label_token_from_line(lexer, i, &proc_label);
+                    match proc_type {
+                        ProcDefitionType::Proc => {
+                            if let Some(err) = get_err_if_already_defined_label(
+                                label_key.clone(),
+                                line,
+                                &proc_compiled_bytes_line_number_map,
+                                already_defined_line_number,
+                            ) {
+                                compilation_errors.push(err);
+                                continue;
+                            }
+
+                            proc_compiled_bytes_line_number_map
+                                .insert(label_key.clone(), (line_number, None));
+                        }
+                        ProcDefitionType::EndP => {
+                            // error if didn't find a proc defintion
+                            if !proc_compiled_bytes_line_number_map.contains_key(&label_key) {
+                                compilation_errors.push(CompilationError::error_with_token(
+                                    label_token.unwrap(),
+                                    &format!(
+                                        "The proc \"{}\" is not defined, Please define it.",
+                                        label_key
+                                    ),
+                                ));
+                                continue;
+                            }
+                            // error if already defined as endp
+                            if let Some((_, Some(_))) =
+                                proc_compiled_bytes_line_number_map.get(&label_key)
+                            {
+                                compilation_errors.push(CompilationError::error_with_token(
+                                    label_token.unwrap(),
+                                    &format!(
+                                        "The proc \"{}\" is already defined as ENDP, Please use a different name.",
+                                        label_key
+                                    ),
+                                ));
+                                continue;
+                            }
+
+                            // push the endp into the map
+                            proc_compiled_bytes_line_number_map.insert(
+                                label_key.clone(),
+                                (already_defined_line_number, Some(line_number)),
+                            );
+                        }
+                    }
+                }
+
                 // Pushing all the labels that reference a particular label
                 for (label_str, (token, _)) in compiled_line.label_idx_map {
                     let label = UniCase::new(label_str);
                     label_ref.push((
                         label.clone(),
                         token,
-                        compiled_bytes_lines_vec.len() as LineNumber,
+                        compiled_bytes_lines_vec.len() as CompiledBytesIndexedLineNumber,
                         i,
                     ));
                 }
@@ -661,8 +851,21 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                     var_ref.push((
                         var_str.clone(),
                         label_type,
-                        compiled_bytes_lines_vec.len() as LineNumber,
+                        compiled_bytes_lines_vec.len() as CompiledBytesIndexedLineNumber,
                         i,
+                    ));
+                }
+
+                // pushing all the proc references into a vec
+                for (proc_label, _) in compiled_line.proc_reference_map {
+                    let placeholder_token = get_label_token_from_line(lexer, i, &proc_label)
+                        .unwrap()
+                        .clone();
+                    proc_ref_vec.push((
+                        proc_label,
+                        placeholder_token,
+                        compiled_bytes_lines_vec.len() as CompiledBytesIndexedLineNumber,
+                        i as LineNumber,
                     ));
                 }
 
@@ -676,7 +879,6 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     }
 
-    // check if all the variables are defined
     // check if all the variables are defined
     let mut var_errors = false;
     for (_i, (var, used_as_type, _, tokenized_line_number)) in var_ref.iter().enumerate() {
@@ -706,6 +908,25 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                     ));
                 }
             }
+        }
+    }
+
+    // check if all the procs are defined
+    let mut proc_errors = false;
+    for (proc_label, _, _, tokenized_line_number) in proc_ref_vec.iter() {
+        let token = get_label_token_from_line(lexer, *tokenized_line_number, proc_label).unwrap();
+        match &proc_compiled_bytes_line_number_map.get(proc_label) {
+            None => {
+                proc_errors = true;
+                compilation_errors.push(CompilationError::error_with_token(
+                    token,
+                    &format!(
+                        "The proc \"{}\" is Undefined, Please define it.",
+                        proc_label
+                    ),
+                ));
+            }
+            &Some(_) => {}
         }
     }
 
@@ -758,7 +979,9 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     }
 
-    if label_errors || var_errors {
+    //TODO: check between labels and procs and vars for duplicate defintions
+
+    if label_errors || var_errors || proc_errors {
         return None;
     }
 
@@ -779,6 +1002,9 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     };
 
+    // merge label_ref and proc_ref
+    label_ref.append(&mut proc_ref_vec);
+
     match mark_labels(
         label_ref,
         &lexer.tokens,
@@ -786,6 +1012,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         compiled_bytes_ref_lines_vec,
         &label_compiled_bytes_line_number_map,
         &var_abs_addr_map,
+        &proc_compiled_bytes_line_number_map,
         is_org_defined,
         0,
     ) {
@@ -821,6 +1048,16 @@ mod test_hlt_and_ret {
     });
 
     test_compile!(add_ax_sp_ret, "ADD AX, SP \n RET", |instructions: &Vec<
+        u8,
+    >| {
+        assert_eq!(instructions, &[0x03, 0xC4, 0xC3]);
+    });
+
+        test_compile!(add_ax_sp_ret_with_proc, "
+        PROC main 
+        ADD AX, SP \n RET
+        ENDP main 
+        ", |instructions: &Vec<
         u8,
     >| {
         assert_eq!(instructions, &[0x03, 0xC4, 0xC3]);
