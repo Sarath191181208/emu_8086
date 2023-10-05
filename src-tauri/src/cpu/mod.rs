@@ -406,9 +406,8 @@ impl CPU {
     }
 }
 
-
-// stack operations 
-impl CPU{
+// stack operations
+impl CPU {
     fn pop_stack(&mut self, mem: &mut Memory) -> Word {
         let sp = self.stack_pointer;
         let value = self.read_word_from_pointer(mem, sp);

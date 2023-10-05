@@ -12,5 +12,5 @@ pub(crate) enum Instructions {
     Jmp,
     Loop,
     Hlt,
-    Ret
+    Ret,
 }

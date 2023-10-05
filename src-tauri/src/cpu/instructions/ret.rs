@@ -11,11 +11,12 @@ impl CPU {
 #[cfg(test)]
 mod test {
     use crate::{
-        cpu::{instructions::test_macro::{compile_and_test_str, compile_code_for_tests}, CPU},
-        memory::Memory, generate_test_with_cycles,
+        cpu::{instructions::test_macro::compile_code_for_tests, CPU},
+        generate_test_with_cycles,
+        memory::Memory,
     };
 
-        generate_test_with_cycles!(
+    generate_test_with_cycles!(
         ret_test,
         (|cpu: &mut CPU, mem: &mut Memory| {
             compile_code_for_tests("ret", cpu, mem);

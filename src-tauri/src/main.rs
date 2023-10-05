@@ -92,29 +92,23 @@ fn get_label_and_var_address_definitions(
     let mut label_and_var_address_definitions = Vec::new();
 
     for (label, ref_token, _, _) in label_ref {
-        match label_addr_map.get(&label) {
-            Some(line_number) => {
-                let def_token = get_label_token_from_line(&lexer, *line_number, &label).unwrap();
-                label_and_var_address_definitions.push((
-                    DefintionTokenPosition::from(def_token),
-                    ReferenceTokenPosition::from(&ref_token),
-                ));
-            }
-            None => {}
+        if let Some(line_number) = label_addr_map.get(&label) {
+            let def_token = get_label_token_from_line(&lexer, *line_number, &label).unwrap();
+            label_and_var_address_definitions.push((
+                DefintionTokenPosition::from(def_token),
+                ReferenceTokenPosition::from(&ref_token),
+            ));
         }
     }
 
     for (label, _, _, tokenized_line_number) in var_ref {
         let ref_token = get_label_token_from_line(&lexer, tokenized_line_number, &label).unwrap();
-        match var_addr_def_map.get(&label) {
-            Some((_, line_number)) => {
-                let def_token = get_label_token_from_line(&lexer, *line_number, &label).unwrap();
-                label_and_var_address_definitions.push((
-                    DefintionTokenPosition::from(def_token),
-                    ReferenceTokenPosition::from(ref_token),
-                ));
-            }
-            None => {}
+        if let Some((_, line_number)) = var_addr_def_map.get(&label) {
+            let def_token = get_label_token_from_line(&lexer, *line_number, &label).unwrap();
+            label_and_var_address_definitions.push((
+                DefintionTokenPosition::from(def_token),
+                ReferenceTokenPosition::from(ref_token),
+            ));
         }
     }
 
