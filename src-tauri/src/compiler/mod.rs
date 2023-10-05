@@ -806,3 +806,16 @@ pub fn compile_str(
     let (compiled_bytes, compiled_bytes_ref, _) = compile_lines(code, debug_print)?;
     Ok((compiled_bytes, compiled_bytes_ref))
 }
+
+#[cfg(test)]
+mod test_hlt_and_ret{
+    use crate::{compiler::compile_str, test_compile};
+
+    test_compile!(add_ax_sp_hlt, "ADD AX, SP \n HLT", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x03, 0xC4, 0xF4]);
+    });
+
+    test_compile!(add_ax_sp_ret, "ADD AX, SP \n RET", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x03, 0xC4, 0xC3]);
+    });
+}
