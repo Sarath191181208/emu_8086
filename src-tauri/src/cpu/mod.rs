@@ -134,13 +134,9 @@ impl CPU {
         self.extra_segment = 0x700;
     }
 
-    pub fn write_instructions(&mut self, mem: &mut Memory, instructions: &[Byte]) {
-        mem.write_instructions(self.code_segment, self.instruction_pointer, instructions);
-    }
-
     pub fn reset(&mut self, mem: &mut Memory) {
         self.instruction_pointer = 0x0000;
-        self.stack_pointer = 0x0100;
+        self.stack_pointer = 0xFFFE;
         self.base_pointer = 0x0000;
         self.source_index = 0x0000;
         self.destination_index = 0x0000;
@@ -283,6 +279,9 @@ impl CPU {
             0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),
             0xB8..=0xBF => self.execute_direct_mov_word(mem, opcode),
 
+            // RET
+            0xC3 => self.execute_ret(mem),
+
             // MOV [0x102], 0x12
             0xC6 => {
                 let ins = self.consume_instruction(mem);
@@ -309,6 +308,12 @@ impl CPU {
 
             // JMP 8bit register
             0xEB => self.execute_jmp_8bit(mem),
+
+            // HLT
+            0xF4 => {
+                // TODO: Implelemnt HLT as a breakpoint
+                let _ = self.consume_instruction(mem);
+            }
 
             // MUL 8bit register
             0xF6 => {
@@ -362,7 +367,12 @@ impl CPU {
     }
 }
 
+// memory operations
 impl CPU {
+    pub fn write_instructions(&mut self, mem: &mut Memory, instructions: &[Byte]) {
+        mem.write_instructions(self.code_segment, self.instruction_pointer, instructions);
+    }
+
     fn read_word_from_u20(&self, mem: &Memory, offset: U20) -> Word {
         mem.read_word_with_u20(offset)
     }
@@ -393,5 +403,23 @@ impl CPU {
 
     fn write_word_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Word) {
         mem.write_word(self.data_segment, pointer, data);
+    }
+}
+
+
+// stack operations 
+impl CPU{
+    fn pop_stack(&mut self, mem: &mut Memory) -> Word {
+        let sp = self.stack_pointer;
+        let value = self.read_word_from_pointer(mem, sp);
+        self.stack_pointer = sp.wrapping_add(2);
+        value
+    }
+
+    #[allow(dead_code)]
+    fn push_stack(&mut self, mem: &mut Memory, value: Word) {
+        let sp = self.stack_pointer.wrapping_sub(2);
+        mem.write_word(self.stack_segment, sp, value);
+        self.stack_pointer = sp;
     }
 }
