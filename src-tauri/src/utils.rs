@@ -41,7 +41,12 @@ impl From<i8> for Either<i8, i16> {
 
 impl From<i16> for Either<i8, i16> {
     fn from(x: i16) -> Self {
-        Self::Right(x)
+        let is_x_in_i8_range = x <= i8::MAX as i16 && x >= i8::MIN as i16;
+        if is_x_in_i8_range{
+            Self::Left(x as i8)
+        } else {
+            Self::Right(x as i16)
+        }
     }
 }
 
