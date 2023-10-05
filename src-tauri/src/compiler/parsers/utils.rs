@@ -51,7 +51,7 @@ pub(super) fn get_idx_from_reg(
     }
 }
 
-pub(super) fn push_instruction(
+pub(in crate::compiler) fn push_instruction(
     compiled_bytes: &mut Vec<u8>,
     ins: Vec<u8>,
     token: &Token,
