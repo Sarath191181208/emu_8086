@@ -13,4 +13,8 @@ pub(crate) enum Instructions {
     Loop,
     Hlt,
     Ret,
+
+    Proc,
+    EndP,
+    Call
 }
