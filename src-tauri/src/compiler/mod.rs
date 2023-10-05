@@ -26,7 +26,6 @@ use crate::{
         utils::get_label_token_from_line,
     },
     convert_and_push_instructions,
-    utils::Either,
 };
 
 use self::{
@@ -45,8 +44,8 @@ use self::{
     tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
     types_structs::{
         CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap,
-        LabelRefrenceList, LineNumber, ProcOffsetDefinitionMap, VariableAddressDefinitionMap,
-        VariableAddressMap, VariableReferenceList, VariableType,
+        LabelRefrenceList, LineNumber, VariableAddressDefinitionMap, VariableAddressMap,
+        VariableReferenceList, VariableType,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -407,9 +406,7 @@ fn unwrap_and_find_offset(
     }
 }
 
-fn find_proc_offset(
-    compiled_line_label_ref: &Option<&CompiledLineLabelRef>,
-) -> Option<i16> {
+fn find_proc_offset(compiled_line_label_ref: &Option<&CompiledLineLabelRef>) -> Option<i16> {
     if compiled_line_label_ref.is_none() {
         return None;
     }
@@ -448,7 +445,7 @@ fn find_proc_offset(
             .take(proc_defined_line_num)
             .skip(proc_reference_line_num + 1)
         {
-            offset += bytes.len() as i16 ;
+            offset += bytes.len() as i16;
         }
     }
 
@@ -1053,13 +1050,15 @@ mod test_hlt_and_ret {
         assert_eq!(instructions, &[0x03, 0xC4, 0xC3]);
     });
 
-        test_compile!(add_ax_sp_ret_with_proc, "
+    test_compile!(
+        add_ax_sp_ret_with_proc,
+        "
         PROC main 
         ADD AX, SP \n RET
         ENDP main 
-        ", |instructions: &Vec<
-        u8,
-    >| {
-        assert_eq!(instructions, &[0x03, 0xC4, 0xC3]);
-    });
+        ",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x03, 0xC4, 0xC3]);
+        }
+    );
 }

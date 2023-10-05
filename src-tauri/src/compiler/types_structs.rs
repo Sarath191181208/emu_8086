@@ -13,7 +13,7 @@ pub enum VariableType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ProcDefitionType{
+pub enum ProcDefitionType {
     Proc,
     EndP,
 }

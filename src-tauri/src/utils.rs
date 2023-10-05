@@ -24,7 +24,7 @@ impl Either<u8, u16> {
     }
 }
 
-impl Either<i8, i16>{
+impl Either<i8, i16> {
     pub fn get_as_unsigned(&self) -> Either<u8, u16> {
         match &self {
             Either::Left(x) => Either::Left(*x as u8),
@@ -42,27 +42,26 @@ impl From<i8> for Either<i8, i16> {
 impl From<i16> for Either<i8, i16> {
     fn from(x: i16) -> Self {
         let is_x_in_i8_range = x <= i8::MAX as i16 && x >= i8::MIN as i16;
-        if is_x_in_i8_range{
+        if is_x_in_i8_range {
             Self::Left(x as i8)
         } else {
-            Self::Right(x as i16)
+            Self::Right(x)
         }
     }
 }
 
 // also impl from usize check the least possilbe and assign i8 or i16
-// also check the min limit 
+// also check the min limit
 impl From<usize> for Either<i8, i16> {
     fn from(x: usize) -> Self {
         let is_x_in_i8_range = x <= i8::MAX as usize && x >= i8::MIN as usize;
-        if is_x_in_i8_range{
+        if is_x_in_i8_range {
             Self::Left(x as i8)
         } else {
             Self::Right(x as i16)
         }
     }
 }
-
 
 #[derive(Debug, Serialize)]
 pub struct TokenPosition {
