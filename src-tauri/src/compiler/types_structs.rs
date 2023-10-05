@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::utils::Either;
+
 use super::Token;
 use serde::Serialize;
 use unicase::UniCase;
@@ -10,11 +12,18 @@ pub enum VariableType {
     Word,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ProcDefitionType{
+    Proc,
+    EndP,
+}
+
 pub type ArrayIndex = usize; // i.e index of array
 pub type Label = UniCase<String>; // case insensitive
 pub type LabelLength = usize; // i.e len of label
 pub type TokenIndex = usize; // i.e index of token in line
 pub type LineNumber = usize; // i.e line number
+pub type CompiledBytesIndexedLineNumber = usize; // i.e line number of this particular token in compiled bytes
 pub type NumberOfBytes = u16; // i.e size of mem
 pub type IsLabelBeforeRef = bool; // i.e is label before reference
 pub type LabelAddressMap = HashMap<Label, LineNumber>;
@@ -29,6 +38,11 @@ pub type VariableAddressMap = HashMap<Variable, (VariableType, NumberOfBytes)>;
 pub type VariableAddressDefinitionMap = HashMap<Variable, (VariableType, LineNumber)>;
 // The list used to store where a particular variable is being referenced
 pub type VariableReferenceList<'a> = Vec<(Label, VariableType, LineNumber, LineNumber)>;
+
+pub type ProcDefinitionMap = HashMap<Label, ProcDefitionType>;
+pub type ProcOffsetDefinitionMap = HashMap<Label, Either<i8, i16>>;
+pub type ProcReferenceMap = HashMap<Label, ArrayIndex>;
+pub type ProcReferenceList = Vec<(Label, CompiledBytesIndexedLineNumber, LineNumber)>;
 
 // This struct is used to store the compiled bytes of the coverted line
 // for ex: MOV AX, BX
@@ -64,6 +78,9 @@ pub(crate) struct CompiledLine {
     pub label_idx_map: std::collections::HashMap<String, (Token, TokenIndex)>,
     pub variable_reference_map: VariableReferenceMap,
     pub variable_abs_address_map: VariableAddressDefinitionMap,
+
+    pub proc_definition_map: ProcDefinitionMap,
+    pub proc_reference_map: ProcReferenceMap,
 }
 
 impl CompiledLine {
@@ -75,6 +92,8 @@ impl CompiledLine {
             label_idx_map: std::collections::HashMap::new(),
             variable_reference_map: std::collections::HashMap::new(),
             variable_abs_address_map: std::collections::HashMap::new(),
+            proc_definition_map: ProcDefinitionMap::new(),
+            proc_reference_map: ProcReferenceMap::new(),
         }
     }
 
@@ -86,5 +105,7 @@ impl CompiledLine {
             .extend(other.variable_reference_map);
         self.variable_abs_address_map
             .extend(other.variable_abs_address_map);
+        self.proc_definition_map.extend(other.proc_definition_map);
+        self.proc_reference_map.extend(other.proc_reference_map);
     }
 }
