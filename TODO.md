@@ -2,7 +2,14 @@
 - [x] add the labels into the symbol table
 - [x] add calc offset in compile itself 
 - [x] parse the data segments
-- [ ] Make `loop` ins work.
+- [x] Make `loop` ins work.
+- [ ] Implement `PROC` work.
+  - [ ] Make the `HTL` compilation.
+  - [ ] Make the `HTL` execution.
+  - [x] Make the `RET` compilation.
+  - [x] Make the `RET` execution.
+  - [x] Make the `CALL` compilation.
+  - [ ] Make the `CALL` execution.
 - [ ] Make Different `JMP` work.
 - [ ] Support Some `interrupts`.
 - [ ] 🐞: Data in memeory doesn't change after second compilation.
