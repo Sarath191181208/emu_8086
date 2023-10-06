@@ -186,7 +186,9 @@ mod tests {
             assert_eq!(
                 instructions,
                 &[
-                    0xE8, 0x05, 0x00, 0x40, 0x8B, 0xC3,
+                    0xE8, 0x05, 0x00,
+                    0x40, 
+                    0x8B, 0xC3,
                     //
                     // Label
                     //

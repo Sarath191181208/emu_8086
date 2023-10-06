@@ -73,7 +73,7 @@ pub(crate) enum Assembly8086Tokens {
     // Define data
     Data(data::DefineData),
 
-    // Error
+    // Label
     Character(UniCase<String>),
 }
 
