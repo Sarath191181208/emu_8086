@@ -120,6 +120,7 @@ impl CPU {
 
     pub(self) fn set_instruction_pointer_from_16bitoffset(&mut self, offset: Word){
         if offset & 0x8000 != 0 {
+            let offset = 0xFFFF - offset + 1;
             self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset);
         } else {
             self.instruction_pointer = self.instruction_pointer.wrapping_add(offset);
