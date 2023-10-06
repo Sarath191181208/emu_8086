@@ -118,6 +118,14 @@ impl CPU {
         self.instruction_pointer = value;
     }
 
+    pub(self) fn set_instruction_pointer_from_16bitoffset(&mut self, offset: Word){
+        if offset & 0x8000 != 0 {
+            self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset);
+        } else {
+            self.instruction_pointer = self.instruction_pointer.wrapping_add(offset);
+        }
+    }
+
     pub(self) fn set_cx(&mut self, value: Word) {
         self.cx = value;
     }
@@ -303,6 +311,9 @@ impl CPU {
             0xE2 => self.execute_loop_8bit(mem),
             0xE3 => self.execute_jmp_if_cx_zero_8bit(mem),
 
+            // CALL 16 bit address 
+            0xE8 => self.execute_call_and_16bitaddr(mem),
+
             // JMP 16bit register
             0xE9 => self.execute_jmp_16bit(mem),
 
@@ -415,7 +426,6 @@ impl CPU {
         value
     }
 
-    #[allow(dead_code)]
     fn push_stack(&mut self, mem: &mut Memory, value: Word) {
         let sp = self.stack_pointer.wrapping_sub(2);
         mem.write_word(self.stack_segment, sp, value);
