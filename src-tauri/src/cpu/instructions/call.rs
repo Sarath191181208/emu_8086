@@ -1,4 +1,4 @@
-use crate::{cpu::CPU, memory::Memory};
+    use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
     pub(in crate::cpu) fn execute_call_and_16bitaddr(&mut self, mem: &mut Memory) {
@@ -32,7 +32,7 @@ mod tests {
     inc ax ",
             4,
             |cpu: &CPU, _: &Memory| {
-                assert_eq!( cpu.ax, 3 );
+                assert_eq!(cpu.ax, 3);
             },
         );
     }
