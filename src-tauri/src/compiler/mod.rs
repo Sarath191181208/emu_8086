@@ -689,14 +689,11 @@ type ProcDefinitionStartAndEndBytesMap = HashMap<
     ),
 >;
 type MacroBoundsDefintionMap = HashMap<Label, (ArrayIndex, Option<ArrayIndex>)>;
-
+type TokenAndItsArrayIndex<'a> = Option<(&'a Assembly8086Tokens, usize)>;
 fn get_first_two_non_space_characters_token_types<'a>(
-    line: &'a Vec<&'a Token>,
+    line: &'a [&'a Token],
     i: usize,
-) -> (
-    Option<(&'a Assembly8086Tokens, usize)>,
-    Option<(&'a Assembly8086Tokens, usize)>,
-) {
+) -> (TokenAndItsArrayIndex<'a>, TokenAndItsArrayIndex<'a>) {
     let mut first: Option<(&Assembly8086Tokens, usize)> = None;
     let mut second = None;
     for token in &line[i..] {
@@ -849,7 +846,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
 fn find_macro_name(tokens: &[Token]) -> Result<Option<usize>, CompilationError> {
     let mut i = 0;
     let (lexed_str_without_spaces, label) = strip_space_and_comments_and_iterate_labels(tokens);
-    if let Some(_) = label {
+    if label.is_some() {
         i += 2;
     }
     // check if the next token is db (or) dw
@@ -883,7 +880,7 @@ fn find_macro_name(tokens: &[Token]) -> Result<Option<usize>, CompilationError> 
 }
 
 fn get_args_seperated_by_comma_from_line(
-    line: &Vec<&Token>,
+    line: &[Token],
     start_idx: usize,
 ) -> Result<Vec<usize>, CompilationError> {
     // get only certain toekns from the line
@@ -891,18 +888,18 @@ fn get_args_seperated_by_comma_from_line(
     // return = arg1, arg2, arg3
     let mut args: Vec<usize> = Vec::<usize>::new();
     let mut new_line = Vec::new();
-    for tokn in line[start_idx..].to_vec() {
+    for tokn in line[start_idx..].iter() {
         new_line.push(tokn.clone());
     }
 
-    let (stripped_line, _) = strip_space_and_comments_and_iterate_labels(&new_line.as_slice());
+    let (stripped_line, _) = strip_space_and_comments_and_iterate_labels(new_line.as_slice());
     iterate_with_seperator(
         0,
         stripped_line.len(),
         &TokenizedLine::new(&stripped_line, stripped_line.len() as u32),
         &Assembly8086Tokens::Comma,
         |token| {
-            let token_idx = line.iter().position(|tokn| tokn == &token).unwrap();
+            let token_idx = line.iter().position(|tokn| tokn == token).unwrap();
             args.push(token_idx);
             Ok(())
         },
@@ -911,9 +908,9 @@ fn get_args_seperated_by_comma_from_line(
 }
 
 fn get_parameter_to_argument<'a>(
-    line: &'a Vec<&'a Token>,
+    line: &'a [Token],
     macro_ref_start_index: usize,
-    macro_definitin_line: &'a Vec<&'a Token>,
+    macro_definitin_line: &'a [Token],
     // macro_def_start_index: usize,
 ) -> Result<HashMap<&'a Token, &'a Token>, CompilationError> {
     // iterate to find the idex
@@ -931,7 +928,7 @@ fn get_parameter_to_argument<'a>(
 
     if parameter_args.len() != argument_args.len() {
         return Err(CompilationError::error_with_token(
-            line[macro_ref_start_index - 1],
+            &line[macro_ref_start_index - 1],
             &format!(
                 "The macro \"{}\" is defined with {} arguments, but you have passed {} arguments",
                 line[macro_ref_start_index - 1].token_type,
@@ -997,13 +994,13 @@ fn expand_macros(
             };
             let (start_idx, end_idx) = *macro_bounds;
             // convert vec<Toekn> to vec<&Token>
-            let macro_ref_line_start = &tokens_vec.iter().map(|token| token).collect();
-            let macro_def_line_start = &lexer.tokens[start_idx].iter().map(|token| token).collect();
+            let macro_ref_line_start = tokens_vec;
+            let macro_def_line_start = &lexer.tokens[start_idx];
 
             let parameters_to_arguments_map = match get_parameter_to_argument(
                 macro_ref_line_start,
                 macro_reference_label_index + 1,
-                macro_def_line_start,
+                macro_def_line_start.as_slice(),
             ) {
                 Ok(parameters_to_arguments_map) => parameters_to_arguments_map,
                 Err(err) => {
@@ -1018,7 +1015,13 @@ fn expand_macros(
                 let mut tokens = lexer.tokens[i].clone();
                 for token in &mut tokens {
                     if let Some(argument) = parameters_to_arguments_map.get(token) {
-                        *token = argument.clone().clone();
+                        let new_token = Token::new(
+                            argument.token_type.clone(),
+                            argument.line_number,
+                            argument.column_number,
+                            argument.token_length,
+                        );
+                        *token = new_token;
                     }
                 }
                 temp_vec.push(tokens);
