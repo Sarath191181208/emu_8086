@@ -2,7 +2,7 @@ use super::SignedU16;
 
 type Offset = SignedU16;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IndexedAddressingTypes {
     BX(Option<Offset>),
     BP(Option<Offset>),

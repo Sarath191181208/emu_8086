@@ -13,7 +13,7 @@ pub mod instructions;
 pub mod registers16bit;
 pub mod registers8bit;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) enum Assembly8086Tokens {
     // Resisters
     // ex: ax, bx, cx, dx, si, di, bp, sp, cs, ds, es, ss, ip
@@ -102,7 +102,7 @@ impl std::fmt::Display for Assembly8086Tokens {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub(crate) struct Token {
     pub token_type: Assembly8086Tokens,
 

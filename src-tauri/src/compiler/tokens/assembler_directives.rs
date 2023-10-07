@@ -1,12 +1,15 @@
 use strum_macros::{Display, EnumString};
 
-#[derive(Debug, Clone, PartialEq, Default, Eq, EnumString, Display)]
+#[derive(Debug, Clone, PartialEq, Default, Eq, EnumString, Display, Hash)]
+#[strum(ascii_case_insensitive)]
 pub(crate) enum AssemblerDirectives {
-    #[strum(ascii_case_insensitive)]
     #[default]
     Org,
-    #[strum(ascii_case_insensitive, serialize = ".data")]
+    #[strum(serialize = ".data")]
     Data,
-    #[strum(ascii_case_insensitive, serialize = ".code")]
+    #[strum(serialize = ".code")]
     Code,
+
+    Macro,
+    EndM,
 }
