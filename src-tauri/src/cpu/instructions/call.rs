@@ -1,4 +1,4 @@
-    use crate::{cpu::CPU, memory::Memory};
+use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
     pub(in crate::cpu) fn execute_call_and_16bitaddr(&mut self, mem: &mut Memory) {
