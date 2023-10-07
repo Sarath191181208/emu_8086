@@ -1,8 +1,3 @@
-import {
-  getDefaultFlags,
-  getDefaultRegisters,
-} from "./getDefaultRegistersAndFlags";
-
 interface GeneralPurposeRegisters {
   [key: string]: number;
   ax: 0;
