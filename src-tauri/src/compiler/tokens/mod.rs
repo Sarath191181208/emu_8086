@@ -102,13 +102,25 @@ impl std::fmt::Display for Assembly8086Tokens {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct Token {
     pub token_type: Assembly8086Tokens,
 
     pub line_number: u32,
     pub column_number: u32,
     pub token_length: u32,
+}
+
+impl std::hash::Hash for Token {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.token_type.hash(state);
+    }
+}
+
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.token_type == other.token_type
+    }
 }
 
 impl Token {
@@ -124,6 +136,13 @@ impl Token {
             column_number,
             token_length,
         }
+    }
+
+    pub fn is_abs_eq(&self, other: &Token) -> bool {
+        self.token_type == other.token_type
+            && self.token_length == other.token_length
+            && self.line_number == other.line_number
+            && self.column_number == other.column_number
     }
 }
 

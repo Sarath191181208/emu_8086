@@ -38,12 +38,14 @@ use self::{
     parsers::{
         add::parse_add, call::parse_call, dec::parse_dec, inc::parse_inc, jmp::parse_jmp,
         loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, sub::parse_sub,
-        var::parse_var_declaration,
+        utils::iterate_with_seperator, var::parse_var_declaration,
     },
     tokenized_line::TokenizedLine,
-    tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
+    tokens::{
+        assembler_directives::AssemblerDirectives, data::DefineData, Assembly8086Tokens, Token,
+    },
     types_structs::{
-        CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap,
+        ArrayIndex, CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap,
         LabelRefrenceList, LineNumber, VariableAddressDefinitionMap, VariableAddressMap,
         VariableReferenceList, VariableType,
     },
@@ -92,14 +94,13 @@ fn compile(
     if i >= lexed_str_without_spaces.len() {
         return Ok(compiled_line);
     }
-    // error if the token type isn't an instruction
-    // let instruction = get_instruction(&lexed_str_without_spaces, i)?;
+
     let tokenized_line = TokenizedLine::new(&lexed_str_without_spaces, len_lexed_strings);
 
     let token = &lexed_str_without_spaces[i];
     if let Assembly8086Tokens::AssemblerDirectives(dir) = &token.token_type {
         match dir {
-            AssemblerDirectives::Org => {}
+            AssemblerDirectives::Org | AssemblerDirectives::Macro | AssemblerDirectives::EndM => {}
             AssemblerDirectives::Data => {
                 if is_org_defined {
                     let jmp_ins = get_jmp_code_compiled_line(token);
@@ -687,6 +688,405 @@ type ProcDefinitionStartAndEndBytesMap = HashMap<
         Option<EndCompiledBytesIndexedLineNumber>,
     ),
 >;
+type MacroBoundsDefintionMap = HashMap<Label, (ArrayIndex, Option<ArrayIndex>)>;
+
+fn get_first_two_non_space_characters_token_types<'a>(
+    line: &'a Vec<&'a Token>,
+    i: usize,
+) -> (
+    Option<(&'a Assembly8086Tokens, usize)>,
+    Option<(&'a Assembly8086Tokens, usize)>,
+) {
+    let mut first: Option<(&Assembly8086Tokens, usize)> = None;
+    let mut second = None;
+    for token in &line[i..] {
+        if token.token_type == Assembly8086Tokens::Space {
+            continue;
+        }
+        if first.is_none() {
+            first = Some((&token.token_type, i));
+        } else if second.is_none() {
+            second = Some((&token.token_type, i));
+            break;
+        }
+    }
+    (first, second)
+}
+
+fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<CompilationError>> {
+    // iterate lexer to find the macro bounds it should be in the form
+    // character macro arguments
+    // ....
+    // ....
+    // endm (or) character endm
+
+    let mut macro_defn_map: MacroBoundsDefintionMap = HashMap::new();
+    let mut current_macro_label = None;
+    let mut compilaton_errors = Vec::<CompilationError>::new();
+
+    for (i, tokens_vec) in lexer.tokens.iter().enumerate() {
+        let toeken_ref_vec = tokens_vec.iter().collect::<Vec<&Token>>();
+        let first_and_second_tokens =
+            get_first_two_non_space_characters_token_types(&toeken_ref_vec, 0);
+        match first_and_second_tokens {
+            (
+                Some((Assembly8086Tokens::Character(macro_label), token_idx)),
+                Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Macro), _)),
+            ) => {
+                if let Some((_, line_num, tokn_idx)) = current_macro_label {
+                    let line: &Vec<Token> = &lexer.tokens[line_num];
+                    let token = &line[tokn_idx];
+                    compilaton_errors.push(CompilationError::error_with_token(token, &format!("You have not closed this MACRO with name {}, Nested macros are not supported", macro_label)));
+                }
+                macro_defn_map.insert(macro_label.clone(), (i, None));
+                current_macro_label = Some((macro_label.clone(), i, token_idx));
+            }
+            (
+                Some((Assembly8086Tokens::Character(macro_label), macro_label_idx)),
+                Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::EndM), _)),
+            ) => {
+                match &current_macro_label {
+                    None => {
+                        compilaton_errors.push(CompilationError::error_with_token(
+                            &tokens_vec[macro_label_idx],
+                            &format!(
+                                "The macro \"{}\" is not defined, Please define it before ending it. Maybe you are trying to define a recursive Macro ? It isn't supported",
+                                macro_label
+                            ),
+                        ));
+                    }
+                    Some((current_macro_label, _, _)) => {
+                        if current_macro_label != macro_label {
+                            compilaton_errors.push(CompilationError::error_with_token(
+                                &tokens_vec[macro_label_idx],
+                                &format!(
+                                    "The macro \"{}\" is not defined, Please define it before ending it. Maybe you are trying to define a recursive Macro ? It isn't supported",
+                                    macro_label
+                                ),
+                            ));
+                        }
+                    }
+                }
+                if let Some((_, end_idx)) = macro_defn_map.get_mut(macro_label) {
+                    *end_idx = Some(i);
+                    current_macro_label = None;
+                } else {
+                    compilaton_errors.push(CompilationError::error_with_token(
+                        &tokens_vec[macro_label_idx],
+                        &format!(
+                            "The macro \"{}\" is not defined, Please define it before ending it.",
+                            macro_label
+                        ),
+                    ));
+                }
+            }
+            (
+                Some((
+                    Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::EndM),
+                    end_macro_idx,
+                )),
+                None,
+            ) => match &current_macro_label {
+                None => {
+                    compilaton_errors.push(CompilationError::error_with_token(
+                            &tokens_vec[0],
+                            "No macro defintion found, define a macro using `Name MACRO p1, p2, p3 syntax`, Please define it before ending it. Maybe you are trying to define a recursive Macro ? It isn't supported",
+                        ));
+                }
+                Some((current_macro_label, _, _)) => {
+                    if let Some((_, end_idx)) = macro_defn_map.get_mut(current_macro_label) {
+                        *end_idx = Some(i);
+                    } else {
+                        compilaton_errors.push(CompilationError::error_with_token(
+                                &tokens_vec[end_macro_idx],
+                                &format!(
+                                    "The macro \"{}\" is not defined, Please define it before ending it.",
+                                    current_macro_label
+                                ),
+                            ));
+                    }
+                }
+            },
+            (
+                Some((_, idx)),
+                Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Macro), _)),
+            ) => {
+                compilaton_errors.push(CompilationError::error_with_token(
+                    &tokens_vec[idx],
+                    "Macro name must be a character",
+                ));
+            }
+            (
+                Some((_, idx)),
+                Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::EndM), _)),
+            ) => {
+                compilaton_errors.push(CompilationError::error_with_token(
+                    &tokens_vec[idx],
+                    "Macro name must be a character",
+                ));
+            }
+
+            (
+                Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Macro), idx)),
+                _,
+            ) => {
+                compilaton_errors.push(CompilationError::error_with_token(
+                    &tokens_vec[idx],
+                    "Need to define a name for the macro with the folling syntax `Name MACRO p1, p2, p3`",
+                ));
+            }
+            _ => {}
+        }
+    }
+
+    if !compilaton_errors.is_empty() {
+        return Err(compilaton_errors);
+    }
+
+    Ok(macro_defn_map)
+}
+
+fn find_macro_name(tokens: &[Token]) -> Result<Option<usize>, CompilationError> {
+    let mut i = 0;
+    let (lexed_str_without_spaces, label) = strip_space_and_comments_and_iterate_labels(tokens);
+    if let Some(_) = label {
+        i += 2;
+    }
+    // check if the next token is db (or) dw
+    let first_and_second_tokens =
+        get_first_two_non_space_characters_token_types(&lexed_str_without_spaces, i);
+    match first_and_second_tokens {
+        (
+            Some((Assembly8086Tokens::Character(_), label_idx)),
+            Some((Assembly8086Tokens::Data(DefineData::Db), _))
+            | Some((Assembly8086Tokens::Data(DefineData::Dw), _)),
+        ) => {
+            return Err(CompilationError::error_with_token(
+                lexed_str_without_spaces[label_idx],
+                "The macro name cannot be a variable",
+            ));
+        }
+        (
+            Some((Assembly8086Tokens::Character(_), _)),
+            Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Macro), _)),
+        ) => {}
+        (Some((Assembly8086Tokens::Character(_), label_idx)), _) => {
+            let token_ref = lexed_str_without_spaces[label_idx];
+            // iterate tokens to find this tokenidx in the tokens
+            let token_idx = tokens.iter().position(|token| token.is_abs_eq(token_ref));
+            return Ok(token_idx);
+        }
+        _ => {}
+    }
+
+    Ok(None)
+}
+
+fn get_args_seperated_by_comma_from_line(
+    line: &Vec<&Token>,
+    start_idx: usize,
+) -> Result<Vec<usize>, CompilationError> {
+    // get only certain toekns from the line
+    // line = token1 arg1, arg2, arg3
+    // return = arg1, arg2, arg3
+    let mut args: Vec<usize> = Vec::<usize>::new();
+    let mut new_line = Vec::new();
+    for tokn in line[start_idx..].to_vec() {
+        new_line.push(tokn.clone());
+    }
+
+    let (stripped_line, _) = strip_space_and_comments_and_iterate_labels(&new_line.as_slice());
+    iterate_with_seperator(
+        0,
+        stripped_line.len(),
+        &TokenizedLine::new(&stripped_line, stripped_line.len() as u32),
+        &Assembly8086Tokens::Comma,
+        |token| {
+            let token_idx = line.iter().position(|tokn| tokn == &token).unwrap();
+            args.push(token_idx);
+            Ok(())
+        },
+    )?;
+    Ok(args)
+}
+
+fn get_parameter_to_argument<'a>(
+    line: &'a Vec<&'a Token>,
+    macro_ref_start_index: usize,
+    macro_definitin_line: &'a Vec<&'a Token>,
+    // macro_def_start_index: usize,
+) -> Result<HashMap<&'a Token, &'a Token>, CompilationError> {
+    // iterate to find the idex
+    let macro_def_start_index = macro_definitin_line
+        .iter()
+        .position(|token| {
+            token.token_type == Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Macro)
+        })
+        .unwrap();
+    let mut parameter_to_argument = HashMap::<&Token, &Token>::new();
+
+    let parameter_args =
+        get_args_seperated_by_comma_from_line(macro_definitin_line, macro_def_start_index + 1)?;
+    let argument_args = get_args_seperated_by_comma_from_line(line, macro_ref_start_index)?;
+
+    if parameter_args.len() != argument_args.len() {
+        return Err(CompilationError::error_with_token(
+            line[macro_ref_start_index - 1],
+            &format!(
+                "The macro \"{}\" is defined with {} arguments, but you have passed {} arguments",
+                line[macro_ref_start_index - 1].token_type,
+                parameter_args.len(),
+                argument_args.len()
+            ),
+        ));
+    }
+
+    for (parameter, argument) in parameter_args.iter().zip(argument_args.iter()) {
+        let macro_def_parameter = &macro_definitin_line[*parameter];
+        let macro_ref_argument = &line[*argument];
+        parameter_to_argument.insert(macro_def_parameter, macro_ref_argument);
+    }
+
+    for (k, v) in &parameter_to_argument {
+        println!("{} -> {}", k.token_type, v.token_type);
+    }
+
+    Ok(parameter_to_argument)
+}
+
+fn expand_macros(
+    lexer: &mut Lexer,
+    macro_bounds: HashMap<Label, (usize, usize)>,
+) -> Result<(), Vec<CompilationError>> {
+    let mut compilation_errors = Vec::<CompilationError>::new();
+    let mut changes: Vec<(usize, usize, Vec<Vec<Token>>)> = Vec::new();
+    let mut line_number = 0;
+
+    for tokens_vec in &lexer.tokens {
+        line_number += 1;
+
+        let macro_name_index = match find_macro_name(tokens_vec) {
+            Ok(macro_name_index) => macro_name_index,
+            Err(err) => {
+                compilation_errors.push(err);
+                continue;
+            }
+        };
+        if let Some(macro_reference_label_index) = macro_name_index {
+            let macro_label = &tokens_vec[macro_reference_label_index];
+            let macro_label_str = match &macro_label.token_type {
+                Assembly8086Tokens::Character(c) => c,
+                _ => {
+                    compilation_errors.push(CompilationError::error_with_token(
+                        macro_label,
+                        "This shouldn't happen, Please report this! Error: 906 in expand macros",
+                    ));
+                    continue;
+                }
+            };
+
+            let macro_bounds = match macro_bounds.get(macro_label_str) {
+                Some(macro_bounds) => macro_bounds,
+                None => {
+                    compilation_errors.push(CompilationError::error_with_token(
+                        macro_label,
+                        "This shouldn't happen, Please report this! Error: 916 in expand macros",
+                    ));
+                    continue;
+                }
+            };
+            let (start_idx, end_idx) = *macro_bounds;
+            // convert vec<Toekn> to vec<&Token>
+            let macro_ref_line_start = &tokens_vec.iter().map(|token| token).collect();
+            let macro_def_line_start = &lexer.tokens[start_idx].iter().map(|token| token).collect();
+
+            let parameters_to_arguments_map = match get_parameter_to_argument(
+                macro_ref_line_start,
+                macro_reference_label_index + 1,
+                macro_def_line_start,
+            ) {
+                Ok(parameters_to_arguments_map) => parameters_to_arguments_map,
+                Err(err) => {
+                    compilation_errors.push(err);
+                    continue;
+                }
+            };
+
+            // start from start_idx and end at end_idx push all the tokens into the lexer
+            let mut temp_vec = Vec::new();
+            for i in (start_idx + 1)..=(end_idx - 1) {
+                let mut tokens = lexer.tokens[i].clone();
+                for token in &mut tokens {
+                    if let Some(argument) = parameters_to_arguments_map.get(token) {
+                        *token = argument.clone().clone();
+                    }
+                }
+                temp_vec.push(tokens);
+            }
+            changes.push((line_number - 1, macro_reference_label_index, temp_vec));
+        }
+    }
+
+    // change the macro defition lines to ';' comment token use iterators
+    lexer.tokens = lexer
+        .tokens
+        .clone()
+        .into_iter()
+        .enumerate()
+        .map(|(i, tokens)| {
+            // check if the line is a by iterating the macro_bounds using iteratos
+            let is_in_macro = macro_bounds.iter().any(|(_, (start, end))| {
+                if i >= *start && i <= *end {
+                    return true;
+                }
+                false
+            });
+            if is_in_macro {
+                let mut tokens = tokens.clone();
+                for token in &mut tokens {
+                    *token = Token::new(
+                        Assembly8086Tokens::Comment,
+                        token.line_number,
+                        token.column_number,
+                        token.token_length,
+                    );
+                }
+                tokens
+            } else {
+                tokens
+            }
+        })
+        .collect();
+
+    // sort chages by line number
+    changes.sort_by(|(line_number1, _, _), (line_number2, _, _)| line_number1.cmp(line_number2));
+
+    // make the changes into the lexer
+    // delete the lexer the chanes line number
+    // replace the single line with maybe mutlpile lines defined in chages
+    let mut index_offset = 0;
+    for (change_line_number, ref_label_idx, change) in changes {
+        // preserve label: from the macro expansion
+        let line = &lexer.tokens[change_line_number];
+        let ref_label_idx = if ref_label_idx > 0 {
+            ref_label_idx - 1
+        } else {
+            ref_label_idx
+        };
+        let front = &line[..ref_label_idx]; // don't include the macro name
+        lexer.tokens[change_line_number + index_offset] = front.to_vec();
+        // expand the macro
+        for tokens in change {
+            index_offset += 1;
+            lexer
+                .tokens
+                .insert(change_line_number + index_offset, tokens);
+        }
+    }
+
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn compile_lines_perform_var_label_substiution(
     lexer: &mut Lexer,
@@ -703,6 +1103,51 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         Err(err) => {
             compilation_errors.push(err);
             false
+        }
+    };
+
+    let macro_bounds = match find_macro_bounds(lexer) {
+        Ok(macro_bounds) => macro_bounds,
+        Err(err) => {
+            compilation_errors.extend(err);
+            return None;
+        }
+    };
+
+    // check if the end is defined in all the keys if not push to compilation errror
+    // and convert macro_bonds to HashMap<Label, (usize, usize)>
+    let macro_bounds = match macro_bounds
+        .into_iter()
+        .map(|(label, (start, end))| match end {
+            None => {
+                let line = &lexer.tokens[start];
+                let token = &line[0];
+                compilation_errors.push(CompilationError::error_with_token(
+                    token,
+                    &format!(
+                        "The macro \"{}\" is not ended, Please end it with `ENDM`",
+                        label
+                    ),
+                ));
+                None
+            }
+            Some(end) => Some((label, (start, end))),
+        })
+        .collect::<Option<HashMap<Label, (usize, usize)>>>()
+    {
+        Some(macro_bounds) => macro_bounds,
+        None => return None,
+    };
+
+    if !compilation_errors.is_empty() {
+        return None;
+    }
+
+    match expand_macros(lexer, macro_bounds) {
+        Ok(()) => {}
+        Err(err) => {
+            compilation_errors.extend(err);
+            return None;
         }
     };
 
@@ -1059,6 +1504,30 @@ mod test_hlt_and_ret {
         ",
         |instructions: &Vec<u8>| {
             assert_eq!(instructions, &[0x03, 0xC4, 0xC3]);
+        }
+    );
+
+    test_compile!(
+        macro_def_inc,
+        "
+mymacro MACRO p1, p1, p3
+    inc p1 
+    inc p1
+    inc p3
+endm 
+
+p1: mymacro ax, dx, cx
+
+mymacro bx, cx, dx
+
+inc dx 
+jmp p1
+        ",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0x42, 0x42, 0x41, 0x41, 0x41, 0x42, 0x42, 0xEb, 0xF7]
+            );
         }
     );
 }
