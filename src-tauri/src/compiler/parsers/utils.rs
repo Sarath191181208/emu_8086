@@ -193,7 +193,7 @@ pub(super) fn get_label_address_or_push_into_ref(
     }
 }
 
-pub(super) fn iterate_with_seperator(
+pub(crate) fn iterate_with_seperator(
     start_index: usize,
     end_index: usize,
     tokenized_line: &TokenizedLine,
@@ -202,23 +202,20 @@ pub(super) fn iterate_with_seperator(
 ) -> Result<usize, CompilationError> {
     let mut i = start_index;
     while i < end_index {
-        let token = tokenized_line.get(
+        let token = match tokenized_line.get(
             i,
             "This shouldn't happen, Report this! Err: iterate_with_seperator:174".to_string(),
             None,
-        );
-        match token {
-            Ok(token) => {
-                callback(token)?;
-                i += 1;
-                if i < end_index {
-                    check_token(tokenized_line, token, i, seperator)?;
-                    i += 1;
-                }
-            }
-            Err(err) => {
-                return Err(err);
-            }
+        ){
+            Ok(token) => token,
+            Err(err) => return Err(err),
+        };
+
+        callback(token)?;
+        i += 1;
+        if i < end_index {
+            check_token(tokenized_line, token, i, seperator)?;
+            i += 1;
         }
     }
 
