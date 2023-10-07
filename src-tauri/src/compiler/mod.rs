@@ -771,7 +771,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                     current_macro_label = None;
                 } else {
                     compilaton_errors.push(CompilationError::error_with_token(
-                        &tokens_vec[macro_label_idx+1],
+                        &tokens_vec[macro_label_idx + 1],
                         &format!(
                             "The macro \"{}\" is not defined, Please define it before ending it.",
                             macro_label
@@ -811,7 +811,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                 Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Macro), _)),
             ) => {
                 compilaton_errors.push(CompilationError::error_with_token(
-                    &tokens_vec[idx+1],
+                    &tokens_vec[idx + 1],
                     "Macro name must be a character",
                 ));
             }
@@ -820,7 +820,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                 Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::EndM), _)),
             ) => {
                 compilaton_errors.push(CompilationError::error_with_token(
-                    &tokens_vec[idx+1],
+                    &tokens_vec[idx + 1],
                     "Macro name must be a character",
                 ));
             }
@@ -945,8 +945,6 @@ fn get_parameter_to_argument<'a>(
         let macro_ref_argument = &line[*argument];
         parameter_to_argument.insert(macro_def_parameter, macro_ref_argument);
     }
-
-   
 
     Ok(parameter_to_argument)
 }
