@@ -3,7 +3,9 @@ import { editor, languages } from "monaco-editor/esm/vs/editor/editor.api";
 export const langRules: languages.IMonarchLanguage = {
   defaultToken: "",
   ignoreCase: true,
-  keywords: ["mov", "add", "sub", "inc", "dec", "mul", "jmp", "loop"],
+  macro: ["macro", "endm"],
+  proc: ["proc", "endp"],
+  keywords: ["mov", "add", "sub", "inc", "dec", "mul", "jmp", "loop", "call", "hlt", 'ret'],
   registers16bit: ["ax", "bx", "cx", "dx", "si", "di", "sp", "bp"],
   registers8bit: ["al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"],
   defineData: ["db", "dw"],
@@ -35,6 +37,8 @@ export const langRules: languages.IMonarchLanguage = {
             "@registers16bit": "registers16bit",
             "@registers8bit": "registers8bit",
             "@defineData": "defineData",
+            "@macro": "directives",
+            "@proc": "directives",
             "@default": "identifier",
           },
         },
@@ -52,7 +56,11 @@ export const langConfiguration: languages.LanguageConfiguration = {
     ["[", "]"],
     ["(", ")"],
   ],
-  colorizedBracketPairs: [["{", "}"], ["[", "]"], ["(", ")"]],
+  colorizedBracketPairs: [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"],
+  ],
 };
 
 export const langTheme: editor.IStandaloneThemeData = {
@@ -61,9 +69,10 @@ export const langTheme: editor.IStandaloneThemeData = {
   rules: [
     { token: "keyword", foreground: "#569CD6" },
     { token: "defineData", foreground: "#569CD6" },
-    { token: "directive.org", foreground: "c586c0" },
-    { token: "directive.data", foreground: "c586c0" },
-    { token: "directive.code", foreground: "c586c0" },
+    { token: "directive.org", foreground: "#c586c0" },
+    { token: "directive.data", foreground: "#c586c0" },
+    { token: "directive.code", foreground: "#c586c0" },
+    { token: "directives", foreground: "#c586c0" },
     { token: "label", foreground: "#6b7280" },
     { token: "registers16bit", foreground: "#9CDCFE" },
     { token: "registers8bit", foreground: "#0891b2" },
