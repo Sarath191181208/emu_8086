@@ -102,7 +102,7 @@ impl std::fmt::Display for Assembly8086Tokens {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub(crate) struct Token {
     pub token_type: Assembly8086Tokens,
 
