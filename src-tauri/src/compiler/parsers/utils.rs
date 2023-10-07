@@ -206,7 +206,7 @@ pub(crate) fn iterate_with_seperator(
             i,
             "This shouldn't happen, Report this! Err: iterate_with_seperator:174".to_string(),
             None,
-        ){
+        ) {
             Ok(token) => token,
             Err(err) => return Err(err),
         };

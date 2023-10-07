@@ -127,7 +127,7 @@ impl Token {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct SignedU16 {
     pub val: u16,
     pub is_negative: bool,
