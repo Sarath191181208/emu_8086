@@ -946,9 +946,7 @@ fn get_parameter_to_argument<'a>(
         parameter_to_argument.insert(macro_def_parameter, macro_ref_argument);
     }
 
-    for (k, v) in &parameter_to_argument {
-        println!("{} -> {}", k.token_type, v.token_type);
-    }
+   
 
     Ok(parameter_to_argument)
 }
