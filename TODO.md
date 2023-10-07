@@ -1,3 +1,7 @@
+## Warnings: 
+- [ ] For same parameter names in macro definitions.
+- [ ] Unused macros.
+## To support: 
 - [x] add support for addressing mode 
 - [x] add the labels into the symbol table
 - [x] add calc offset in compile itself 
