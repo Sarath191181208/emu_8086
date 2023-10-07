@@ -696,16 +696,18 @@ fn get_first_two_non_space_characters_token_types<'a>(
 ) -> (TokenAndItsArrayIndex<'a>, TokenAndItsArrayIndex<'a>) {
     let mut first: Option<(&Assembly8086Tokens, usize)> = None;
     let mut second = None;
+    let mut j = 0_usize;
     for token in &line[i..] {
         if token.token_type == Assembly8086Tokens::Space {
             continue;
         }
         if first.is_none() {
-            first = Some((&token.token_type, i));
+            first = Some((&token.token_type, i + j));
         } else if second.is_none() {
-            second = Some((&token.token_type, i));
+            second = Some((&token.token_type, i + j));
             break;
         }
+        j += 1;
     }
     (first, second)
 }
@@ -745,7 +747,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                 match &current_macro_label {
                     None => {
                         compilaton_errors.push(CompilationError::error_with_token(
-                            &tokens_vec[macro_label_idx],
+                            &tokens_vec[macro_label_idx+1],
                             &format!(
                                 "The macro \"{}\" is not defined, Please define it before ending it. Maybe you are trying to define a recursive Macro ? It isn't supported",
                                 macro_label
@@ -755,7 +757,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                     Some((current_macro_label, _, _)) => {
                         if current_macro_label != macro_label {
                             compilaton_errors.push(CompilationError::error_with_token(
-                                &tokens_vec[macro_label_idx],
+                                &tokens_vec[macro_label_idx+1],
                                 &format!(
                                     "The macro \"{}\" is not defined, Please define it before ending it. Maybe you are trying to define a recursive Macro ? It isn't supported",
                                     macro_label
@@ -769,7 +771,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                     current_macro_label = None;
                 } else {
                     compilaton_errors.push(CompilationError::error_with_token(
-                        &tokens_vec[macro_label_idx],
+                        &tokens_vec[macro_label_idx+1],
                         &format!(
                             "The macro \"{}\" is not defined, Please define it before ending it.",
                             macro_label
@@ -786,7 +788,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
             ) => match &current_macro_label {
                 None => {
                     compilaton_errors.push(CompilationError::error_with_token(
-                            &tokens_vec[0],
+                            &tokens_vec[end_macro_idx+1],
                             "No macro defintion found, define a macro using `Name MACRO p1, p2, p3 syntax`, Please define it before ending it. Maybe you are trying to define a recursive Macro ? It isn't supported",
                         ));
                 }
@@ -795,7 +797,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                         *end_idx = Some(i);
                     } else {
                         compilaton_errors.push(CompilationError::error_with_token(
-                                &tokens_vec[end_macro_idx],
+                                &tokens_vec[end_macro_idx+1],
                                 &format!(
                                     "The macro \"{}\" is not defined, Please define it before ending it.",
                                     current_macro_label
@@ -809,7 +811,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                 Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Macro), _)),
             ) => {
                 compilaton_errors.push(CompilationError::error_with_token(
-                    &tokens_vec[idx],
+                    &tokens_vec[idx+1],
                     "Macro name must be a character",
                 ));
             }
@@ -818,7 +820,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                 Some((Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::EndM), _)),
             ) => {
                 compilaton_errors.push(CompilationError::error_with_token(
-                    &tokens_vec[idx],
+                    &tokens_vec[idx+1],
                     "Macro name must be a character",
                 ));
             }
@@ -828,7 +830,7 @@ fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<Compi
                 _,
             ) => {
                 compilaton_errors.push(CompilationError::error_with_token(
-                    &tokens_vec[idx],
+                    &tokens_vec[idx+1],
                     "Need to define a name for the macro with the folling syntax `Name MACRO p1, p2, p3`",
                 ));
             }
@@ -1124,7 +1126,11 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         .map(|(label, (start, end))| match end {
             None => {
                 let line = &lexer.tokens[start];
-                let token = &line[0];
+                // find the first non space char
+                let token = line
+                    .iter()
+                    .find(|token| token.token_type != Assembly8086Tokens::Space)
+                    .unwrap();
                 compilation_errors.push(CompilationError::error_with_token(
                     token,
                     &format!(
