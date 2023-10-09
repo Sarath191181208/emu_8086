@@ -5,7 +5,7 @@ import { Editor } from "@monaco-editor/react";
 import { langConfiguration, langRules, langTheme } from "./langRules";
 import { Navbar } from "./Components/Navbar";
 import { RegistersTableView } from "./Components/RegisterView";
-import { MemoryBottomBar } from "./Components/MemoryBottombar";
+import { BottomBar } from "./Components/MemoryBottombar";
 import { useApp } from "./hooks/useApp";
 import { useState } from "react";
 import { Interrupt } from "./types/interrupts";
@@ -83,7 +83,7 @@ function App() {
             }
           />
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
-          <MemoryBottomBar
+          <BottomBar
             key="memory-bottom-bar"
             memoryIndex={
               registers.instruction_pointer + registers.code_segment * 0x10
