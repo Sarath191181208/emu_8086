@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
+import { BottomBarStates } from "../App";
 
 export function MemoryBottomBar({
   memAddrValueMap,
   prevMemAddrValueMap,
-  showMemoryBottomBar,
-  setIsMemoryShown,
+  bottomBarState,
+  setBottomBarState,
   memoryIndex,
   className = "",
 }: {
   memAddrValueMap: Map<ArrayIndex, Byte>;
   prevMemAddrValueMap: Map<ArrayIndex, Byte>;
-  showMemoryBottomBar: boolean;
-  setIsMemoryShown: (showMemoryBottomBar: boolean) => void;
-    memoryIndex: ArrayIndex;
+  bottomBarState: BottomBarStates;
+  setBottomBarState: (bottomBarState: BottomBarStates) => void;
+  memoryIndex: ArrayIndex;
   className?: string;
 }) {
   const [start, setStart] = useState(0x1000);
@@ -69,11 +70,11 @@ export function MemoryBottomBar({
     return () => clearTimeout(timeoutId);
   }, [memAddrValueMap]);
 
-  "bg-[#fddf47]";
+  ("bg-[#fddf47]");
 
   return (
     <div className={"absolute w-full " + className}>
-      {showMemoryBottomBar && (
+      { (bottomBarState != "Collapsed")  && (
         <div
           className={`absolute w-full h-50 pointer-events-auto opacity-100
         left-0 bottom-8 border border-black/20 dark:border-white/20
@@ -83,7 +84,7 @@ export function MemoryBottomBar({
           <div className="absolute right-0 top-0">
             <button
               className="pr-2"
-              onClick={() => setIsMemoryShown(!showMemoryBottomBar)}
+              onClick={() =>  setBottomBarState("Collapsed") }
             >
               X
             </button>
@@ -158,7 +159,9 @@ export function MemoryBottomBar({
                         (indicesToAnimate.includes(start + i)
                           ? `animate-val-change `
                           : " ") +
-                        (((start + i) === memoryIndex) ? "bg-[#fddf47] bg-opacity-20 rounded-sm" : " ")
+                        (start + i === memoryIndex
+                          ? "bg-[#fddf47] bg-opacity-20 rounded-sm"
+                          : " ")
                       }
                     >
                       {getValOrZero(start + i)
@@ -175,9 +178,13 @@ export function MemoryBottomBar({
       <div className="w-full flex absolute bottom-0 bg-slate-800 pl-5 overflow-x-hidden">
         <button
           className="max-w-md text-xs p-2"
-          onClick={() => setIsMemoryShown(!showMemoryBottomBar)}
+          onClick={() => {
+            setBottomBarState(
+              bottomBarState === "Collapsed" ? "Memory" : "Collapsed"
+            );
+          }}
         >
-          {showMemoryBottomBar ? "Hide" : "Show"} Memory
+          { bottomBarState=="Memory" ? "Hide" : "Show"} Memory
         </button>
       </div>
     </div>

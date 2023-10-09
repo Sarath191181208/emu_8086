@@ -15,10 +15,17 @@ import {
   compilationErrorToSuggestions,
   suggestionToCompletionProvider,
 } from "../types/compilationError";
-import { Definitions, find_matching_reference_positions } from "../types/token_position";
+import {
+  Definitions,
+  find_matching_reference_positions,
+} from "../types/token_position";
+import { Interrupt, InterruptType } from "../types/interrupts";
 
-export function useApp() {
-  const [showMemoryBottomBar, setIsMemoryShown] = useState(true);
+export function useApp({
+  interruptHandler,
+}: {
+  interruptHandler: (interrupt: Interrupt) => void;
+}) {
   const [memory, setMemory, prevMemoryRef] = useStateSavePrevious<
     Map<ArrayIndex, Byte>
   >(new Map<ArrayIndex, Byte>());
@@ -172,12 +179,30 @@ export function useApp() {
 
   const nextPressed = async () => {
     try {
-      const result: [CPUData, Array<[number, number]>] = await invoke("next", {
-        code: editorRef.current?.getValue(),
-      });
-      const regs: any = result[0];
+      const result: [CPUData & Flags, any | null, Array<[number, number]>] =
+        await invoke("next", {
+          code: editorRef.current?.getValue(),
+        });
+      const regs = result[0];
       const cpu = extractCPUData(regs);
-      const memoryChanges = result[1];
+
+      let intermediateInturrupt = result[1];
+      let interrupt: Interrupt | null = null;
+      if (intermediateInturrupt !== null) {
+        // convert Print : value to
+        // {
+        //   type: "print",
+        //   value: value,
+        // }
+        let key = Object.keys(intermediateInturrupt)[0];
+        let value = intermediateInturrupt[key];
+        interrupt = {
+          type: key as InterruptType,
+          value: value,
+        };
+      }
+
+      const memoryChanges = result[2];
 
       let memClone = new Map<ArrayIndex, Byte>(memory);
       // update memory
@@ -292,12 +317,11 @@ export function useApp() {
         console.log(position);
         console.log(word);
         let pos = find_matching_reference_positions(val, {
-          column_number: word.startColumn - 1 ,
+          column_number: word.startColumn - 1,
           length: word.endColumn - word.startColumn,
           line_number: position.lineNumber - 1,
         });
         if (pos === null) return null;
-        console.log(pos);
         return {
           uri: model.uri,
           range: {
@@ -316,7 +340,6 @@ export function useApp() {
     flags,
 
     memory,
-    showMemoryBottomBar,
 
     prevRegistersRef,
     prevMemoryRef,
@@ -328,7 +351,6 @@ export function useApp() {
 
     compileCode,
     nextPressed,
-    setIsMemoryShown,
     tryCompile,
   };
 }

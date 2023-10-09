@@ -7,14 +7,28 @@ import { Navbar } from "./Components/Navbar";
 import { RegistersTableView } from "./Components/RegisterView";
 import { MemoryBottomBar } from "./Components/MemoryBottombar";
 import { useApp } from "./hooks/useApp";
+import { useState } from "react";
+import { Interrupt } from "./types/interrupts";
+
+export type BottomBarStates = "Memory"   | "Collapsed" | "Display";
 
 function App() {
+  const [wirteString, setWirteString] = useState<string>("");
+  const [bottomBarState, setBottomBarState] =
+    useState<BottomBarStates>("Memory");
+
+  const interruptHandler = (interrupt: Interrupt) => {
+    // if (interrupt)
+    if (interrupt.type === "Print") {
+      setWirteString((prev) => prev + interrupt.value);
+    }
+  };
+
   const {
     registers,
     prevRegistersRef,
     flags,
     memory,
-    showMemoryBottomBar,
     prevMemoryRef,
     editorRef,
     monacoRef,
@@ -24,9 +38,8 @@ function App() {
 
     compileCode,
     nextPressed,
-    setIsMemoryShown,
     tryCompile,
-  } = useApp();
+  } = useApp({ interruptHandler });
 
   return (
     <>
@@ -55,7 +68,10 @@ function App() {
                 langConfiguration
               );
 
-              monaco.languages.registerDefinitionProvider("assembly", langDefinitionProvider);
+              monaco.languages.registerDefinitionProvider(
+                "assembly",
+                langDefinitionProvider
+              );
             }}
             onChange={tryCompile}
             height="100%"
@@ -74,8 +90,8 @@ function App() {
             }
             prevMemAddrValueMap={prevMemoryRef.current}
             memAddrValueMap={memory}
-            showMemoryBottomBar={showMemoryBottomBar}
-            setIsMemoryShown={setIsMemoryShown}
+            bottomBarState={bottomBarState}
+            setBottomBarState={setBottomBarState}
           />
         </div>
         <RegistersTableView
