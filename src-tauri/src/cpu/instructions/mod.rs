@@ -7,10 +7,10 @@ pub mod mul;
 pub mod sub;
 
 pub mod call;
-pub mod loop_ins;
-pub mod ret;
 pub mod int;
 pub mod iret;
+pub mod loop_ins;
+pub mod ret;
 
 pub mod test_macro;
 

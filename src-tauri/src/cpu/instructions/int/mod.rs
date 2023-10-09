@@ -1,31 +1,33 @@
-use crate::{cpu::{CPU, interrupt::Interrupt}, memory::Memory};
+use crate::{
+    cpu::{interrupt::Interrupt, CPU},
+    memory::Memory,
+};
 
-pub mod int;
+pub mod exec_interrupt;
 pub mod procedures;
 
-impl CPU{
-    pub(in crate) fn execute_bios_di(&mut self, mem: &mut Memory) -> Interrupt{
+impl CPU {
+    pub(crate) fn execute_bios_di(&mut self, mem: &mut Memory) -> Interrupt {
         self.consume_instruction(mem); // 0xFF
         self.consume_instruction(mem); // 0xCD
         let interrupt_arg = self.consume_byte(mem);
 
-        match interrupt_arg{
+        match interrupt_arg {
             0x21 => {
-                let val =  self.get_dx_low() as char ;
-                Interrupt::Print( val.to_string() )
+                let val = self.get_dx_low() as char;
+                Interrupt::Print(val.to_string())
             }
 
             _ => {
                 panic!("Unknown interrupt: {}", interrupt_arg);
             }
         }
-
     }
 }
 
 #[cfg(test)]
-mod tests{
-        use crate::{
+mod tests {
+    use crate::{
         cpu::{instructions::test_macro::compile_and_test_str, CPU},
         memory::Memory,
     };

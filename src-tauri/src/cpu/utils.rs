@@ -217,20 +217,20 @@ impl CPU {
     }
 
     pub(in crate::cpu) fn set_flags_from_u16(&mut self, value: u16) {
-            self.carry_flag  = get_nth_bit(value, 0);
-            // true
-            self.pairity_flag = get_nth_bit(value, 2);
-            // false,
-            // false,
-            self.auxiliary_carry_flag = get_nth_bit(value, 5);
-            // false,
-            self.zero_flag = get_nth_bit(value, 7);
-            self.negative_flag = get_nth_bit(value, 8);
-            // false,
-            // false,
-            self.interrupt_disable_flag = ! get_nth_bit(value, 11);
-            self.direction_flag = get_nth_bit(value, 12);
-            self.overflow_flag = get_nth_bit(value, 13);
+        self.carry_flag = get_nth_bit(value, 0);
+        // true
+        self.pairity_flag = get_nth_bit(value, 2);
+        // false,
+        // false,
+        self.auxiliary_carry_flag = get_nth_bit(value, 5);
+        // false,
+        self.zero_flag = get_nth_bit(value, 7);
+        self.negative_flag = get_nth_bit(value, 8);
+        // false,
+        // false,
+        self.interrupt_disable_flag = !get_nth_bit(value, 11);
+        self.direction_flag = get_nth_bit(value, 12);
+        self.overflow_flag = get_nth_bit(value, 13);
     }
 }
 

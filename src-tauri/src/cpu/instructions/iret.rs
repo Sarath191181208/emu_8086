@@ -12,10 +12,9 @@ impl CPU {
     }
 }
 
-
 #[cfg(test)]
-mod tests{
-        use crate::{
+mod tests {
+    use crate::{
         cpu::{instructions::test_macro::compile_and_test_str, CPU},
         memory::Memory,
     };

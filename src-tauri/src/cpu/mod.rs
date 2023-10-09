@@ -321,7 +321,7 @@ impl CPU {
             // INT
             0xCD => self.execute_interrupt(mem),
 
-            // IRET 
+            // IRET
             0xCF => self.execute_iret(mem),
 
             0xE2 => self.execute_loop_8bit(mem),

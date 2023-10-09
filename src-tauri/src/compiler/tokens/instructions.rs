@@ -19,5 +19,5 @@ pub(crate) enum Instructions {
     Call,
 
     Int,
-    Iret
+    Iret,
 }
