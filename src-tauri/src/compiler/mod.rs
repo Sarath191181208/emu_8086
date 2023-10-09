@@ -352,7 +352,37 @@ fn compile(
                     offset_bytes_from_line_and_is_label_before_ref,
                 )?;
                 // compiled_line.extend(_compliled_line);
-                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JMP", 1)?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "CALL", 1)?;
+                Ok(compiled_line)
+            }
+            Instructions::Int => {
+                let val_token = tokenized_line.get(
+                    i + 1,
+                    "Expected a 8bit value after INT, Got nothing!".to_string(),
+                    None,
+                )?;
+                match &val_token.token_type {
+                    Assembly8086Tokens::Number8bit(val) => {
+                        convert_and_push_instructions!(
+                            compiled_bytes,
+                            compiled_bytes_ref,
+                            (
+                               token => vec![0xCD, *val]
+                            )
+                        );
+                        i += 1;
+                    }
+                    _ => {
+                        return Err(CompilationError::error_with_token(
+                            token,
+                            &format!(
+                                "Expected a 8bit value after INT, Got {} nothing!",
+                                val_token.token_type
+                            ),
+                        ))
+                    }
+                };
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i + 1, "INT", 1)?;
                 Ok(compiled_line)
             }
         },
@@ -1533,6 +1563,16 @@ jmp p1
                 instructions,
                 &[0x42, 0x42, 0x41, 0x41, 0x41, 0x42, 0x42, 0xEb, 0xF7]
             );
+        }
+    );
+
+    test_compile!(
+        test_int_10h,
+        "
+            mov ax, bx
+            int 10h 
+        ", |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x8B, 0xC3, 0xCD, 0x10]);
         }
     );
 }

@@ -17,4 +17,6 @@ pub(crate) enum Instructions {
     Proc,
     EndP,
     Call,
+
+    Int
 }
