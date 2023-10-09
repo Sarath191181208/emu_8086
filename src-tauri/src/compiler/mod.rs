@@ -1571,7 +1571,8 @@ jmp p1
         "
             mov ax, bx
             int 10h 
-        ", |instructions: &Vec<u8>| {
+        ",
+        |instructions: &Vec<u8>| {
             assert_eq!(instructions, &[0x8B, 0xC3, 0xCD, 0x10]);
         }
     );

@@ -18,5 +18,5 @@ pub(crate) enum Instructions {
     EndP,
     Call,
 
-    Int
+    Int,
 }
