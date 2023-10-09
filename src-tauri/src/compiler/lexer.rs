@@ -7,7 +7,7 @@ use super::tokens::{
     registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens, Token,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Lexer {
     pub tokens: Vec<Vec<Token>>,
 }
@@ -211,5 +211,11 @@ impl Lexer {
         }
 
         None
+    }
+}
+
+impl Default for Lexer {
+    fn default() -> Self {
+        Self::new()
     }
 }

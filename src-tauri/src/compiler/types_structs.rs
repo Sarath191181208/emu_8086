@@ -42,7 +42,10 @@ pub type VariableReferenceList<'a> = Vec<(Label, VariableType, LineNumber, LineN
 pub type ProcDefinitionMap = HashMap<Label, ProcDefitionType>;
 pub type ProcOffsetDefinitionMap = HashMap<Label, Either<i8, i16>>;
 pub type ProcReferenceMap = HashMap<Label, ArrayIndex>;
-pub type ProcReferenceList = Vec<(Label, CompiledBytesIndexedLineNumber, LineNumber)>;
+pub(crate) type ProcReferenceList = Vec<(Label, Token, LineNumber, LineNumber)>;
+pub type ProcDefinitionLineNumberMap = HashMap<Label, (LineNumber, Option<LineNumber>)>;
+pub(crate) type MacroReferenceList = Vec<(Label, Token, LineNumber)>;
+pub(crate) type MacroBoundsDefintionMap = HashMap<Label, (ArrayIndex, ArrayIndex)>;
 
 // This struct is used to store the compiled bytes of the coverted line
 // for ex: MOV AX, BX

@@ -46,8 +46,9 @@ use self::{
     },
     types_structs::{
         ArrayIndex, CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap,
-        LabelRefrenceList, LineNumber, VariableAddressDefinitionMap, VariableAddressMap,
-        VariableReferenceList, VariableType,
+        LabelRefrenceList, LineNumber, MacroBoundsDefintionMap, MacroReferenceList,
+        ProcDefinitionLineNumberMap, ProcReferenceList, VariableAddressDefinitionMap,
+        VariableAddressMap, VariableReferenceList, VariableType,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -696,6 +697,10 @@ pub fn compile_lines(
         &mut label_ref,
         &mut var_addr_def_map,
         &mut var_ref,
+        &mut ProcDefinitionLineNumberMap::new(),
+        &mut ProcReferenceList::new(),
+        &mut MacroBoundsDefintionMap::new(),
+        &mut MacroReferenceList::new(),
     ) {
         Some(is_org_defined) => {
             let compiled_bytes = compiled_bytes_lines_vec.into_iter().flatten().collect();
@@ -722,7 +727,6 @@ pub fn compile_lines(
 
 type StartCompiledBytesIndexedLineNumber = LineNumber;
 type EndCompiledBytesIndexedLineNumber = LineNumber;
-type PlaceHolderVariable = Token;
 type ProcDefinitionStartAndEndBytesMap = HashMap<
     Label,
     (
@@ -730,7 +734,7 @@ type ProcDefinitionStartAndEndBytesMap = HashMap<
         Option<EndCompiledBytesIndexedLineNumber>,
     ),
 >;
-type MacroBoundsDefintionMap = HashMap<Label, (ArrayIndex, Option<ArrayIndex>)>;
+type MacroBoundsDefintionMapWithOption = HashMap<Label, (ArrayIndex, Option<ArrayIndex>)>;
 type TokenAndItsArrayIndex<'a> = Option<(&'a Assembly8086Tokens, usize)>;
 fn get_first_two_non_space_characters_token_types<'a>(
     line: &'a [&'a Token],
@@ -754,14 +758,16 @@ fn get_first_two_non_space_characters_token_types<'a>(
     (first, second)
 }
 
-fn find_macro_bounds(lexer: &Lexer) -> Result<MacroBoundsDefintionMap, Vec<CompilationError>> {
+fn find_macro_bounds(
+    lexer: &Lexer,
+) -> Result<MacroBoundsDefintionMapWithOption, Vec<CompilationError>> {
     // iterate lexer to find the macro bounds it should be in the form
     // character macro arguments
     // ....
     // ....
     // endm (or) character endm
 
-    let mut macro_defn_map: MacroBoundsDefintionMap = HashMap::new();
+    let mut macro_defn_map: MacroBoundsDefintionMapWithOption = HashMap::new();
     let mut current_macro_label = None;
     let mut compilaton_errors = Vec::<CompilationError>::new();
 
@@ -994,6 +1000,7 @@ fn get_parameter_to_argument<'a>(
 fn expand_macros(
     lexer: &mut Lexer,
     macro_bounds: HashMap<Label, (usize, usize)>,
+    macro_ref_list: &mut MacroReferenceList,
 ) -> Result<(), Vec<CompilationError>> {
     let mut compilation_errors = Vec::<CompilationError>::new();
     let mut changes: Vec<(usize, usize, Vec<Vec<Token>>)> = Vec::new();
@@ -1027,11 +1034,14 @@ fn expand_macros(
                 None => {
                     compilation_errors.push(CompilationError::error_with_token(
                         macro_label,
-                        "This shouldn't happen, Please report this! Error: 916 in expand macros",
+                        "This shouldn't happen, Unable to get macro bounds. Please report this! Error: 916 in expand macros",
                     ));
                     continue;
                 }
             };
+
+            macro_ref_list.push((macro_label_str.clone(), macro_label.clone(), line_number));
+
             let (start_idx, end_idx) = *macro_bounds;
             // convert vec<Toekn> to vec<&Token>
             let macro_ref_line_start = tokens_vec;
@@ -1086,13 +1096,11 @@ fn expand_macros(
             });
             if is_in_macro {
                 let mut tokens = tokens.clone();
-                for token in &mut tokens {
-                    *token = Token::new(
-                        Assembly8086Tokens::Comment,
-                        token.line_number,
-                        token.column_number,
-                        token.token_length,
-                    );
+                let first = tokens.first();
+                if let Some(first) = first {
+                    let mut first_clone = first.clone();
+                    first_clone.token_type = Assembly8086Tokens::Comment;
+                    tokens.insert(0, first_clone);
                 }
                 tokens
             } else {
@@ -1140,6 +1148,11 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
     label_ref: &mut LabelRefrenceList,
     var_addr_def_map: &mut VariableAddressDefinitionMap,
     var_ref: &mut VariableReferenceList,
+    proc_line_num_map: &mut ProcDefinitionLineNumberMap,
+    proc_ref_vec: &mut ProcReferenceList,
+
+    macro_line_num_map: &mut MacroBoundsDefintionMap,
+    macro_ref_list: &mut MacroReferenceList,
 ) -> Option<bool> {
     let is_org_defined = match is_org_defined(&lexer.tokens) {
         Ok(is_org_defined) => is_org_defined,
@@ -1185,12 +1198,13 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         Some(macro_bounds) => macro_bounds,
         None => return None,
     };
+    macro_line_num_map.extend(macro_bounds.clone());
 
     if !compilation_errors.is_empty() {
         return None;
     }
 
-    match expand_macros(lexer, macro_bounds) {
+    match expand_macros(lexer, macro_bounds, macro_ref_list) {
         Ok(()) => {}
         Err(err) => {
             compilation_errors.extend(err);
@@ -1205,7 +1219,6 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         HashMap::<Label, (VariableType, CompiledBytesIndexedLineNumber)>::new();
 
     let mut proc_compiled_bytes_line_number_map = ProcDefinitionStartAndEndBytesMap::new();
-    let mut proc_ref_vec = Vec::<(Label, PlaceHolderVariable, LineNumber, LineNumber)>::new();
 
     for (i, line) in lexer.tokens.iter().enumerate() {
         match compile(line, is_org_defined, None, None) {
@@ -1286,8 +1299,11 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                                 continue;
                             }
 
-                            proc_compiled_bytes_line_number_map
-                                .insert(label_key.clone(), (line_number, None));
+                            proc_compiled_bytes_line_number_map.insert(
+                                label_key.clone(),
+                                (line_number as CompiledBytesIndexedLineNumber, None),
+                            );
+                            proc_line_num_map.insert(label_key.clone(), (i as LineNumber, None));
                         }
                         ProcDefitionType::EndP => {
                             // error if didn't find a proc defintion
@@ -1319,6 +1335,12 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                             proc_compiled_bytes_line_number_map.insert(
                                 label_key.clone(),
                                 (already_defined_line_number, Some(line_number)),
+                            );
+                            let already_defined_line_number =
+                                proc_line_num_map.get(&label_key).unwrap_or(&(0, None)).0;
+                            proc_line_num_map.insert(
+                                label_key.clone(),
+                                (already_defined_line_number, Some(i as LineNumber)),
                             );
                         }
                     }
@@ -1492,7 +1514,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
     };
 
     // merge label_ref and proc_ref
-    label_ref.append(&mut proc_ref_vec);
+    label_ref.append(&mut proc_ref_vec.clone());
 
     match mark_labels(
         label_ref,
