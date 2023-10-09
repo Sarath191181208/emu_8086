@@ -12,7 +12,7 @@ use compiler::{
     utils::get_label_token_from_line,
 };
 use consts::Byte;
-use cpu::CPU;
+use cpu::{CPU, interrupt::Interrupt};
 use memory::Memory;
 use std::sync::{Arc, Mutex};
 use tauri::State;
@@ -37,12 +37,12 @@ struct MutableCpu(Arc<Mutex<CPU>>);
 struct MutableMem(Arc<Mutex<Memory>>);
 
 #[tauri::command]
-fn next(cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem>) -> (CPU, MemoryChanges) {
+fn next(cpu: State<'_, MutableCpu>, mem: State<'_, MutableMem>) -> (CPU, Option<Interrupt>, MemoryChanges) {
     let mut cpu = cpu.0.lock().unwrap();
     let mut mem = mem.0.lock().unwrap();
-    cpu.execute(&mut mem);
+    let interrupt = cpu.execute(&mut mem);
 
-    (*cpu, mem.get_recent_new_bytes())
+    (*cpu, interrupt, mem.get_recent_new_bytes())
 }
 
 #[tauri::command]
