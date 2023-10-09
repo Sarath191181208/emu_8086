@@ -13,17 +13,9 @@ import { Interrupt } from "./types/interrupts";
 export type BottomBarStates = "Memory"   | "Collapsed" | "Display";
 
 function App() {
-  const [wirteString, setWirteString] = useState<string>("");
   const [bottomBarState, setBottomBarState] =
     useState<BottomBarStates>("Memory");
-
-  const interruptHandler = (interrupt: Interrupt) => {
-    // if (interrupt)
-    if (interrupt.type === "Print") {
-      setWirteString((prev) => prev + interrupt.value);
-    }
-  };
-
+  
   const {
     registers,
     prevRegistersRef,
@@ -33,13 +25,15 @@ function App() {
     editorRef,
     monacoRef,
 
+    wirteString,
+
     languageCompletionProvider,
     langDefinitionProvider,
 
     compileCode,
     nextPressed,
     tryCompile,
-  } = useApp({ interruptHandler });
+  } = useApp();
 
   return (
     <>
@@ -88,6 +82,7 @@ function App() {
             memoryIndex={
               registers.instruction_pointer + registers.code_segment * 0x10
             }
+            writeString={wirteString}
             prevMemAddrValueMap={prevMemoryRef.current}
             memAddrValueMap={memory}
             bottomBarState={bottomBarState}

@@ -21,11 +21,7 @@ import {
 } from "../types/token_position";
 import { Interrupt, InterruptType } from "../types/interrupts";
 
-export function useApp({
-  interruptHandler,
-}: {
-  interruptHandler: (interrupt: Interrupt) => void;
-}) {
+export function useApp() {
   const [memory, setMemory, prevMemoryRef] = useStateSavePrevious<
     Map<ArrayIndex, Byte>
   >(new Map<ArrayIndex, Byte>());
@@ -168,7 +164,7 @@ export function useApp({
         memClone.set(index, value);
       }
       setMemory(memClone);
-
+      setWirteString("");
       setRegisters(extractCPUData(regs));
       clearErrorsOnEditor();
       setFlags(extractFlags(regs));
@@ -189,17 +185,15 @@ export function useApp({
       let intermediateInturrupt = result[1];
       let interrupt: Interrupt | null = null;
       if (intermediateInturrupt !== null) {
-        // convert Print : value to
-        // {
-        //   type: "print",
-        //   value: value,
-        // }
         let key = Object.keys(intermediateInturrupt)[0];
         let value = intermediateInturrupt[key];
+        console.log(value);
+        console.log(typeof value);
         interrupt = {
           type: key as InterruptType,
           value: value,
         };
+        interruptHandler(interrupt);
       }
 
       const memoryChanges = result[2];
@@ -335,6 +329,15 @@ export function useApp({
     },
   };
 
+  const [wirteString, setWirteString] = useState<string>("");
+
+  const interruptHandler = (interrupt: Interrupt) => {
+    // if (interrupt)
+    if (interrupt.type === "Print") {
+      setWirteString((prev) => prev + interrupt.value);
+    }
+  };
+
   return {
     registers,
     flags,
@@ -345,6 +348,8 @@ export function useApp({
     prevMemoryRef,
     editorRef,
     monacoRef,
+
+    wirteString,
 
     languageCompletionProvider,
     langDefinitionProvider,
