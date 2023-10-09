@@ -2,27 +2,31 @@
 - [ ] For same parameter names in macro definitions.
 - [ ] Unused macros.
 ## To support: 
+- [ ] Support Some `interrupts`.
+- [ ] Support for ctrl + click for procs and macros.
+- [ ] inline macro editor fn.
+- [ ] creating a formatter.
+- [ ] Fix Running of macros.
 - [x] add support for addressing mode 
 - [x] add the labels into the symbol table
 - [x] add calc offset in compile itself 
 - [x] parse the data segments
 - [x] Make `loop` ins work.
-- [ ] Implement `PROC` work.
+- [=] Implement `PROC` work.
   - [ ] Make the `HTL` compilation.
   - [ ] Make the `HTL` execution.
   - [x] Make the `RET` compilation.
   - [x] Make the `RET` execution.
   - [x] Make the `CALL` compilation.
-  - [ ] Make the `CALL` execution.
+  - [x] Make the `CALL` execution.
 - [ ] Make Different `JMP` work.
-- [ ] Support Some `interrupts`.
 - [ ] 🐞: Data in memeory doesn't change after second compilation.
 - [ ] Create a commmit interface for timestamp making mem and cpu work easily.
 - [ ] support bin numbers
 - [ ] support var ptr declearation
 - [ ] Look into the .CODE crash
 - [ ] Look into why CX is loded with some value 
--[ ] Setting up a CI/CD pipeline
+-[ ] Setting up a CI/CD pipeline for frontend.
 -[ ] Adding more addressing modes to 
     - [ ] MOV
     - [ ] ADD
