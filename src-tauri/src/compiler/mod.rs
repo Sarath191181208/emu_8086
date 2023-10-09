@@ -385,6 +385,18 @@ fn compile(
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i + 1, "INT", 1)?;
                 Ok(compiled_line)
             }
+            Instructions::Iret => {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                       token => vec![0xCF]
+                    )
+                );
+                i += 1;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "IRET", 0)?;
+                Ok(compiled_line)
+            },
         },
         Assembly8086Tokens::AssemblerDirectives(_) => Ok(compiled_line),
 
