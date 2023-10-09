@@ -10,6 +10,7 @@ pub mod call;
 pub mod loop_ins;
 pub mod ret;
 pub mod int;
+pub mod iret;
 
 pub mod test_macro;
 
