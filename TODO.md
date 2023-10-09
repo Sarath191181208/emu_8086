@@ -6,6 +6,7 @@
 - [ ] Support for ctrl + click for procs and macros.
 - [ ] inline macro editor fn.
 - [ ] creating a formatter.
+- [ ] Change interrupt flag name to `INTERRUPT_FLAG`.
 - [ ] Fix Running of macros.
 - [x] add support for addressing mode 
 - [x] add the labels into the symbol table
