@@ -4,7 +4,10 @@ use crate::{
     consts::{Byte, Word, U20},
     Memory,
 };
+
+use self::interrupt::Interrupt;
 pub mod instructions;
+pub mod interrupt;
 pub(in crate::cpu) mod utils;
 
 macro_rules! generate_byte_access_methods {
@@ -135,6 +138,10 @@ impl CPU {
         self.code_segment
     }
 
+    pub fn set_code_segment(&mut self, value: Word) {
+        self.code_segment = value;
+    }
+
     pub fn set_org_defined(&mut self) {
         self.instruction_pointer = 0x100;
         self.code_segment = 0x700;
@@ -170,6 +177,8 @@ impl CPU {
         self.extra_segment = 0x0100;
 
         mem.reset();
+        self.write_0x10_interrupt_procedure(mem);
+        self.write_0x21_interrupt_procedure(mem);
     }
 
     fn consume_instruction(&mut self, mem: &Memory) -> Byte {
@@ -196,7 +205,7 @@ impl CPU {
         let _ = self.consume_instruction(mem);
     }
 
-    pub fn execute(&mut self, mem: &mut Memory) {
+    pub fn execute(&mut self, mem: &mut Memory) -> Option<Interrupt> {
         let opcode = self.consume_instruction(mem);
         match opcode {
             0x00 => self.execute_add_address_and_8bit_register(mem),
@@ -309,6 +318,9 @@ impl CPU {
                 }
             }
 
+            // INT
+            0xCD => self.execute_interrupt(mem),
+
             0xE2 => self.execute_loop_8bit(mem),
             0xE3 => self.execute_jmp_if_cx_zero_8bit(mem),
 
@@ -371,11 +383,17 @@ impl CPU {
                     0x0E => self.execute_dec_address_16bit(mem),
                     // JMP [0x1234]
                     0x26 => self.execute_jmp_abs_address(mem),
+                    // BIOS DI
+                    0xFF => {
+                        let int = self.execute_bios_di(mem);
+                        return Some(int);
+                    }
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFF", opcode),
                 }
             }
             _ => unimplemented!("Unimplemented opcode: {:X}", opcode),
         }
+        None
     }
 }
 
@@ -431,5 +449,26 @@ impl CPU {
         let sp = self.stack_pointer.wrapping_sub(2);
         mem.write_word(self.stack_segment, sp, value);
         self.stack_pointer = sp;
+    }
+
+    #[allow(dead_code)]
+    fn print_stack(&self, mem: &Memory) {
+        // print all the valus starting from sp and ending with 0xFFFF
+        // ----------
+        // |   val  |
+        // ----------
+        // |   val  |
+        // ----------
+        println!("                |------------|");
+
+        // go from 0xFFFE to sp
+        for sp in (self.stack_pointer..0xFFFF).step_by(2).rev() {
+            let value = self.read_word_from_pointer(mem, sp);
+            println!(
+                "0x{:04X}: 0x{:04X}: |   0x{:04X}   |",
+                self.stack_segment, sp, value
+            );
+            println!("                |------------|");
+        }
     }
 }

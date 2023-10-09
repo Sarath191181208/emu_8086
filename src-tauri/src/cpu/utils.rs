@@ -171,6 +171,18 @@ impl CPU {
     }
 }
 
+macro_rules! bools_to_u16 {
+    ($($bools:expr),*) => {{
+        let mut val: u16 = 0;
+        let mut i: usize = 0;
+        $(
+                val |= ($bools as u16) << i;
+            i += 1;
+        )*
+        val
+    }}
+}
+
 impl CPU {
     pub(in crate::cpu) fn get_flags_as_binary(&self) -> u8 {
         let mut flags: u8 = 0;
@@ -183,5 +195,24 @@ impl CPU {
         flags |= (self.interrupt_disable_flag as u8) << 6;
         flags |= (self.direction_flag as u8) << 7;
         flags
+    }
+
+    pub(in crate::cpu) fn get_flags_as_16bit_number(&self) -> u16 {
+        bools_to_u16!(
+            (self.carry_flag),
+            true,
+            (self.pairity_flag),
+            false,
+            false,
+            (self.auxiliary_carry_flag),
+            false,
+            (self.zero_flag),
+            (self.negative_flag),
+            false,
+            false,
+            (!self.interrupt_disable_flag),
+            (self.direction_flag),
+            (self.overflow_flag)
+        )
     }
 }

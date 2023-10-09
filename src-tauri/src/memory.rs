@@ -28,7 +28,7 @@ impl Memory {
     }
 
     fn get_addr(&self, segment: u16, address: u16) -> usize {
-        (((segment * 0x10) as u32) + (address as u32)) as usize
+        ((segment as u32 * 0x10) + (address as u32)) as usize
     }
 
     fn push_history(&mut self, time: usize, index_old_new_values_pairs: Vec<(usize, Byte, Byte)>) {

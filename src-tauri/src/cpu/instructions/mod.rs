@@ -9,6 +9,8 @@ pub mod sub;
 pub mod call;
 pub mod loop_ins;
 pub mod ret;
+pub mod int;
+
 pub mod test_macro;
 
 pub(in crate::cpu::instructions) mod utils;
