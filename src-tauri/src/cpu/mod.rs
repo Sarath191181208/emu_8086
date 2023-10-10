@@ -5,9 +5,10 @@ use crate::{
     Memory,
 };
 
-use self::interrupt::Interrupt;
+use self::{interrupt::Interrupt, ports_handler::Ports};
 pub mod instructions;
 pub mod interrupt;
+pub mod ports_handler;
 pub(in crate::cpu) mod utils;
 
 macro_rules! generate_byte_access_methods {
@@ -68,6 +69,9 @@ pub struct CPU {
     auxiliary_carry_flag: bool,
     interrupt_disable_flag: bool,
     direction_flag: bool,
+
+    // Ports
+    pub ports: Ports,
 }
 
 impl CPU {
@@ -75,6 +79,43 @@ impl CPU {
     generate_byte_access_methods!(bx);
     generate_byte_access_methods!(cx);
     generate_byte_access_methods!(dx);
+
+    pub fn get_instruciton_pointer(&self) -> Word {
+        self.instruction_pointer
+    }
+
+    pub(self) fn set_instruction_pointer(&mut self, value: Word) {
+        self.instruction_pointer = value;
+    }
+
+    pub(self) fn set_instruction_pointer_from_16bitoffset(&mut self, offset: Word) {
+        if offset & 0x8000 != 0 {
+            let offset = 0xFFFF - offset + 1;
+            self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset);
+        } else {
+            self.instruction_pointer = self.instruction_pointer.wrapping_add(offset);
+        }
+    }
+
+    pub(self) fn set_cx(&mut self, value: Word) {
+        self.cx = value;
+    }
+
+    pub fn get_code_segment(&self) -> Word {
+        self.code_segment
+    }
+
+    pub fn set_code_segment(&mut self, value: Word) {
+        self.code_segment = value;
+    }
+
+    pub fn get_port(&self, port: Byte) -> Byte {
+        self.ports.get(port)
+    }
+
+    pub fn set_port(&mut self, port: Byte, value: Byte) {
+        self.ports.set(port, value);
+    }
 }
 
 impl Default for CPU {
@@ -110,44 +151,9 @@ impl CPU {
             direction_flag: false,
             overflow_flag: false,
             negative_flag: false,
+
+            ports: Ports::new(),
         }
-    }
-
-    pub fn get_instruciton_pointer(&self) -> Word {
-        self.instruction_pointer
-    }
-
-    pub(self) fn set_instruction_pointer(&mut self, value: Word) {
-        self.instruction_pointer = value;
-    }
-
-    pub(self) fn set_instruction_pointer_from_16bitoffset(&mut self, offset: Word) {
-        if offset & 0x8000 != 0 {
-            let offset = 0xFFFF - offset + 1;
-            self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset);
-        } else {
-            self.instruction_pointer = self.instruction_pointer.wrapping_add(offset);
-        }
-    }
-
-    pub(self) fn set_cx(&mut self, value: Word) {
-        self.cx = value;
-    }
-
-    pub fn get_code_segment(&self) -> Word {
-        self.code_segment
-    }
-
-    pub fn set_code_segment(&mut self, value: Word) {
-        self.code_segment = value;
-    }
-
-    pub fn set_org_defined(&mut self) {
-        self.instruction_pointer = 0x100;
-        self.code_segment = 0x700;
-        self.data_segment = 0x700;
-        self.stack_segment = 0x700;
-        self.extra_segment = 0x700;
     }
 
     pub fn reset(&mut self, mem: &mut Memory) {
@@ -179,6 +185,14 @@ impl CPU {
         mem.reset();
         self.write_0x10_interrupt_procedure(mem);
         self.write_0x21_interrupt_procedure(mem);
+    }
+
+    pub fn set_org_defined(&mut self) {
+        self.instruction_pointer = 0x100;
+        self.code_segment = 0x700;
+        self.data_segment = 0x700;
+        self.stack_segment = 0x700;
+        self.extra_segment = 0x700;
     }
 
     fn consume_instruction(&mut self, mem: &Memory) -> Byte {
