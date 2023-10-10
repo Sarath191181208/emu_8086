@@ -97,6 +97,10 @@ impl CPU {
         }
     }
 
+    pub(self) fn set_ax(&mut self, value: Word) {
+        self.ax = value;
+    }
+
     pub(self) fn set_cx(&mut self, value: Word) {
         self.cx = value;
     }
@@ -111,6 +115,12 @@ impl CPU {
 
     pub fn get_port(&self, port: Byte) -> Byte {
         self.ports.get(port)
+    }
+
+    pub fn get_port_word(&self, port: Byte) -> Word {
+        let low_byte = self.get_port(port);
+        let high_byte = self.get_port(port + 1);
+        ((high_byte as Word) << 8) | (low_byte as Word)
     }
 
     pub fn set_port(&mut self, port: Byte, value: Byte) {
@@ -341,6 +351,10 @@ impl CPU {
             0xE2 => self.execute_loop_8bit(mem),
             0xE3 => self.execute_jmp_if_cx_zero_8bit(mem),
 
+            // IN
+            0xE4 => self.execute_in_al_8bit(mem),
+            0xE5 => self.execute_in_ax_8bit(mem),
+
             // CALL 16 bit address
             0xE8 => self.execute_call_and_16bitaddr(mem),
 
@@ -349,6 +363,10 @@ impl CPU {
 
             // JMP 8bit register
             0xEB => self.execute_jmp_8bit(mem),
+
+            // IN AL, DX
+            0xEC => self.execute_in_al_dx(),
+            0xED => self.execute_in_ax_dx(),
 
             // HLT
             0xF4 => {

@@ -7,6 +7,7 @@ pub mod mul;
 pub mod sub;
 
 pub mod call;
+pub mod in_compilation;
 pub mod int;
 pub mod iret;
 pub mod loop_ins;
