@@ -41,7 +41,7 @@ mod tests {
             int 0x21
 ",
             3,
-            |cpu: &CPU, mem: &Memory| {
+            |cpu: &CPU, _mem: &Memory| {
                 // cpu.print_stack(mem);
                 assert_eq!(cpu.get_code_segment(), 0xF400);
                 assert_eq!(cpu.get_instruciton_pointer(), 0x204);

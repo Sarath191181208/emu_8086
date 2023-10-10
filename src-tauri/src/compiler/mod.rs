@@ -36,9 +36,9 @@ use self::{
         is_org_defined,
     },
     parsers::{
-        add::parse_add, call::parse_call, dec::parse_dec, inc::parse_inc, jmp::parse_jmp,
-        loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, sub::parse_sub,
-        utils::iterate_with_seperator, var::parse_var_declaration,
+        add::parse_add, call::parse_call, dec::parse_dec, in_ins::parse_in, inc::parse_inc,
+        jmp::parse_jmp, loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, sub::parse_sub,
+        utils::iterate_with_seperator, var::parse_var_declaration, out_ins::parse_out,
     },
     tokenized_line::TokenizedLine,
     tokens::{
@@ -396,6 +396,16 @@ fn compile(
                 );
                 i += 1;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "IRET", 0)?;
+                Ok(compiled_line)
+            }
+            Instructions::In => {
+                i = parse_in(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "IN", 2)?;
+                Ok(compiled_line)
+            }
+            Instructions::Out => {
+                i = parse_out(&tokenized_line, i, compiled_bytes, compiled_bytes_ref)?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "OUT", 2)?;
                 Ok(compiled_line)
             }
         },

@@ -20,4 +20,7 @@ pub(crate) enum Instructions {
 
     Int,
     Iret,
+
+    In,
+    Out
 }
