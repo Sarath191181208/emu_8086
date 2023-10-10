@@ -115,26 +115,24 @@ pub(in crate::compiler) fn parse_out(
 mod tests {
     use crate::{compiler::compile_str, test_compile};
 
-    test_compile!(out_num_al, &format!(" OUT 0x80, AL",), |instructions: &Vec<
-        u8,
-    >| {
-        assert_eq!(instructions, &vec![0xE6, 0x80])
-    });
+    test_compile!(
+        out_num_al,
+        &format!(" OUT 0x80, AL",),
+        |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xE6, 0x80]) }
+    );
 
-    
-    test_compile!(out_num_ax, &format!(" OUT 0x80, AX",), |instructions: &Vec<
-        u8,
-    >| {
-        assert_eq!(instructions, &vec![0xE7, 0x80])
-    });
+    test_compile!(
+        out_num_ax,
+        &format!(" OUT 0x80, AX",),
+        |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xE7, 0x80]) }
+    );
 
-    
     test_compile!(out_dx_al, &format!(" OUT DX, AL",), |instructions: &Vec<
         u8,
     >| {
         assert_eq!(instructions, &vec![0xEE])
     });
-    
+
     test_compile!(out_dx_ax, &format!(" OUT DX, AX",), |instructions: &Vec<
         u8,
     >| {

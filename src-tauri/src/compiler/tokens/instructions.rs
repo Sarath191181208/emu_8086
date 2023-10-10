@@ -22,5 +22,5 @@ pub(crate) enum Instructions {
     Iret,
 
     In,
-    Out
+    Out,
 }
