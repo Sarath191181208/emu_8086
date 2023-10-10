@@ -59,8 +59,13 @@ interface FlagsShort {
   DF: boolean;
 }
 
+interface Ports{
+  [key: string]: number[];
+  ports: number[],
+}
+
 type Registers16BitNotGeneral = PointerRegisters & SegmentRegisters;
-type CPUData = GeneralPurposeRegisters & PointerRegisters & SegmentRegisters;
+type CPUData = GeneralPurposeRegisters & PointerRegisters & SegmentRegisters & Ports;
 
 export function findKeysOfNotMatchingregisters16BitNotGeneral(
   registers: Registers16BitNotGeneral,
@@ -75,6 +80,7 @@ export function findKeysOfNotMatchingregisters16BitNotGeneral(
 
 export type {
   CPUData,
+  Ports,
   GeneralPurposeRegisters,
   PointerRegisters,
   SegmentRegisters,
