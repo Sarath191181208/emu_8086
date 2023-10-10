@@ -127,7 +127,7 @@ impl CPU {
         self.ports.set(port, value);
     }
 
-    pub fn set_port_word(&mut self, port: Byte, value: Word){
+    pub fn set_port_word(&mut self, port: Byte, value: Word) {
         let low_byte = value as Byte;
         let high_byte = (value >> 8) as Byte;
         self.set_port(port, low_byte);
@@ -362,6 +362,10 @@ impl CPU {
             0xE4 => self.execute_in_al_8bit(mem),
             0xE5 => self.execute_in_ax_8bit(mem),
 
+            // OUT
+            0xE6 => self.execute_out_8bit_al(mem),
+            0xE7 => self.execute_out_8bit_ax(mem),
+
             // CALL 16 bit address
             0xE8 => self.execute_call_and_16bitaddr(mem),
 
@@ -374,6 +378,10 @@ impl CPU {
             // IN AL, DX
             0xEC => self.execute_in_al_dx(),
             0xED => self.execute_in_ax_dx(),
+
+            // OUT DX, AL
+            0xEE => self.execute_out_dx_al(),
+            0xEF => self.execute_out_dx_ax(),
 
             // HLT
             0xF4 => {

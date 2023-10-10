@@ -51,3 +51,13 @@ impl Ports {
         self.list[port as usize] = value;
     }
 }
+
+impl Ports {
+    pub fn print_non_empty_prots(&self) {
+        for (i, port) in self.list.iter().enumerate() {
+            if *port != 0 {
+                println!("Port: {:#X} Value: {:#X}", i, port);
+            }
+        }
+    }
+}
