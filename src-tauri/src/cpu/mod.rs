@@ -126,6 +126,13 @@ impl CPU {
     pub fn set_port(&mut self, port: Byte, value: Byte) {
         self.ports.set(port, value);
     }
+
+    pub fn set_port_word(&mut self, port: Byte, value: Word){
+        let low_byte = value as Byte;
+        let high_byte = (value >> 8) as Byte;
+        self.set_port(port, low_byte);
+        self.set_port(port + 1, high_byte);
+    }
 }
 
 impl Default for CPU {
