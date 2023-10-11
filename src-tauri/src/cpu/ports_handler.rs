@@ -43,6 +43,10 @@ impl Ports {
         Self { list: [0; 0xFF] }
     }
 
+    pub fn reset(&mut self){
+        self.list = [0; 0xFF];
+    }
+
     pub fn get(&self, port: u8) -> u8 {
         self.list[port as usize]
     }

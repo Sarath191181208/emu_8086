@@ -199,6 +199,7 @@ impl CPU {
         self.data_segment = 0x0100;
         self.extra_segment = 0x0100;
 
+        self.ports.reset();
         mem.reset();
         self.write_0x10_interrupt_procedure(mem);
         self.write_0x21_interrupt_procedure(mem);
