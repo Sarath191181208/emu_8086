@@ -27,7 +27,7 @@ export function useApp() {
   >(new Map<ArrayIndex, Byte>());
 
   const [registers, setRegisters, prevRegistersRef] =
-    useStateSavePrevious<CPUData>(getDefaultRegisters());
+    useStateSavePrevious<CPUData>({...getDefaultRegisters(), ...getDefaultPorts()} );
   const compiledBytesRef = useRef<Array<CompiledBytes>>();
   const [flags, setFlags, _] = useStateSavePrevious<Flags>(getDefaultFlags());
 
@@ -187,8 +187,6 @@ export function useApp() {
       if (intermediateInturrupt !== null) {
         let key = Object.keys(intermediateInturrupt)[0];
         let value = intermediateInturrupt[key];
-        console.log(value);
-        console.log(typeof value);
         interrupt = {
           type: key as InterruptType,
           value: value,
@@ -360,6 +358,10 @@ export function useApp() {
   };
 }
 
+
+function getDefaultPorts(): CPUData {
+  throw new Error("Function not implemented.");
+}
 // function getCompiletion(
 //   range: {
 //     startLineNumber: number;

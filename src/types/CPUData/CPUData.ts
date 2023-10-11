@@ -60,7 +60,7 @@ interface FlagsShort {
 }
 
 interface Ports{
-  [key: string]: number[];
+  // [key: string]: number[];
   ports: number[],
 }
 

@@ -1,4 +1,4 @@
-import { Flags, GeneralPurposeRegisters, PointerRegisters, SegmentRegisters } from "./CPUData";
+import { Flags, GeneralPurposeRegisters, PointerRegisters, Ports, SegmentRegisters } from "./CPUData";
 
 export function getDefaultGeneralPurposeRegisters(): GeneralPurposeRegisters {
   return {
@@ -37,6 +37,12 @@ export function getDefaultRegisters(): GeneralPurposeRegisters &
     ...getDefaultSegmentRegisters(),
     // ...defaultFlags,
   };
+}
+
+function getDefaultPorts(): Ports{
+  return {
+    ports: Array(0xFF).fill(0),
+  }
 }
 
 function getDefaultFlags(): Flags {
