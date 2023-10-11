@@ -8,14 +8,14 @@ import { RegistersTableView } from "./Components/RegisterView";
 import { BottomBar } from "./Components/MemoryBottombar";
 import { useApp } from "./hooks/useApp";
 import { useState } from "react";
-import { Interrupt } from "./types/interrupts";
+import { ButtonOnPort } from "./ButtonOnPort";
 
-export type BottomBarStates = "Memory"   | "Collapsed" | "Display";
+export type BottomBarStates = "Memory" | "Collapsed" | "Display";
 
 function App() {
   const [bottomBarState, setBottomBarState] =
     useState<BottomBarStates>("Memory");
-  
+
   const {
     registers,
     prevRegistersRef,
@@ -41,6 +41,12 @@ function App() {
         compileCode={compileCode}
         nextPressed={nextPressed}
         className="mb-5"
+      />
+      <ButtonOnPort
+        readPortValue={registers.ports[0x80]}
+        writeToPortFn={function (_: number): void {
+          throw new Error("Function not implemented.");
+        }}
       />
       <div className="flex gap-4 overflow-hidden">
         <div className="relative col-span-4 w-full">

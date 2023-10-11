@@ -39,7 +39,7 @@ export function getDefaultRegisters(): GeneralPurposeRegisters &
   };
 }
 
-function getDefaultPorts(): Ports{
+export function getDefaultPorts(): Ports{
   return {
     ports: Array(0xFF).fill(0),
   }

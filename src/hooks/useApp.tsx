@@ -6,6 +6,7 @@ import { extractCPUData, extractFlags } from "../types/CPUData/extract";
 import {
   getDefaultRegisters,
   getDefaultFlags,
+  getDefaultPorts,
 } from "../types/CPUData/getDefaultRegistersAndFlags";
 import { useStateSavePrevious } from "./useStateSavePrevious";
 import { languages } from "monaco-editor/esm/vs/editor/editor.api";
@@ -27,7 +28,7 @@ export function useApp() {
   >(new Map<ArrayIndex, Byte>());
 
   const [registers, setRegisters, prevRegistersRef] =
-    useStateSavePrevious<CPUData>({...getDefaultRegisters(), ...getDefaultPorts()} );
+    useStateSavePrevious<CPUData>({...getDefaultRegisters(), ...getDefaultPorts()} as CPUData);
   const compiledBytesRef = useRef<Array<CompiledBytes>>();
   const [flags, setFlags, _] = useStateSavePrevious<Flags>(getDefaultFlags());
 
@@ -358,10 +359,6 @@ export function useApp() {
   };
 }
 
-
-function getDefaultPorts(): CPUData {
-  throw new Error("Function not implemented.");
-}
 // function getCompiletion(
 //   range: {
 //     startLineNumber: number;
