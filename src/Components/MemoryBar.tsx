@@ -1,89 +1,6 @@
-import { useState, useEffect } from "react";
-import { BottomBarStates } from "../App";
+import { useEffect, useState } from "react";
 
-export function BottomBar({
-  bottomBarState,
-  setBottomBarState,
-  memAddrValueMap,
-  prevMemAddrValueMap,
-  memoryIndex,
-  writeString,
-  className = "",
-}: {
-  bottomBarState: BottomBarStates;
-  setBottomBarState: (bottomBarState: BottomBarStates) => void;
-  memAddrValueMap: Map<ArrayIndex, Byte>;
-  prevMemAddrValueMap: Map<ArrayIndex, Byte>;
-  memoryIndex: ArrayIndex;
-  writeString: string;
-  className?: string;
-}) {
-  return (
-    <div className={"absolute w-full " + className}>
-      {bottomBarState != "Collapsed" && (
-        <div
-          className={`absolute w-full h-52 pointer-events-auto opacity-100
-        left-0 bottom-8 border border-black/20 dark:border-white/20
-        transition-all duration-500 ease-in-out bg-slate-800
-        `}
-        >
-          <div className="absolute right-0 top-0">
-            <button
-              className="pr-2"
-              onClick={() => setBottomBarState("Collapsed")}
-            >
-              X
-            </button>
-          </div>
-          <div className="h-full px-5 overflow-y-hidden">
-            {bottomBarState == "Memory" ? (
-              <MemoryBottombar
-                key="memory-bottom-bar"
-                memoryIndex={memoryIndex}
-                prevMemAddrValueMap={prevMemAddrValueMap}
-                memAddrValueMap={memAddrValueMap}
-              />
-            ) : (
-              <></>
-            )}
-            {bottomBarState == "Display" ? (
-              <Display key="display-bottom-bar" field={writeString} />
-            ) : (
-              <></>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Navigation bar of the Bottom Bar */}
-      <div className="w-full flex absolute bottom-0 bg-slate-800 pl-5 overflow-x-hidden">
-        <button
-          className="max-w-md text-xs p-2"
-          onClick={() => {
-            setBottomBarState(
-              bottomBarState === "Memory" ? "Collapsed" : "Memory"
-            );
-          }}
-        >
-          {bottomBarState == "Memory" ? "Hide" : "Show"} Memory
-        </button>
-
-        <button
-          className="max-w-md text-xs p-2"
-          onClick={() => {
-            setBottomBarState(
-              bottomBarState === "Display" ? "Collapsed" : "Display"
-            );
-          }}
-        >
-          {bottomBarState == "Display" ? "Hide" : "Show"} Display
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function MemoryBottombar({
+export function MemoryBottombar({
   memAddrValueMap,
   prevMemAddrValueMap,
   memoryIndex,
@@ -235,26 +152,5 @@ function MemoryBottombar({
           ))}
       </div>
     </>
-  );
-}
-
-function Display({
-  className = "",
-  field,
-}: {
-  className?: string;
-  field: string;
-}) {
-  return (
-    <div
-      className={"bg-slate-800 text-slate-400 h-full w-full flex flex-col " + className}
-    >
-      {/* show a Output headding */}
-      <div className="text-center text-lg font-semibold p-2">Output:</div>
-      {/* show the output */}
-      <div className="flex-1 p-2 overflow-y-auto">
-        <div className="text-sm">{field}</div>
-      </div>
-    </div>
   );
 }

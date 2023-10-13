@@ -5,10 +5,12 @@ import { Editor } from "@monaco-editor/react";
 import { langConfiguration, langRules, langTheme } from "./langRules";
 import { Navbar } from "./Components/Navbar";
 import { RegistersTableView } from "./Components/RegisterView";
-import { BottomBar } from "./Components/MemoryBottombar";
+import { BottomBar } from "./Components/BottomBar";
 import { useApp } from "./hooks/useApp";
 import { useState } from "react";
 import { ButtonOnPort } from "./ButtonOnPort";
+import { MemoryBottombar } from "./Components/MemoryBar";
+import { OutputDisplay } from "./Components/OutputDisplay";
 
 export type BottomBarStates = "Memory" | "Collapsed" | "Display";
 
@@ -33,6 +35,7 @@ function App() {
     compileCode,
     nextPressed,
     tryCompile,
+    setPort,
   } = useApp();
 
   return (
@@ -41,12 +44,6 @@ function App() {
         compileCode={compileCode}
         nextPressed={nextPressed}
         className="mb-5"
-      />
-      <ButtonOnPort
-        readPortValue={registers.ports[0x80]}
-        writeToPortFn={function (_: number): void {
-          throw new Error("Function not implemented.");
-        }}
       />
       <div className="flex gap-4 overflow-hidden">
         <div className="relative col-span-4 w-full">
@@ -85,14 +82,22 @@ function App() {
           {/* create a toggle button that creates a white screen when pressed that's on top of editor */}
           <BottomBar
             key="memory-bottom-bar"
-            memoryIndex={
-              registers.instruction_pointer + registers.code_segment * 0x10
-            }
-            writeString={wirteString}
-            prevMemAddrValueMap={prevMemoryRef.current}
-            memAddrValueMap={memory}
             bottomBarState={bottomBarState}
             setBottomBarState={setBottomBarState}
+            stateToComponentMap={{
+              Memory: (
+                <MemoryBottombar
+                  memAddrValueMap={memory}
+                  prevMemAddrValueMap={prevMemoryRef.current}
+                  memoryIndex={
+                    registers.instruction_pointer +
+                    registers.code_segment * 0x10
+                  }
+                />
+              ),
+              Display: <OutputDisplay field={wirteString}/>,
+              Collapsed: <></>,
+            }}
           />
         </div>
         <RegistersTableView
