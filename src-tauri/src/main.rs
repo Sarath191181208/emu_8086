@@ -42,6 +42,29 @@ struct MutableCpu(Arc<Mutex<CPU>>);
 struct MutableMem(Arc<Mutex<Memory>>);
 
 #[tauri::command]
+fn set_port(
+    cpu: State<'_, MutableCpu>,
+    port: u8,
+    value: Vec<u8>,
+) -> Result<CPU, String> {
+    let mut cpu = cpu.0.lock().unwrap();
+    if value.len() <1{
+        return Err("Value must be at least 1 byte".to_string());
+    }
+
+    if value.len() == 1{
+        cpu.set_port(port, *value.first().unwrap())
+    }else{
+        let mut val: u16 = 0;
+        val |= value[0] as u16;
+        val |= (value[1] as u16) << 8;
+        cpu.set_port_word(port, val);
+    }
+
+    Ok(*cpu)
+}
+
+#[tauri::command]
 fn next(
     cpu: State<'_, MutableCpu>,
     mem: State<'_, MutableMem>,
@@ -188,7 +211,8 @@ fn main() {
             try_compile_code,
             get_label_and_var_address_definitions,
             compile_code,
-            next
+            next,
+            set_port
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

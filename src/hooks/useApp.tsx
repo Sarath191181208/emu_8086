@@ -28,7 +28,10 @@ export function useApp() {
   >(new Map<ArrayIndex, Byte>());
 
   const [registers, setRegisters, prevRegistersRef] =
-    useStateSavePrevious<CPUData>({...getDefaultRegisters(), ...getDefaultPorts()} as CPUData);
+    useStateSavePrevious<CPUData>({
+      ...getDefaultRegisters(),
+      ...getDefaultPorts(),
+    } as CPUData);
   const compiledBytesRef = useRef<Array<CompiledBytes>>();
   const [flags, setFlags, _] = useStateSavePrevious<Flags>(getDefaultFlags());
 
@@ -167,8 +170,8 @@ export function useApp() {
       setMemory(memClone);
       setWirteString("");
       setRegisters(extractCPUData(regs));
-      clearErrorsOnEditor();
       setFlags(extractFlags(regs));
+      clearErrorsOnEditor();
     } catch (e) {
       setErrorsOnEditor(e);
     }
@@ -212,6 +215,17 @@ export function useApp() {
       // setErrorsOnEditor(e);
       // TODO: handle error
     }
+  };
+
+  const setPort = async (port: number, value: number[]) => {
+    try {
+      let res: CPUData & Flags = await invoke("set_port", {
+        port: port,
+        value: value,
+      });
+      setRegisters(extractCPUData(res));
+      setFlags(extractFlags(res));
+    } catch (e) {}
   };
 
   const tryCompile = async () => {
@@ -356,6 +370,7 @@ export function useApp() {
     compileCode,
     nextPressed,
     tryCompile,
+    setPort,
   };
 }
 
