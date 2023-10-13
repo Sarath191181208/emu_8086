@@ -8,11 +8,15 @@ import { RegistersTableView } from "./Components/RegisterView";
 import { BottomBar } from "./Components/BottomBar";
 import { useApp } from "./hooks/useApp";
 import { useState } from "react";
-import { ButtonOnPort } from "./ButtonOnPort";
 import { MemoryBottombar } from "./Components/MemoryBar";
 import { OutputDisplay } from "./Components/OutputDisplay";
+import { SimpleButtonOnPort0x80 } from "./Components/ButtonOnPort";
 
-export type BottomBarStates = "Memory" | "Collapsed" | "Display";
+export type BottomBarStates =
+  | "Memory"
+  | "Collapsed"
+  | "Display"
+  | "SimpleButtonOnPort0x80";
 
 function App() {
   const [bottomBarState, setBottomBarState] =
@@ -95,8 +99,21 @@ function App() {
                   }
                 />
               ),
-              Display: <OutputDisplay field={wirteString}/>,
+              Display: <OutputDisplay field={wirteString} />,
               Collapsed: <></>,
+              SimpleButtonOnPort0x80: (
+                <SimpleButtonOnPort0x80
+                  onClick={() => {
+                    // check the value and flip it
+                    if (registers.ports[0x80] === 0) {
+                      setPort(0x80, [1]);
+                    } else {
+                      setPort(0x80, [0]);
+                    }
+                  }}
+                  readPortValue={registers.ports[0x80]}
+                />
+              ),
             }}
           />
         </div>

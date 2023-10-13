@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
 import { BottomBarStates } from "../App";
-import { ButtonOnPort } from "../ButtonOnPort";
 
 // build the bottom bar component from a dict
 
