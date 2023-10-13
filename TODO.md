@@ -3,11 +3,12 @@
 - [ ] Unused macros.
 ## To support: 
 - [ ] Support Some `interrupts`.
-- [ ] Support for ctrl + click for procs and macros.
 - [ ] inline macro editor fn.
 - [ ] creating a formatter.
 - [ ] Change interrupt flag name to `INTERRUPT_FLAG`.
-- [ ] Fix Running of macros.
+- [ ] 🐞FIX:  Running of macros.
+- [ ] 🛠️ Refactor:  Make the react ui composable .
+- [x] Support for ctrl + click for procs and macros.
 - [x] add support for addressing mode 
 - [x] add the labels into the symbol table
 - [x] add calc offset in compile itself 
