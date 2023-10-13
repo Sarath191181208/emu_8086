@@ -42,19 +42,15 @@ struct MutableCpu(Arc<Mutex<CPU>>);
 struct MutableMem(Arc<Mutex<Memory>>);
 
 #[tauri::command]
-fn set_port(
-    cpu: State<'_, MutableCpu>,
-    port: u8,
-    value: Vec<u8>,
-) -> Result<CPU, String> {
+fn set_port(cpu: State<'_, MutableCpu>, port: u8, value: Vec<u8>) -> Result<CPU, String> {
     let mut cpu = cpu.0.lock().unwrap();
-    if value.len() <1{
+    if value.is_empty() {
         return Err("Value must be at least 1 byte".to_string());
     }
 
-    if value.len() == 1{
+    if value.len() == 1 {
         cpu.set_port(port, *value.first().unwrap())
-    }else{
+    } else {
         let mut val: u16 = 0;
         val |= value[0] as u16;
         val |= (value[1] as u16) << 8;

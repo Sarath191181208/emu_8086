@@ -43,7 +43,7 @@ impl Ports {
         Self { list: [0; 0xFF] }
     }
 
-    pub fn reset(&mut self){
+    pub fn reset(&mut self) {
         self.list = [0; 0xFF];
     }
 
