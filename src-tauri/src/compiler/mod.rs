@@ -562,9 +562,12 @@ fn calc_offset(
     (offset as u16, is_label_before_ref)
 }
 
+type IsVariable = bool;
+
 #[allow(clippy::too_many_arguments)]
 fn mark_labels(
-    label_ref: &LabelRefrenceList,
+    // label_ref: &LabelRefrenceList,
+    variable_and_label_ref_list: &[(IsVariable, Label, LineNumber, LineNumber)],
 
     tokenized_line: &Vec<Vec<Token>>,
 
@@ -572,18 +575,21 @@ fn mark_labels(
     compiled_bytes_ref: &mut [Vec<CompiledBytesReference>],
 
     label_addr_map: &LabelAddressMap,
-    var_abs_addr_map: &VariableAddressMap,
+
+    var_addr_def_map: &VariableAddressDefinitionMap,
+    var_abs_addr_map: &mut VariableAddressMap,
+
     proc_compiled_bytes_line_start_map: &ProcDefinitionStartAndEndBytesMap,
 
     is_org_defined: bool,
     idx: usize,
 ) -> Result<bool, CompilationError> {
-    if idx >= label_ref.len() {
+    if idx >= variable_and_label_ref_list.len() {
         return Ok(true);
     }
-    let (label, _, line_number, tokenized_line_idx) = &label_ref[idx];
+    let (_, label, line_number, tokenized_line_idx) = &variable_and_label_ref_list[idx];
     let line_number = *line_number;
-    for _ in 0..(label_ref.len() - idx) {
+    for _ in 0..(variable_and_label_ref_list.len() - idx) {
         let compiled_tokens = compile(
             &tokenized_line[*tokenized_line_idx],
             is_org_defined,
@@ -603,16 +609,25 @@ fn mark_labels(
 
         let prev_compiled_bytes_len = compiled_bytes[line_number].len();
         let curr_compiled_bytes_len = compiled_bytes[line_number].len();
+
         if prev_compiled_bytes_len != curr_compiled_bytes_len {
+            // update the variables
+            calculate_variable_offset_map(
+                var_addr_def_map,
+                var_abs_addr_map,
+                compiled_bytes,
+                is_org_defined,
+            );
             return Ok(false);
         }
 
         if mark_labels(
-            label_ref,
+            variable_and_label_ref_list,
             tokenized_line,
             compiled_bytes,
             compiled_bytes_ref,
             label_addr_map,
+            var_addr_def_map,
             var_abs_addr_map,
             proc_compiled_bytes_line_start_map,
             is_org_defined,
@@ -631,18 +646,10 @@ fn mark_variables(
     tokenized_lines: &[Vec<Token>],
 
     var_ref: &VariableReferenceList,
-    var_addr_def_map: &VariableAddressDefinitionMap,
-    var_abs_addr_map: &mut VariableAddressMap,
+    var_abs_addr_map: &VariableAddressMap,
 
     is_org_defined: bool,
 ) -> Result<(), CompilationError> {
-    // calc offset addr for each var
-    for (var_label, (var_type, label_definition_line_number)) in var_addr_def_map {
-        let (offset, _) = calc_offset(compiled_bytes, 0, *label_definition_line_number);
-        let org_offset = if is_org_defined { 0x100 } else { 0x00 };
-        var_abs_addr_map.insert(var_label.clone(), (*var_type, offset + org_offset));
-    }
-
     // mark the variables
     for (_, _, line_number, tokenized_line_index) in var_ref {
         let tokenized_line = &tokenized_lines[*tokenized_line_index];
@@ -655,6 +662,20 @@ fn mark_variables(
     }
 
     Ok(())
+}
+
+fn calculate_variable_offset_map(
+    var_addr_def_map: &VariableAddressDefinitionMap,
+    var_abs_addr_map: &mut VariableAddressMap,
+    compiled_bytes: &[Vec<u8>],
+    is_org_defined: bool,
+) {
+    // calc offset addr for each var
+    for (var_label, (var_type, label_definition_line_number)) in var_addr_def_map {
+        let (offset, _) = calc_offset(compiled_bytes, 0, *label_definition_line_number);
+        let org_offset = if is_org_defined { 0x100 } else { 0x00 };
+        var_abs_addr_map.insert(var_label.clone(), (*var_type, offset + org_offset));
+    }
 }
 
 fn get_err_if_already_defined_label<T>(
@@ -1400,6 +1421,97 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     }
 
+    // check between labels and variables
+    for (label, (_, line_number)) in var_addr_def_map.iter() {
+        let line_number = *line_number;
+        if label_addr_map.contains_key(label) {
+            let var_token = get_label_token_from_line(lexer, line_number, label).unwrap();
+            let label_line_number = *label_addr_map.get(label).unwrap();
+            let label_token = get_label_token_from_line(lexer, label_line_number, label).unwrap();
+            compilation_errors.push(CompilationError::error_with_token(
+                var_token,
+                &format!(
+                    "The VARIABLE \"{}\" is defined as a label on Line: {}, Please use a different name.",
+                    label,
+                    label_line_number+1
+                ),
+            ));
+            compilation_errors.push(CompilationError::error_with_token(
+                label_token,
+                &format!(
+                    "The VARIABLE \"{}\" is defined as a variable on Line: {}, Please use a different name.",
+                    label,
+                    line_number+1
+                ),
+            ));
+        }
+    }
+
+    // labels and procs duplicate defintions
+    let matching_keys = label_addr_map
+        .keys()
+        .filter(|key| proc_compiled_bytes_line_number_map.contains_key(key))
+        .collect::<Vec<_>>();
+
+    // for all keys in matching_keys push to compilation_errors
+    matching_keys.iter().for_each(|key| {
+        let line_number = *label_addr_map.get(key).unwrap();
+        let token = get_label_token_from_line(lexer, line_number, key).unwrap();
+        let (line_number, _) = *proc_line_num_map.get(key).unwrap();
+        let token2 = get_label_token_from_line(lexer, line_number, key).unwrap();
+        let temp_errors = CompilationError::same_error_on_two_tokens(
+            token,
+            token2,
+            &format!(
+                "The label \"{}\" is defined as a LABEL on Line: {} and as PROC on Line: {}, Please use a different name.",
+                key, token.line_number+1, token2.line_number + 1
+            ),
+        );
+        compilation_errors.extend(temp_errors)
+    });
+
+    // merge label_ref and proc_ref
+    label_ref.append(&mut proc_ref_vec.clone());
+
+    // merge label and proc
+    label_compiled_bytes_line_number_map.extend(
+        proc_compiled_bytes_line_number_map
+            .clone()
+            .into_iter()
+            .map(|(label, (start, _))| (label, start)),
+    );
+
+    // merge label_ref and proc_ref
+    label_addr_map.extend(
+        proc_line_num_map
+            .clone()
+            .into_iter()
+            .map(|(label, (start, _))| (label, start)),
+    );
+
+    // variable and proc duplicate defintions
+    let matching_keys = var_addr_def_map
+        .keys()
+        .filter(|key| proc_compiled_bytes_line_number_map.contains_key(key))
+        .collect::<Vec<_>>();
+
+    // for all keys in matching_keys push to compilation_errors
+    matching_keys.iter().for_each(|key| {
+        let (_, line_number) = *var_addr_def_map.get(key).unwrap();
+        let token = get_label_token_from_line(lexer, line_number, key).unwrap();
+        let (line_number, _) = *proc_line_num_map.get(key).unwrap();
+        let token2 = get_label_token_from_line(lexer, line_number, key).unwrap();
+        let temp_errors = CompilationError::same_error_on_two_tokens(
+            token,
+            token2,
+            &format!(
+                "The label \"{}\" is defined as a VARIABLE on Line: {} and as PROC on Line: {}, Please use a different name.",
+                key, token.line_number+1, token2.line_number + 1
+            ),
+        );
+        compilation_errors.extend(temp_errors)
+    });
+
     // check if all the variables are defined
     let mut var_errors = false;
     for (_i, (var, used_as_type, _, tokenized_line_number)) in var_ref.iter().enumerate() {
@@ -1423,7 +1535,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                     compilation_errors.push(CompilationError::error_with_token(
                         token,
                         &format!(
-                            "The variable \"{}\" is defined as {:?}, but used as {:?}.",
+                            "The VARIABLE \"{}\" is defined as {:?}, but used as {:?}.",
                             var, var_type, used_as_type
                         ),
                     ));
@@ -1436,48 +1548,26 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
     let mut proc_errors = false;
     for (proc_label, _, _, tokenized_line_number) in proc_ref_vec.iter() {
         let token = get_label_token_from_line(lexer, *tokenized_line_number, proc_label).unwrap();
-        match &proc_compiled_bytes_line_number_map.get(proc_label) {
-            None => {
-                proc_errors = true;
-                compilation_errors.push(CompilationError::error_with_token(
-                    token,
-                    &format!(
-                        "The proc \"{}\" is Undefined, Please define it.",
-                        proc_label
-                    ),
-                ));
-            }
-            &Some(_) => {}
+
+        if proc_line_num_map.contains_key(proc_label) {
+            continue;
         }
+
+        if label_addr_map.contains_key(proc_label){
+            continue;
+        }
+
+        proc_errors = true;
+        compilation_errors.push(CompilationError::error_with_token(
+            token,
+            &format!(
+                "The PROC \"{}\" is Undefined, Please define it.",
+                proc_label
+            ),
+        ));
     }
 
-    // check between labels and variables
-    for (label, (_, line_number)) in var_addr_def_map.iter() {
-        let line_number = *line_number;
-        if label_addr_map.contains_key(label) {
-            let var_token = get_label_token_from_line(lexer, line_number, label).unwrap();
-            let label_line_number = *label_addr_map.get(label).unwrap();
-            let label_token = get_label_token_from_line(lexer, label_line_number, label).unwrap();
-            compilation_errors.push(CompilationError::error_with_token(
-                var_token,
-                &format!(
-                    "The variable \"{}\" is defined as a label on Line: {}, Please use a different name.",
-                    label,
-                    label_line_number+1
-                ),
-            ));
-            compilation_errors.push(CompilationError::error_with_token(
-                label_token,
-                &format!(
-                    "The variable \"{}\" is defined as a variable on Line: {}, Please use a different name.",
-                    label,
-                    line_number+1
-                ),
-            ));
-        }
-    }
-
-    // check if all flags are defined
+    // check if all labels are defined
     let mut label_errors = false;
     for (label, token, _, _) in &mut *label_ref {
         if !label_addr_map.contains_key(label) && !var_addr_def_map.contains_key(label) {
@@ -1500,39 +1590,40 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         }
     }
 
-    //TODO: check between labels and procs and vars for duplicate defintions
-
     if label_errors || var_errors || proc_errors {
         return None;
     }
 
     let mut var_abs_addr_map = VariableAddressMap::new();
-
-    match mark_variables(
-        compiled_bytes_lines_vec,
-        compiled_bytes_ref_lines_vec,
-        &lexer.tokens,
-        var_ref,
-        &var_compiled_bytes_line_number_map,
+    calculate_variable_offset_map(
+        var_addr_def_map,
         &mut var_abs_addr_map,
+        compiled_bytes_lines_vec,
         is_org_defined,
-    ) {
-        Ok(_) => (),
-        Err(err) => {
-            compilation_errors.push(err);
-        }
-    };
+    );
 
-    // merge label_ref and proc_ref
-    label_ref.append(&mut proc_ref_vec.clone());
+    let mut var_label_ref = Vec::new();
+    for (var, _, var_line_number, tokenized_line_number) in var_ref.iter() {
+        var_label_ref.push((true, var.clone(), *var_line_number, *tokenized_line_number));
+    }
+
+    for (label, _, label_line_number, tokenized_line_number) in label_ref.iter() {
+        var_label_ref.push((
+            false,
+            label.clone(),
+            *label_line_number,
+            *tokenized_line_number,
+        ));
+    }
 
     match mark_labels(
-        label_ref,
+        &var_label_ref,
         &lexer.tokens,
         compiled_bytes_lines_vec,
         compiled_bytes_ref_lines_vec,
         &label_compiled_bytes_line_number_map,
-        &var_abs_addr_map,
+        &var_addr_def_map,
+        &mut var_abs_addr_map,
         &proc_compiled_bytes_line_number_map,
         is_org_defined,
         0,

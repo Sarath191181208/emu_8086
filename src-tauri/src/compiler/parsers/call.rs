@@ -85,14 +85,20 @@ fn get_address_from_defined_maps(
         (None, None) => None,
         (Some(offset), None) => Some(offset),
         (None, Some(offset)) => Some(offset),
-        _ => panic!("The same label is defined in both label and proc macro this shouldn't happen check your compile function, Please report this"),
+        // _ => panic!("The same label is defined in both label and proc macro this shouldn't happen check your compile function, Please report this"),
+        (Some(_), Some(offset2)) => {
+            // if offset != offset2 {
+            //     panic!("The same label is defined in both label and proc macro this shouldn't happen check your compile function, Please report this");
+            // }
+            Some(offset2)
+        }
     }
 }
 
 fn calc_offset(offset_bytes: u16, is_jmp_after_label: bool) -> u16 {
     // TODO: handle overflow of offset_bytes i.e line limit exceed
     if is_jmp_after_label {
-        0xFFFF - offset_bytes + 1
+        0xFFFD - offset_bytes 
     } else {
         offset_bytes
     }

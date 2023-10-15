@@ -43,6 +43,23 @@ impl CompilationError {
             msg,
         )
     }
+
+    pub(super) fn same_error_on_two_tokens(token1: &Token, token2: &Token, msg: &str) -> [Self; 2] {
+        [
+            CompilationError::new_without_suggestions(
+                token1.line_number,
+                token1.column_number,
+                token1.token_length,
+                msg,
+            ),
+            CompilationError::new_without_suggestions(
+                token2.line_number,
+                token2.column_number,
+                token2.token_length,
+                msg,
+            ),
+        ]
+    }
 }
 
 pub(crate) fn get_label_token_from_line<'a>(
