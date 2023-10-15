@@ -1,10 +1,7 @@
 use crate::{
     compiler::{
-        compilation_error::CompilationError,
-        parsers::utils::get_idx_from_reg,
-        tokenized_line::TokenizedLine,
-        types_structs::{VariableAddressMap, VariableReferenceMap},
-        CompiledBytesReference,
+        compilation_error::CompilationError, parsers::utils::get_idx_from_reg,
+        tokenized_line::TokenizedLine, types_structs::VariableAddressMap, CompiledBytesReference,
     },
     convert_and_push_instructions,
     utils::Either,
@@ -18,7 +15,7 @@ use super::{
             parse_register_8bit_and_indexed_registers_with_offset,
             parse_register_8bit_and_indexed_registers_without_offset,
         },
-        parse_two_arguments_line, AddressingMode,
+        AddressingMode,
     },
     utils::{
         get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, get_token_as_label,
@@ -31,21 +28,15 @@ pub(in crate::compiler) fn parse_add(
     i: usize,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-    variable_ref_map: &mut VariableReferenceMap,
     variable_abs_offset_map: Option<&VariableAddressMap>,
+    addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
         i,
         "This shouldn't happen, Please report this".to_string(),
         None,
     )?;
-    match parse_two_arguments_line(
-        tokenized_line,
-        i,
-        "ADD",
-        variable_ref_map,
-        variable_abs_offset_map.unwrap_or(&VariableAddressMap::new()),
-    )? {
+    match addressing_mode {
         AddressingMode::Registers16bit {
             high_token,
             low_token,

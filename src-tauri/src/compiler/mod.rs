@@ -38,7 +38,8 @@ use self::{
     parsers::{
         add::parse_add, call::parse_call, dec::parse_dec, in_ins::parse_in, inc::parse_inc,
         jmp::parse_jmp, loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, out_ins::parse_out,
-        sub::parse_sub, utils::iterate_with_seperator, var::parse_var_declaration,
+        pattern_extractors::parse_two_arguments_line, sub::parse_sub,
+        utils::iterate_with_seperator, var::parse_var_declaration,
     },
     tokenized_line::TokenizedLine,
     tokens::{
@@ -161,26 +162,61 @@ fn compile(
         }
         Assembly8086Tokens::Instruction(ins) => match ins {
             Instructions::Mov => {
+                let addressing_mode = parse_two_arguments_line(
+                    &tokenized_line,
+                    i,
+                    "MOV",
+                    variable_ref_map,
+                    variable_address_map.unwrap_or(&HashMap::default()),
+                )?;
                 i = parse_mov(
                     &tokenized_line,
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    variable_ref_map,
                     variable_address_map,
+                    addressing_mode,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MOV", 2)?;
                 Ok(compiled_line)
             }
 
             Instructions::Add => {
+                let addressing_mode = parse_two_arguments_line(
+                    &tokenized_line,
+                    i,
+                    "ADD",
+                    variable_ref_map,
+                    variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                )?;
                 i = parse_add(
                     &tokenized_line,
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    variable_ref_map,
                     variable_address_map,
+                    addressing_mode,
+                )?;
+
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "ADD", 2)?;
+                Ok(compiled_line)
+            }
+
+            Instructions::Sub => {
+                let addressing_mode = parse_two_arguments_line(
+                    &tokenized_line,
+                    i,
+                    "SUB",
+                    variable_ref_map,
+                    variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                )?;
+                i = parse_sub(
+                    &tokenized_line,
+                    i,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    variable_address_map,
+                    addressing_mode,
                 )?;
 
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "ADD", 2)?;
@@ -211,20 +247,6 @@ fn compile(
                 )?;
 
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "DEC", 1)?;
-                Ok(compiled_line)
-            }
-
-            Instructions::Sub => {
-                i = parse_sub(
-                    &tokenized_line,
-                    i,
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    variable_ref_map,
-                    variable_address_map,
-                )?;
-
-                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "ADD", 2)?;
                 Ok(compiled_line)
             }
 
@@ -442,7 +464,7 @@ impl<'a> CompiledLineLabelRef<'a> {
 
     pub fn find_proc_offset(&self, label: &Label, line_number: LineNumber) -> Option<i16> {
         let proc_reference_line_num = line_number;
-        let proc_defined_line_num = self.proc_compiled_bytes_line_start_map.get(&label);
+        let proc_defined_line_num = self.proc_compiled_bytes_line_start_map.get(label);
 
         let proc_defined_line_num = match proc_defined_line_num {
             None => return None,

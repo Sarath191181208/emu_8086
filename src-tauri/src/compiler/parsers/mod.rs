@@ -12,5 +12,5 @@ pub mod out_ins;
 pub mod sub;
 pub mod var;
 
-pub(in crate::compiler::parsers) mod pattern_extractors;
+pub(in crate::compiler) mod pattern_extractors;
 pub(in crate::compiler) mod utils;
