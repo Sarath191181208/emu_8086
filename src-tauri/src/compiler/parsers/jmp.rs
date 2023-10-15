@@ -5,8 +5,8 @@ use crate::compiler::{
     suggestions_utils::get_all_registers_and_variable_suggestions,
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},
-    types_structs::{Label, VariableAddressMap},
-    CompiledBytesReference,
+    types_structs::{Label, VariableAddressMap, LineNumber},
+    CompiledBytesReference, CompiledLineLabelRef,
 };
 
 use super::utils::push_instruction;
@@ -19,12 +19,13 @@ enum Offset {
 pub(in crate::compiler) fn parse_jmp(
     tokenized_line: &TokenizedLine,
     i: usize,
+    line_number: LineNumber,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     variable_address_map: Option<&VariableAddressMap>,
 
     label_idx_map: &mut HashMap<String, (Token, usize)>,
-    offset_bytes_from_line_and_is_label_before_ref: Option<(u16, bool)>,
+    compiled_line_ref_with_offset_maps : Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
         i,
@@ -40,6 +41,13 @@ pub(in crate::compiler) fn parse_jmp(
     )?;
     match &high_token.token_type {
         Assembly8086Tokens::Character(label) => {
+            // let offset_bytes_from_line_and_is_label_before_ref = compiled_line_ref_with_offset_maps.find_label_offset(label, line_number );
+
+            let offset_bytes_from_line_and_is_label_before_ref = match compiled_line_ref_with_offset_maps {
+                None => None,
+                Some(compiled_line_ref_with_offset_maps) => compiled_line_ref_with_offset_maps.find_label_offset(label, line_number ),
+            };
+
             match offset_bytes_from_line_and_is_label_before_ref {
                 None => {
                     // try to get the bytes from the variable_address_map

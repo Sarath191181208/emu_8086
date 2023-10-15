@@ -5,7 +5,7 @@ use crate::{
         compilation_error::CompilationError,
         tokenized_line::TokenizedLine,
         tokens::{Assembly8086Tokens, Token},
-        CompiledBytesReference,
+        CompiledBytesReference, types_structs::LineNumber, CompiledLineLabelRef,
     },
     convert_and_push_instructions,
     utils::Either,
@@ -16,10 +16,12 @@ use super::utils::push_instruction;
 pub(in crate::compiler) fn parse_loop(
     tokenized_line: &TokenizedLine,
     i: usize,
+    line_number: LineNumber,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     label_idx_map: &mut HashMap<String, (Token, usize)>,
-    offset_num_bytes: Option<(u16, bool)>,
+    compiled_line_ref_with_offset_maps : Option<&CompiledLineLabelRef>,
+
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
         i,
@@ -35,6 +37,10 @@ pub(in crate::compiler) fn parse_loop(
 
     match &label_token.token_type {
         Assembly8086Tokens::Character(label) => {
+            let offset_num_bytes = match compiled_line_ref_with_offset_maps {
+                None => None,
+                Some(compiled_line_ref_with_offset_maps) => compiled_line_ref_with_offset_maps.find_label_offset(label, line_number ),
+            };
             match calc_offset(offset_num_bytes) {
                 Some(Either::Right(num)) => {
                     // E9 Offset

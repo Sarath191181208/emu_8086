@@ -1,8 +1,8 @@
 use crate::{
     compiler::{
         compilation_error::CompilationError, parsers::utils::push_instruction,
-        tokenized_line::TokenizedLine, tokens::Assembly8086Tokens, types_structs::ProcReferenceMap,
-        CompiledBytesReference,
+        tokenized_line::TokenizedLine, tokens::Assembly8086Tokens, types_structs::{ProcReferenceMap, LineNumber},
+        CompiledBytesReference, CompiledLineLabelRef,
     },
     convert_and_push_instructions,
 };
@@ -10,12 +10,13 @@ use crate::{
 pub(in crate::compiler) fn parse_call(
     tokenized_line: &TokenizedLine,
     i: usize,
+    line_number: LineNumber,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     proc_ref_map: &mut ProcReferenceMap,
 
-    proc_offset: Option<i16>,
-    offset_bytes_from_line_and_is_label_before_ref: Option<(u16, bool)>,
+    compiled_line_ref_with_offset_maps : Option<&CompiledLineLabelRef>,
+
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
         i,
@@ -31,6 +32,14 @@ pub(in crate::compiler) fn parse_call(
 
     match &high_token.token_type {
         Assembly8086Tokens::Character(label) => {
+            let offset_bytes_from_line_and_is_label_before_ref = match compiled_line_ref_with_offset_maps {
+                None => None,
+                Some(compiled_line_ref_with_offset_maps) => compiled_line_ref_with_offset_maps.find_label_offset(label, line_number ),
+            };
+            let proc_offset = match  compiled_line_ref_with_offset_maps{
+                None => None,
+                Some(proc_ref_map) => proc_ref_map.find_proc_offset(label, line_number),
+            };
             let addr = get_address_from_defined_maps(
                 proc_offset,
                 offset_bytes_from_line_and_is_label_before_ref,

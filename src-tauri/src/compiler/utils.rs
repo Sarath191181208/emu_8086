@@ -4,7 +4,7 @@ use super::{
     compilation_error::CompilationError,
     lexer::Lexer,
     tokens::{instructions::Instructions, Assembly8086Tokens, Token},
-    types_structs::Label,
+    types_structs::{Label, CompiledBytesReference},
 };
 
 pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Token> {
@@ -74,3 +74,39 @@ pub(crate) fn get_label_token_from_line<'a>(
         _ => false,
     })
 }
+
+impl Lexer {
+    pub fn print_with_compiled_tokens(&self, compiled_tokens: &[CompiledBytesReference]) {
+        // print a formatted headding
+        println!(
+            "| {0: <30} | {1: <10} | {2: <10} | {3: <10} | {4: <10} |",
+            "Token", "Line", "Column", "Length", "Bytes"
+        );
+
+        for token_list in &self.tokens {
+            // find the compiled token that matches the line and column number
+            for token in token_list {
+                let mut bytes = String::new();
+                for compiled_token in compiled_tokens {
+                    if compiled_token.line_number == token.line_number
+                        && compiled_token.column_number == token.column_number
+                    {
+                        for byte in &compiled_token.bytes {
+                            bytes.push_str(&format!("{:02X} ", byte));
+                        }
+                    }
+                }
+                println!(
+                    "| {0: <30} | {1: <10} | {2: <10} | {3: <10} | {4: <10} |",
+                    format!("{}", token.token_type),
+                    token.line_number,
+                    token.column_number,
+                    token.token_length,
+                    bytes
+                );
+            }
+            println!();
+        }
+    }
+}
+

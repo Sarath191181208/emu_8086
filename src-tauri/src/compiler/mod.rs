@@ -70,6 +70,7 @@ fn strip_space_and_comments_and_iterate_labels(
 }
 
 fn compile(
+    line_number: usize,
     lexed_strings: &[Token],
     is_org_defined: bool,
     compiled_line_label_ref: Option<&CompiledLineLabelRef>,
@@ -107,17 +108,16 @@ fn compile(
                     let jmp_ins = get_jmp_code_compiled_line(token);
                     let jmp_ins: Vec<&Token> = jmp_ins.iter().collect();
                     let mut temp_line = CompiledLine::new();
-                    let offset_bytes_from_line_and_is_label_before_ref =
-                        unwrap_and_find_offset(&compiled_line_label_ref);
 
                     let _ = parse_jmp(
                         &TokenizedLine::new(&jmp_ins, 0),
                         0,
+                        line_number,
                         &mut temp_line.compiled_bytes,
                         &mut temp_line.compiled_bytes_ref,
                         Some(&VariableAddressMap::new()),
                         &mut temp_line.label_idx_map,
-                        offset_bytes_from_line_and_is_label_before_ref,
+                        compiled_line_label_ref,
                     )?;
                     let high_token = tokenized_line.get(
                         i,
@@ -147,9 +147,6 @@ fn compile(
     let compiled_bytes_ref = &mut compiled_line.compiled_bytes_ref;
     let variable_ref_map = &mut compiled_line.variable_reference_map;
 
-    let offset_bytes_from_line_and_is_label_before_ref =
-        unwrap_and_find_offset(&compiled_line_label_ref);
-    let proc_offset = find_proc_offset(&compiled_line_label_ref);
     match &token.token_type {
         Assembly8086Tokens::Character(_) => {
             i = parse_var_declaration(
@@ -248,10 +245,11 @@ fn compile(
                 let i = parse_loop(
                     &tokenized_line,
                     i,
+                    line_number,
                     compiled_bytes,
                     compiled_bytes_ref,
                     &mut compiled_line.label_idx_map,
-                    offset_bytes_from_line_and_is_label_before_ref,
+                    compiled_line_label_ref,
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LOOP", 1)?;
@@ -262,11 +260,12 @@ fn compile(
                 let i = parse_jmp(
                     &tokenized_line,
                     i,
+                    line_number,
                     compiled_bytes,
                     compiled_bytes_ref,
                     variable_address_map,
                     &mut compiled_line.label_idx_map,
-                    offset_bytes_from_line_and_is_label_before_ref,
+                    compiled_line_label_ref,
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JMP", 1)?;
@@ -346,11 +345,11 @@ fn compile(
                 let i = parse_call(
                     &tokenized_line,
                     i,
+                    line_number,
                     compiled_bytes,
                     compiled_bytes_ref,
                     &mut compiled_line.proc_reference_map,
-                    proc_offset,
-                    offset_bytes_from_line_and_is_label_before_ref,
+                    compiled_line_label_ref,
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "CALL", 1)?;
@@ -425,119 +424,53 @@ fn compile(
 
 struct CompiledLineLabelRef<'a> {
     compiled_bytes: &'a [Vec<u8>],
-    line_num: LineNumber,
-    label: &'a str,
     label_addr_map: &'a HashMap<UniCase<String>, LineNumber>,
     proc_compiled_bytes_line_start_map: &'a ProcDefinitionStartAndEndBytesMap,
 }
 
-fn unwrap_and_find_offset(
-    compiled_line_label_ref: &Option<&CompiledLineLabelRef>,
-) -> Option<(u16, IsLabelBeforeRef)> {
-    match compiled_line_label_ref {
-        None => None,
-        Some(line) => {
-            let CompiledLineLabelRef {
-                compiled_bytes,
-                line_num,
-                label,
-                label_addr_map,
-                ..
-            } = line;
-            let start_line = line_num;
-            let end_line = label_addr_map.get(&UniCase::new(label.to_string()));
-            match end_line {
-                None => {
-                    // print!("This should only happen on JMP variable, Please check if this is corrct behaviour");
-                    None
-                }
-                Some(end_line) => {
-                    let val = calc_offset(compiled_bytes, *start_line, *end_line);
-                    Some(val)
-                }
+impl<'a> CompiledLineLabelRef<'a> {
+    pub fn find_label_offset(&self, label: &Label, line_number: LineNumber) -> Option<(u16, bool)> {
+        let label_addr = self.label_addr_map.get(&UniCase::new(label.to_string()));
+        let label_addr = match label_addr {
+            None => return None,
+            Some(label_addr) => label_addr,
+        };
+        let (offset, is_label_before_ref) =
+            calc_offset(self.compiled_bytes, line_number, *label_addr);
+        Some((offset, is_label_before_ref))
+    }
+
+    pub fn find_proc_offset(&self, label: &Label, line_number: LineNumber) -> Option<i16> {
+        let proc_reference_line_num = line_number;
+        let proc_defined_line_num = self.proc_compiled_bytes_line_start_map.get(&label);
+
+        let proc_defined_line_num = match proc_defined_line_num {
+            None => return None,
+            Some(proc_defined_line_num) => proc_defined_line_num.0,
+        };
+
+        let mut offset = 0_i16;
+        if proc_defined_line_num < proc_reference_line_num {
+            // label defined on top of reference
+            for bytes in self.compiled_bytes
+                .iter()
+                .take(proc_reference_line_num)
+                .skip(proc_defined_line_num)
+            {
+                offset -= bytes.len() as i16;
+            }
+        } else {
+            // defined on bottom
+            for bytes in self.compiled_bytes
+                .iter()
+                .take(proc_defined_line_num)
+                .skip(proc_reference_line_num + 1)
+            {
+                offset += bytes.len() as i16;
             }
         }
-    }
-}
 
-fn find_proc_offset(compiled_line_label_ref: &Option<&CompiledLineLabelRef>) -> Option<i16> {
-    if compiled_line_label_ref.is_none() {
-        return None;
-    }
-
-    let CompiledLineLabelRef {
-        compiled_bytes,
-        line_num,
-        label,
-        proc_compiled_bytes_line_start_map,
-        ..
-    } = compiled_line_label_ref.unwrap();
-
-    let proc_label = UniCase::new(label.to_string());
-    let proc_reference_line_num = *line_num;
-    let proc_defined_line_num = proc_compiled_bytes_line_start_map.get(&proc_label);
-
-    let proc_defined_line_num = match proc_defined_line_num {
-        None => return None,
-        Some(proc_defined_line_num) => proc_defined_line_num.0,
-    };
-
-    let mut offset = 0_i16;
-    if proc_defined_line_num < proc_reference_line_num {
-        // label defined on top of reference
-        for bytes in compiled_bytes
-            .iter()
-            .take(proc_reference_line_num)
-            .skip(proc_defined_line_num)
-        {
-            offset -= bytes.len() as i16;
-        }
-    } else {
-        // defined on bottom
-        for bytes in compiled_bytes
-            .iter()
-            .take(proc_defined_line_num)
-            .skip(proc_reference_line_num + 1)
-        {
-            offset += bytes.len() as i16;
-        }
-    }
-
-    Some(offset)
-}
-
-impl Lexer {
-    pub fn print_with_compiled_tokens(&self, compiled_tokens: &[CompiledBytesReference]) {
-        // print a formatted headding
-        println!(
-            "| {0: <30} | {1: <10} | {2: <10} | {3: <10} | {4: <10} |",
-            "Token", "Line", "Column", "Length", "Bytes"
-        );
-
-        for token_list in &self.tokens {
-            // find the compiled token that matches the line and column number
-            for token in token_list {
-                let mut bytes = String::new();
-                for compiled_token in compiled_tokens {
-                    if compiled_token.line_number == token.line_number
-                        && compiled_token.column_number == token.column_number
-                    {
-                        for byte in &compiled_token.bytes {
-                            bytes.push_str(&format!("{:02X} ", byte));
-                        }
-                    }
-                }
-                println!(
-                    "| {0: <30} | {1: <10} | {2: <10} | {3: <10} | {4: <10} |",
-                    format!("{}", token.token_type),
-                    token.line_number,
-                    token.column_number,
-                    token.token_length,
-                    bytes
-                );
-            }
-            println!();
-        }
+        Some(offset)
     }
 }
 
@@ -587,16 +520,15 @@ fn mark_labels(
     if idx >= variable_and_label_ref_list.len() {
         return Ok(true);
     }
-    let (_, label, line_number, tokenized_line_idx) = &variable_and_label_ref_list[idx];
+    let (_, _, line_number, tokenized_line_idx) = &variable_and_label_ref_list[idx];
     let line_number = *line_number;
     for _ in 0..(variable_and_label_ref_list.len() - idx) {
         let compiled_tokens = compile(
+            line_number,
             &tokenized_line[*tokenized_line_idx],
             is_org_defined,
             Some(&CompiledLineLabelRef {
                 compiled_bytes,
-                line_num: line_number,
-                label,
                 label_addr_map,
                 proc_compiled_bytes_line_start_map,
                 // is_org_defined,
@@ -638,7 +570,6 @@ fn mark_labels(
     }
     Ok(false)
 }
-
 
 fn calculate_variable_offset_map(
     var_addr_def_map: &VariableAddressDefinitionMap,
@@ -1228,7 +1159,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
     let mut proc_compiled_bytes_line_number_map = ProcDefinitionStartAndEndBytesMap::new();
 
     for (i, line) in lexer.tokens.iter().enumerate() {
-        match compile(line, is_org_defined, None, None) {
+        match compile(i, line, is_org_defined, None, None) {
             Ok(compiled_line) => {
                 let compiled_bytes_line = compiled_line.compiled_bytes;
                 let compiled_bytes_ref_line = compiled_line.compiled_bytes_ref;
