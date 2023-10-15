@@ -117,25 +117,25 @@ mod tests {
 
     test_compile!(
         out_num_al,
-        &format!(" OUT 0x80, AL",),
+        &" OUT 0x80, AL".to_string(),
         |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xE6, 0x80]) }
     );
 
     test_compile!(
         out_num_ax,
-        &format!(" OUT 0x80, AX",),
+        &" OUT 0x80, AX".to_string(),
         |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xE7, 0x80]) }
     );
 
-    test_compile!(out_dx_al, &format!(" OUT DX, AL",), |instructions: &Vec<
-        u8,
-    >| {
-        assert_eq!(instructions, &vec![0xEE])
-    });
+    test_compile!(
+        out_dx_al,
+        &" OUT DX, AL".to_string(),
+        |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xEE]) }
+    );
 
-    test_compile!(out_dx_ax, &format!(" OUT DX, AX",), |instructions: &Vec<
-        u8,
-    >| {
-        assert_eq!(instructions, &vec![0xEF])
-    });
+    test_compile!(
+        out_dx_ax,
+        &" OUT DX, AX".to_string(),
+        |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xEF]) }
+    );
 }

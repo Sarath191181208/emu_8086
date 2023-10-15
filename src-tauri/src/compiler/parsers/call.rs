@@ -98,7 +98,7 @@ fn get_address_from_defined_maps(
 fn calc_offset(offset_bytes: u16, is_jmp_after_label: bool) -> u16 {
     // TODO: handle overflow of offset_bytes i.e line limit exceed
     if is_jmp_after_label {
-        0xFFFD - offset_bytes 
+        0xFFFD - offset_bytes
     } else {
         offset_bytes
     }

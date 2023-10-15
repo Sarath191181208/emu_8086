@@ -1553,7 +1553,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
             continue;
         }
 
-        if label_addr_map.contains_key(proc_label){
+        if label_addr_map.contains_key(proc_label) {
             continue;
         }
 
@@ -1622,7 +1622,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         compiled_bytes_lines_vec,
         compiled_bytes_ref_lines_vec,
         &label_compiled_bytes_line_number_map,
-        &var_addr_def_map,
+        var_addr_def_map,
         &mut var_abs_addr_map,
         &proc_compiled_bytes_line_number_map,
         is_org_defined,

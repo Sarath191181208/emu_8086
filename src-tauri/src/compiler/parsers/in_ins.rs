@@ -93,25 +93,25 @@ mod tests {
 
     test_compile!(
         out_in_al_and_num,
-        &format!("IN AL, 0x80",),
+        &"IN AL, 0x80".to_string(),
         |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xE4, 0x80]) }
     );
 
     test_compile!(
         out_in_ax_and_num,
-        &format!("IN AX, 0x10",),
+        &"IN AX, 0x10".to_string(),
         |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xE5, 0x10]) }
     );
 
     test_compile!(
         out_in_al_and_dx,
-        &format!("IN AL, DX",),
+        &"IN AL, DX".to_string(),
         |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xEC]) }
     );
 
     test_compile!(
         out_in_ax_and_dx,
-        &format!("IN AX, DX",),
+        &"IN AX, DX".to_string(),
         |instructions: &Vec<u8>| { assert_eq!(instructions, &vec![0xED]) }
     );
 }
