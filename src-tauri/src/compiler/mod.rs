@@ -639,30 +639,6 @@ fn mark_labels(
     Ok(false)
 }
 
-fn mark_variables(
-    compiled_bytes: &mut [Vec<u8>],
-    compiled_bytes_ref: &mut [Vec<CompiledBytesReference>],
-
-    tokenized_lines: &[Vec<Token>],
-
-    var_ref: &VariableReferenceList,
-    var_abs_addr_map: &VariableAddressMap,
-
-    is_org_defined: bool,
-) -> Result<(), CompilationError> {
-    // mark the variables
-    for (_, _, line_number, tokenized_line_index) in var_ref {
-        let tokenized_line = &tokenized_lines[*tokenized_line_index];
-        let line_number = *line_number;
-        let compiled_tokens =
-            compile(tokenized_line, is_org_defined, None, Some(var_abs_addr_map))?;
-
-        compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
-        compiled_bytes_ref[line_number] = compiled_tokens.compiled_bytes_ref;
-    }
-
-    Ok(())
-}
 
 fn calculate_variable_offset_map(
     var_addr_def_map: &VariableAddressDefinitionMap,
