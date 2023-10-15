@@ -452,7 +452,8 @@ impl<'a> CompiledLineLabelRef<'a> {
         let mut offset = 0_i16;
         if proc_defined_line_num < proc_reference_line_num {
             // label defined on top of reference
-            for bytes in self.compiled_bytes
+            for bytes in self
+                .compiled_bytes
                 .iter()
                 .take(proc_reference_line_num)
                 .skip(proc_defined_line_num)
@@ -461,7 +462,8 @@ impl<'a> CompiledLineLabelRef<'a> {
             }
         } else {
             // defined on bottom
-            for bytes in self.compiled_bytes
+            for bytes in self
+                .compiled_bytes
                 .iter()
                 .take(proc_defined_line_num)
                 .skip(proc_reference_line_num + 1)

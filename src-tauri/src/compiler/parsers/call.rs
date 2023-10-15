@@ -1,7 +1,10 @@
 use crate::{
     compiler::{
-        compilation_error::CompilationError, parsers::utils::push_instruction,
-        tokenized_line::TokenizedLine, tokens::Assembly8086Tokens, types_structs::{ProcReferenceMap, LineNumber},
+        compilation_error::CompilationError,
+        parsers::utils::push_instruction,
+        tokenized_line::TokenizedLine,
+        tokens::Assembly8086Tokens,
+        types_structs::{LineNumber, ProcReferenceMap},
         CompiledBytesReference, CompiledLineLabelRef,
     },
     convert_and_push_instructions,
@@ -15,8 +18,7 @@ pub(in crate::compiler) fn parse_call(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     proc_ref_map: &mut ProcReferenceMap,
 
-    compiled_line_ref_with_offset_maps : Option<&CompiledLineLabelRef>,
-
+    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
         i,
@@ -32,11 +34,14 @@ pub(in crate::compiler) fn parse_call(
 
     match &high_token.token_type {
         Assembly8086Tokens::Character(label) => {
-            let offset_bytes_from_line_and_is_label_before_ref = match compiled_line_ref_with_offset_maps {
-                None => None,
-                Some(compiled_line_ref_with_offset_maps) => compiled_line_ref_with_offset_maps.find_label_offset(label, line_number ),
-            };
-            let proc_offset = match  compiled_line_ref_with_offset_maps{
+            let offset_bytes_from_line_and_is_label_before_ref =
+                match compiled_line_ref_with_offset_maps {
+                    None => None,
+                    Some(compiled_line_ref_with_offset_maps) => {
+                        compiled_line_ref_with_offset_maps.find_label_offset(label, line_number)
+                    }
+                };
+            let proc_offset = match compiled_line_ref_with_offset_maps {
                 None => None,
                 Some(proc_ref_map) => proc_ref_map.find_proc_offset(label, line_number),
             };

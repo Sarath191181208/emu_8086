@@ -4,7 +4,7 @@ use super::{
     compilation_error::CompilationError,
     lexer::Lexer,
     tokens::{instructions::Instructions, Assembly8086Tokens, Token},
-    types_structs::{Label, CompiledBytesReference},
+    types_structs::{CompiledBytesReference, Label},
 };
 
 pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Token> {
@@ -109,4 +109,3 @@ impl Lexer {
         }
     }
 }
-

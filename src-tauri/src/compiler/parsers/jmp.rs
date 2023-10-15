@@ -5,7 +5,7 @@ use crate::compiler::{
     suggestions_utils::get_all_registers_and_variable_suggestions,
     tokenized_line::TokenizedLine,
     tokens::{Assembly8086Tokens, Token},
-    types_structs::{Label, VariableAddressMap, LineNumber},
+    types_structs::{Label, LineNumber, VariableAddressMap},
     CompiledBytesReference, CompiledLineLabelRef,
 };
 
@@ -25,7 +25,7 @@ pub(in crate::compiler) fn parse_jmp(
     variable_address_map: Option<&VariableAddressMap>,
 
     label_idx_map: &mut HashMap<String, (Token, usize)>,
-    compiled_line_ref_with_offset_maps : Option<&CompiledLineLabelRef>,
+    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
         i,
@@ -43,10 +43,13 @@ pub(in crate::compiler) fn parse_jmp(
         Assembly8086Tokens::Character(label) => {
             // let offset_bytes_from_line_and_is_label_before_ref = compiled_line_ref_with_offset_maps.find_label_offset(label, line_number );
 
-            let offset_bytes_from_line_and_is_label_before_ref = match compiled_line_ref_with_offset_maps {
-                None => None,
-                Some(compiled_line_ref_with_offset_maps) => compiled_line_ref_with_offset_maps.find_label_offset(label, line_number ),
-            };
+            let offset_bytes_from_line_and_is_label_before_ref =
+                match compiled_line_ref_with_offset_maps {
+                    None => None,
+                    Some(compiled_line_ref_with_offset_maps) => {
+                        compiled_line_ref_with_offset_maps.find_label_offset(label, line_number)
+                    }
+                };
 
             match offset_bytes_from_line_and_is_label_before_ref {
                 None => {
