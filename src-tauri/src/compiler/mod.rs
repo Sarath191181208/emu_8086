@@ -74,7 +74,7 @@ fn compile(
     line_number: usize,
     lexed_strings: &[Token],
     is_org_defined: bool,
-    compiled_line_label_ref: Option<&CompiledLineLabelRef>,
+    compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
     variable_address_map: Option<&VariableAddressMap>,
 ) -> Result<CompiledLine, CompilationError> {
     let mut i = 0;
@@ -118,7 +118,7 @@ fn compile(
                         &mut temp_line.compiled_bytes_ref,
                         Some(&VariableAddressMap::new()),
                         &mut temp_line.label_idx_map,
-                        compiled_line_label_ref,
+                        compiled_line_offset_maps,
                     )?;
                     let high_token = tokenized_line.get(
                         i,
@@ -165,9 +165,11 @@ fn compile(
                 let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
+                    line_number,
                     "MOV",
                     variable_ref_map,
                     variable_address_map.unwrap_or(&HashMap::default()),
+                    compiled_line_offset_maps,
                 )?;
                 i = parse_mov(
                     &tokenized_line,
@@ -185,9 +187,11 @@ fn compile(
                 let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
+                    line_number,
                     "ADD",
                     variable_ref_map,
                     variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                    compiled_line_offset_maps,
                 )?;
                 i = parse_add(
                     &tokenized_line,
@@ -206,9 +210,11 @@ fn compile(
                 let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
+                    line_number,
                     "SUB",
                     variable_ref_map,
                     variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                    compiled_line_offset_maps,
                 )?;
                 i = parse_sub(
                     &tokenized_line,
@@ -271,7 +277,7 @@ fn compile(
                     compiled_bytes,
                     compiled_bytes_ref,
                     &mut compiled_line.label_idx_map,
-                    compiled_line_label_ref,
+                    compiled_line_offset_maps,
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LOOP", 1)?;
@@ -287,7 +293,7 @@ fn compile(
                     compiled_bytes_ref,
                     variable_address_map,
                     &mut compiled_line.label_idx_map,
-                    compiled_line_label_ref,
+                    compiled_line_offset_maps,
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JMP", 1)?;
@@ -371,7 +377,7 @@ fn compile(
                     compiled_bytes,
                     compiled_bytes_ref,
                     &mut compiled_line.proc_reference_map,
-                    compiled_line_label_ref,
+                    compiled_line_offset_maps,
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "CALL", 1)?;
@@ -444,13 +450,29 @@ fn compile(
     }
 }
 
-struct CompiledLineLabelRef<'a> {
+pub(crate) struct CompiledLineLabelRef<'a> {
     compiled_bytes: &'a [Vec<u8>],
     label_addr_map: &'a HashMap<UniCase<String>, LineNumber>,
     proc_compiled_bytes_line_start_map: &'a ProcDefinitionStartAndEndBytesMap,
 }
 
 impl<'a> CompiledLineLabelRef<'a> {
+    pub fn find_label_offset_or_proc_offset(
+        &self,
+        label: &Label,
+        line_number: LineNumber,
+    ) -> Option<i16> {
+        let label_off = self.find_label_offset(label, line_number);
+        if let Some((label_off, is_label_before_ref)) = label_off {
+            return Some(label_off as i16 * if is_label_before_ref { -1 } else { 1 });
+        }
+        let proc_off = self.find_proc_offset(label, line_number);
+        if let Some(proc_off) = proc_off {
+            return Some(proc_off);
+        }
+        None
+    }
+
     pub fn find_label_offset(&self, label: &Label, line_number: LineNumber) -> Option<(u16, bool)> {
         let label_addr = self.label_addr_map.get(&UniCase::new(label.to_string()));
         let label_addr = match label_addr {
@@ -1454,11 +1476,14 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         let token = &line[idx];
         match &var_addr_def_map.get(var) {
             None => {
-                var_errors = true;
-                compilation_errors.push(CompilationError::error_with_token(
-                    token,
-                    &format!("The variable \"{}\" is Undefined, Please define it.", var),
-                ));
+                // check if the variable is defined as a label
+                if !label_addr_map.contains_key(var) {
+                    var_errors = true;
+                    compilation_errors.push(CompilationError::error_with_token(
+                        token,
+                        &format!("The variable \"{}\" is Undefined, Please define it.", var),
+                    ));
+                }   
             }
             &Some((var_type, _)) => {
                 if used_as_type == &VariableType::Word && var_type == &VariableType::Byte {

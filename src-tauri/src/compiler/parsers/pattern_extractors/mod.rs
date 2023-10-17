@@ -12,12 +12,15 @@ use crate::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
             registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
-        types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
+        types_structs::{
+            ArrayIndex, Label, LineNumber, VariableAddressMap, VariableReferenceMap, VariableType,
+        },
+        CompiledLineLabelRef,
     },
     utils::Either,
 };
 
-use super::utils::{check_comma, get_label_address_or_push_into_ref};
+use super::utils::check_comma;
 
 pub(in super::super) mod compile_two_arguments_patterns;
 
@@ -455,9 +458,11 @@ fn get_compact_ins<'a>(
 pub(crate) fn parse_two_arguments_line<'a>(
     tokenized_line: &'a TokenizedLine<'a>,
     i: usize,
+    line_number: LineNumber,
     ins: &'a str,
     variable_ref_map: &mut VariableReferenceMap,
     variable_abs_address_map: &VariableAddressMap,
+    compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<AddressingMode, CompilationError> {
     let len_lexed_strings = tokenized_line.get_len_lexed_strings();
     let token = tokenized_line.get(
@@ -546,10 +551,12 @@ pub(crate) fn parse_two_arguments_line<'a>(
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 3,
+                            line_number,
                             label,
                             VariableType::Word,
                             variable_abs_address_map,
                             variable_ref_map,
+                            compiled_line_offset_maps,
                         ),
                         register_type: register_type.clone(),
                     })
@@ -606,10 +613,12 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     low_token,
                     address_bytes: get_label_address_or_push_into_ref(
                         i + 1,
+                        line_number,
                         label,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
+                        compiled_line_offset_maps,
                     ),
                     num: *num,
                 }),
@@ -619,10 +628,12 @@ pub(crate) fn parse_two_arguments_line<'a>(
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 1,
+                            line_number,
                             label,
                             VariableType::Word,
                             variable_abs_address_map,
                             variable_ref_map,
+                            compiled_line_offset_maps,
                         ),
                         register_type: low_token_register_type.clone(),
                     })
@@ -632,10 +643,12 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     low_token,
                     address_bytes: get_label_address_or_push_into_ref(
                         i + 1,
+                        line_number,
                         label,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
+                        compiled_line_offset_maps,
                     ),
                     num: *num,
                 }),
@@ -645,10 +658,12 @@ pub(crate) fn parse_two_arguments_line<'a>(
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 1,
+                            line_number,
                             label,
                             VariableType::Byte,
                             variable_abs_address_map,
                             variable_ref_map,
+                            compiled_line_offset_maps,
                         ),
                         register_type: low_token_reg_type.clone(),
                     })
@@ -724,10 +739,12 @@ pub(crate) fn parse_two_arguments_line<'a>(
                         low_token,
                         address_bytes: get_label_address_or_push_into_ref(
                             i + 3,
+                            line_number,
                             label,
                             VariableType::Byte,
                             variable_abs_address_map,
                             variable_ref_map,
+                            compiled_line_offset_maps,
                         ),
                         register_type: high_token_type.clone(),
                     })
@@ -754,5 +771,43 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 ins, &high_token.token_type
             ),
         )),
+    }
+}
+
+fn get_label_address_or_push_into_ref(
+    idx: ArrayIndex,
+    line_number: LineNumber,
+    label: &Label,
+    var_type: VariableType,
+    variable_abs_offset_bytes_map: &VariableAddressMap,
+    var_ref_map: &mut VariableReferenceMap,
+    compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
+) -> [u8; 2] {
+    let placeholder = [0x00, 0x00];
+    match variable_abs_offset_bytes_map.get(label) {
+        Some((_, abs_addr)) => {
+            let ins = (abs_addr & 0xFF) as u8;
+            let ins2 = (abs_addr >> 8) as u8;
+            [ins, ins2]
+        }
+        None => {
+            let offset: Option<i16> = match compiled_line_offset_maps {
+                None => None,
+                Some(compiled_line_offset_maps) => match compiled_line_offset_maps
+                    .find_label_offset_or_proc_offset(label, line_number)
+                {
+                    None => None,
+                    Some(offset) => Some(offset),
+                },
+            };
+            let offset = match offset {
+                None => {
+                    var_ref_map.insert(label.clone(), (var_type, idx));
+                    placeholder
+                }
+                Some(offset) => offset.to_le_bytes(),
+            };
+            offset
+        }
     }
 }
