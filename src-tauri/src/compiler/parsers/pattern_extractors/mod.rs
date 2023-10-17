@@ -793,21 +793,17 @@ fn get_label_address_or_push_into_ref(
         None => {
             let offset: Option<i16> = match compiled_line_offset_maps {
                 None => None,
-                Some(compiled_line_offset_maps) => match compiled_line_offset_maps
-                    .find_label_offset_or_proc_offset(label, line_number)
-                {
-                    None => None,
-                    Some(offset) => Some(offset),
-                },
+                Some(compiled_line_offset_maps) => {
+                    compiled_line_offset_maps.find_label_offset_or_proc_offset(label, line_number)
+                }
             };
-            let offset = match offset {
+            match offset {
                 None => {
                     var_ref_map.insert(label.clone(), (var_type, idx));
                     placeholder
                 }
                 Some(offset) => offset.to_le_bytes(),
-            };
-            offset
+            }
         }
     }
 }

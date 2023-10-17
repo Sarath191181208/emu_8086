@@ -16,6 +16,7 @@ enum Offset {
     U16(u16),
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn parse_jmp(
     tokenized_line: &TokenizedLine,
     i: usize,
@@ -23,7 +24,6 @@ pub(in crate::compiler) fn parse_jmp(
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     variable_address_map: Option<&VariableAddressMap>,
-
     label_idx_map: &mut HashMap<String, (Token, usize)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {

@@ -1483,7 +1483,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                         token,
                         &format!("The variable \"{}\" is Undefined, Please define it.", var),
                     ));
-                }   
+                }
             }
             &Some((var_type, _)) => {
                 if used_as_type == &VariableType::Word && var_type == &VariableType::Byte {
