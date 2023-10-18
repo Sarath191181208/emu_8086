@@ -411,6 +411,21 @@ mod tests16bit {
             assert_eq!(instructions, &[0x03, 0x94, 0x00, 0x20]);
         }
     );
+
+    test_compile!(
+        add_ax_proc_ref,
+        "
+        ADD AX, main 
+        inc ax
+
+        proc main 
+            mov ax, bx 
+        endp main
+        ",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x05, 0x04, 0x00, 0x40, 0x8B, 0xC3]);
+        }
+    );
 }
 
 #[cfg(test)]
