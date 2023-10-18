@@ -7,6 +7,17 @@ pub enum Either<T, U> {
     Right(U),
 }
 
+impl From<i16> for Either<u8, u16> {
+    fn from(num: i16) -> Self {
+        let transformed_num = num as u16;
+        if transformed_num <= u8::MAX as u16 {
+            Either::Left(transformed_num as u8)
+        } else {
+            Either::Right(transformed_num)
+        }
+    }
+}
+
 // have a special implmentation for T = u8 and U = u16
 impl Either<u8, u16> {
     pub fn get_as_u16(&self) -> u16 {

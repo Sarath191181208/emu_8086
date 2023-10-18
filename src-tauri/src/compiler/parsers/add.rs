@@ -423,7 +423,7 @@ mod tests16bit {
         endp main
         ",
         |instructions: &Vec<u8>| {
-            assert_eq!(instructions, &[0x05, 0x04, 0x00, 0x40, 0x8B, 0xC3]);
+            assert_eq!(instructions, &[0x05, 0x05, 0x00, 0x40, 0x8B, 0xC3]);
         }
     );
 }

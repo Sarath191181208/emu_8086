@@ -458,7 +458,7 @@ fn get_compact_ins<'a>(
 pub(crate) fn parse_two_arguments_line<'a>(
     tokenized_line: &'a TokenizedLine<'a>,
     i: usize,
-    line_number: LineNumber,
+    _line_number: LineNumber,
     ins: &'a str,
     variable_ref_map: &mut VariableReferenceMap,
     variable_abs_address_map: &VariableAddressMap,
@@ -546,20 +546,28 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     }),
                 },
                 Assembly8086Tokens::Character(label) => {
-                    Ok(AddressingMode::Register16bitAndAddress {
-                        high_token: compact_high_token,
-                        low_token,
-                        address_bytes: get_label_address_or_push_into_ref(
-                            i + 3,
-                            line_number,
-                            label,
-                            VariableType::Word,
-                            variable_abs_address_map,
-                            variable_ref_map,
-                            compiled_line_offset_maps,
-                        ),
-                        register_type: register_type.clone(),
-                    })
+                    let addr_bytes = get_label_address_or_push_into_ref(
+                        i + 3,
+                        label,
+                        VariableType::Word,
+                        variable_abs_address_map,
+                        variable_ref_map,
+                        compiled_line_offset_maps,
+                    );
+
+                    match addr_bytes {
+                        Either::Left(bytes) => Ok(AddressingMode::Register16bitAndAddress {
+                            high_token: compact_high_token,
+                            low_token,
+                            address_bytes: bytes,
+                            register_type: register_type.clone(),
+                        }),
+                        Either::Right(number) => Ok(AddressingMode::Registers16bitNumber {
+                            high_token: compact_high_token,
+                            low_token: low_token.clone(),
+                            num: Either::Right(number.get_as_u16()),
+                        }),
+                    }
                 }
 
                 _ => Err(CompilationError::new_without_suggestions(
@@ -608,64 +616,93 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 None => low_token.clone(),
             };
             match &low_token.token_type.clone() {
-                Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::AddressAnd16bitNumber {
-                    high_token: compact_high_token,
-                    low_token,
-                    address_bytes: get_label_address_or_push_into_ref(
+                Assembly8086Tokens::Number16bit(num) => {
+                    let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
-                        line_number,
                         label,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
                         compiled_line_offset_maps,
-                    ),
-                    num: *num,
-                }),
+                    );
+
+                    let address_bytes = match address_bytes {
+                        Either::Left(bytes) => bytes,
+                        Either::Right(number) => number.get_as_u16().to_le_bytes(),
+                    };
+
+                    Ok(AddressingMode::AddressAnd16bitNumber {
+                        high_token: compact_high_token,
+                        low_token,
+                        num: *num,
+                        address_bytes,
+                    })
+                }
                 Assembly8086Tokens::Register16bit(low_token_register_type) => {
+                    let address_bytes = get_label_address_or_push_into_ref(
+                        i + 1,
+                        label,
+                        VariableType::Word,
+                        variable_abs_address_map,
+                        variable_ref_map,
+                        compiled_line_offset_maps,
+                    );
+
+                    let address_bytes = match address_bytes {
+                        Either::Left(bytes) => bytes,
+                        Either::Right(number) => number.get_as_u16().to_le_bytes(),
+                    };
+
                     Ok(AddressingMode::AddressAnd16bitRegister {
                         high_token: compact_high_token,
                         low_token,
-                        address_bytes: get_label_address_or_push_into_ref(
-                            i + 1,
-                            line_number,
-                            label,
-                            VariableType::Word,
-                            variable_abs_address_map,
-                            variable_ref_map,
-                            compiled_line_offset_maps,
-                        ),
                         register_type: low_token_register_type.clone(),
+                        address_bytes,
                     })
                 }
-                Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::AddressAnd8bitNumber {
-                    high_token: compact_high_token,
-                    low_token,
-                    address_bytes: get_label_address_or_push_into_ref(
+                Assembly8086Tokens::Number8bit(num) => {
+                    let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
-                        line_number,
                         label,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
                         compiled_line_offset_maps,
-                    ),
-                    num: *num,
-                }),
+                    );
+
+                    let address_bytes = match address_bytes {
+                        Either::Left(bytes) => bytes,
+                        Either::Right(number) => number.get_as_u16().to_le_bytes(),
+                    };
+
+                    Ok(AddressingMode::AddressAnd8bitNumber {
+                        high_token: compact_high_token,
+                        low_token,
+                        address_bytes,
+                        num: *num,
+                    })
+                }
+
                 Assembly8086Tokens::Register8bit(low_token_reg_type) => {
+                    let address_bytes = get_label_address_or_push_into_ref(
+                        i + 1,
+                        label,
+                        VariableType::Byte,
+                        variable_abs_address_map,
+                        variable_ref_map,
+                        compiled_line_offset_maps,
+                    );
+
+                    let address_bytes = match address_bytes {
+                        Either::Left(bytes) => bytes,
+                        Either::Right(number) => number.get_as_u16().to_le_bytes(),
+                    };
+
                     Ok(AddressingMode::AddressAnd8bitRegister {
                         high_token: compact_high_token,
                         low_token,
-                        address_bytes: get_label_address_or_push_into_ref(
-                            i + 1,
-                            line_number,
-                            label,
-                            VariableType::Byte,
-                            variable_abs_address_map,
-                            variable_ref_map,
-                            compiled_line_offset_maps,
-                        ),
                         register_type: low_token_reg_type.clone(),
+                        address_bytes,
                     })
                 }
                 _ => Err(CompilationError::new_without_suggestions(
@@ -734,20 +771,37 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 },
 
                 Assembly8086Tokens::Character(label) => {
-                    Ok(AddressingMode::Register8bitAndAddress {
-                        high_token: compact_high_token,
-                        low_token,
-                        address_bytes: get_label_address_or_push_into_ref(
-                            i + 3,
-                            line_number,
-                            label,
-                            VariableType::Byte,
-                            variable_abs_address_map,
-                            variable_ref_map,
-                            compiled_line_offset_maps,
-                        ),
-                        register_type: high_token_type.clone(),
-                    })
+                    let address_bytes = get_label_address_or_push_into_ref(
+                        i + 3,
+                        label,
+                        VariableType::Byte,
+                        variable_abs_address_map,
+                        variable_ref_map,
+                        compiled_line_offset_maps,
+                    );
+
+                    match address_bytes {
+                        Either::Left(address_bytes) => Ok(AddressingMode::Register8bitAndAddress {
+                            high_token: compact_high_token,
+                            low_token,
+                            address_bytes,
+                            register_type: high_token_type.clone(),
+                        }),
+                        Either::Right(num) => match num {
+                            Number::Left(num) => Ok(AddressingMode::Register8bitNumber {
+                                high_token: compact_high_token,
+                                low_token,
+                                num,
+                            }),
+                            Number::Right(_) => Err(CompilationError::error_with_token(
+                                token,
+                                &format!(
+                                    "Expected a 8bit value after {} got 16bit value insted",
+                                    ins
+                                ),
+                            )),
+                        },
+                    }
                 }
 
                 _ => Err(CompilationError::new_without_suggestions(
@@ -774,35 +828,39 @@ pub(crate) fn parse_two_arguments_line<'a>(
     }
 }
 
+type Address = [u8; 2];
+type Number = Either<u8, u16>;
+
 fn get_label_address_or_push_into_ref(
     idx: ArrayIndex,
-    line_number: LineNumber,
     label: &Label,
     var_type: VariableType,
     variable_abs_offset_bytes_map: &VariableAddressMap,
     var_ref_map: &mut VariableReferenceMap,
     compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
-) -> [u8; 2] {
+) -> Either<Address, Number> {
     let placeholder = [0x00, 0x00];
     match variable_abs_offset_bytes_map.get(label) {
         Some((_, abs_addr)) => {
             let ins = (abs_addr & 0xFF) as u8;
             let ins2 = (abs_addr >> 8) as u8;
-            [ins, ins2]
+            Either::Left([ins, ins2])
         }
         None => {
             let offset: Option<i16> = match compiled_line_offset_maps {
                 None => None,
                 Some(compiled_line_offset_maps) => {
-                    compiled_line_offset_maps.find_label_offset_or_proc_offset(label, line_number)
+                    let start_line_num = 0;
+                    compiled_line_offset_maps
+                        .find_label_offset_or_proc_offset(label, start_line_num)
                 }
             };
             match offset {
                 None => {
                     var_ref_map.insert(label.clone(), (var_type, idx));
-                    placeholder
+                    Either::Left(placeholder)
                 }
-                Some(offset) => offset.to_le_bytes(),
+                Some(offset) => Either::Right(Either::<u8, u16>::from(offset)),
             }
         }
     }
