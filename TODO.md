@@ -2,6 +2,7 @@
 - [ ] For same parameter names in macro definitions.
 - [ ] Unused macros.
 ## To support: 
+- [ ] Support vector indexing.
 - [ ] Support Some `interrupts`.
 - [ ] inline macro editor fn.
 - [ ] creating a formatter.

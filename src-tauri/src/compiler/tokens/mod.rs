@@ -152,6 +152,24 @@ pub struct SignedU16 {
     pub is_negative: bool,
 }
 
+impl From<[u8; 2]> for SignedU16 {
+    fn from(val: [u8; 2]) -> Self {
+        // convert the bytes to u16 and check if it's negative
+        // if it is then set the is_negative to true
+        let val = u16::from_le_bytes(val);
+        Self {
+            val,
+            is_negative: false,
+        }
+    }
+}
+
+impl From<Either<u8, u16>> for SignedU16{
+    fn from(val: Either<u8, u16>) -> Self{
+        Self::new(val.get_as_u16())
+    }
+}
+
 impl SignedU16 {
     pub fn new(val: u16) -> Self {
         Self {

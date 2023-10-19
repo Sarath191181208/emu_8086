@@ -111,6 +111,10 @@ fn get_compact_ins<'a>(
     start_index: usize,
     end_index: usize,
     tokenized_line: &'a TokenizedLine<'a>,
+
+    var_ref_map: &mut VariableReferenceMap,
+    variable_abs_address_map: &VariableAddressMap,
+    compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<Option<Token>, CompilationError> {
     if start_index >= tokenized_line.len()
         || start_index == end_index
@@ -200,7 +204,26 @@ fn get_compact_ins<'a>(
             Assembly8086Tokens::Minus => {
                 operator_stack.push(StackOperator::Minus);
             }
-            Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {}
+            Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {
+                operator_stack.push(StackOperator::Plus)
+            }
+            Assembly8086Tokens::Character(label) => {
+                let addr_bytes = get_label_address_or_push_into_ref(
+                    i,
+                    label,
+                    VariableType::Word,
+                    variable_abs_address_map,
+                    var_ref_map,
+                    compiled_line_offset_maps,
+                );
+
+                let val = match addr_bytes {
+                    Either::Left(val) => Ok(SignedU16::from(val)),
+                    Either::Right(val) => Ok(SignedU16::from(val)),
+                }?;
+
+                stack.push(StackItem::Number(token, val));
+            }
 
             _ => {
                 if operator_stack.is_empty() && !stack.is_empty() {
@@ -485,11 +508,24 @@ pub(crate) fn parse_two_arguments_line<'a>(
         None => tokenized_line.len(),
     };
 
-    let compact_high_token =
-        get_compact_ins(i + 1, compact_high_until, tokenized_line)?.unwrap_or(high_token.clone());
+    let compact_high_token = get_compact_ins(
+        i + 1,
+        compact_high_until,
+        tokenized_line,
+        variable_ref_map,
+        variable_abs_address_map,
+        compiled_line_offset_maps,
+    )?
+    .unwrap_or(high_token.clone());
     let high_token = &compact_high_token;
-    let compact_low_token =
-        get_compact_ins(compact_high_until + 1, tokenized_line.len(), tokenized_line)?;
+    let compact_low_token = get_compact_ins(
+        compact_high_until + 1,
+        tokenized_line.len(),
+        tokenized_line,
+        variable_ref_map,
+        variable_abs_address_map,
+        compiled_line_offset_maps
+    )?;
 
     match &high_token.token_type.clone() {
         Assembly8086Tokens::Register16bit(register_type) => {
