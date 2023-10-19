@@ -464,7 +464,6 @@ impl<'a> CompiledLineLabelRef<'a> {
     ) -> Option<i16> {
         let label_off = self.find_label_offset(label, line_number);
         if let Some((label_off, is_label_before_ref)) = label_off {
-            println!("label_off: {}", label_off);
             return Some(label_off as i16 * if is_label_before_ref { -1 } else { 1 });
         }
         let proc_off = self.find_proc_offset(label, line_number);

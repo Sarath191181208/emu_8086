@@ -1,7 +1,7 @@
 const padHex = (s: string) => s.padStart(2, "0");
 
 export const getHighHex = (v: number) => {
-  const highBits = 0xFF00 & v;
+  const highBits = (0xFF00 & v) >> 8;
   const hex = highBits.toString(16).toUpperCase();
   return "0x" + padHex(hex.slice(0, 2));
 };
