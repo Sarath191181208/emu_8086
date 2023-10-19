@@ -2,13 +2,13 @@
 - [ ] For same parameter names in macro definitions.
 - [ ] Unused macros.
 ## To support: 
-- [ ] Support vector indexing.
 - [ ] Support Some `interrupts`.
 - [ ] inline macro editor fn.
 - [ ] creating a formatter.
 - [ ] Change interrupt flag name to `INTERRUPT_FLAG`.
 - [ ] 🐞FIX:  Running of macros.
 - [ ] 🛠️ Refactor:  Make the react ui composable .
+- [x] Support vector indexing.
 - [x] Support for ctrl + click for procs and macros.
 - [x] add support for addressing mode 
 - [x] add the labels into the symbol table
