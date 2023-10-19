@@ -165,7 +165,7 @@ fn compile(
                 let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
-                    line_number,
+                    is_org_defined,
                     "MOV",
                     variable_ref_map,
                     variable_address_map.unwrap_or(&HashMap::default()),
@@ -187,7 +187,7 @@ fn compile(
                 let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
-                    line_number,
+                    is_org_defined,
                     "ADD",
                     variable_ref_map,
                     variable_address_map.unwrap_or(&VariableAddressMap::default()),
@@ -210,7 +210,7 @@ fn compile(
                 let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
-                    line_number,
+                    is_org_defined,
                     "SUB",
                     variable_ref_map,
                     variable_address_map.unwrap_or(&VariableAddressMap::default()),

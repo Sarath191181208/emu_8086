@@ -13,7 +13,7 @@ use crate::{
             registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
         types_structs::{
-            ArrayIndex, Label, LineNumber, VariableAddressMap, VariableReferenceMap, VariableType,
+            ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType,
         },
         CompiledLineLabelRef,
     },
@@ -111,7 +111,7 @@ fn get_compact_ins<'a>(
     start_index: usize,
     end_index: usize,
     tokenized_line: &'a TokenizedLine<'a>,
-
+    is_org_defined: bool,
     var_ref_map: &mut VariableReferenceMap,
     variable_abs_address_map: &VariableAddressMap,
     compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
@@ -211,6 +211,7 @@ fn get_compact_ins<'a>(
                 let addr_bytes = get_label_address_or_push_into_ref(
                     i,
                     label,
+                    is_org_defined,
                     VariableType::Word,
                     variable_abs_address_map,
                     var_ref_map,
@@ -481,7 +482,7 @@ fn get_compact_ins<'a>(
 pub(crate) fn parse_two_arguments_line<'a>(
     tokenized_line: &'a TokenizedLine<'a>,
     i: usize,
-    _line_number: LineNumber,
+    is_org_defined: bool,
     ins: &'a str,
     variable_ref_map: &mut VariableReferenceMap,
     variable_abs_address_map: &VariableAddressMap,
@@ -512,6 +513,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
         i + 1,
         compact_high_until,
         tokenized_line,
+        is_org_defined,
         variable_ref_map,
         variable_abs_address_map,
         compiled_line_offset_maps,
@@ -522,6 +524,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
         compact_high_until + 1,
         tokenized_line.len(),
         tokenized_line,
+        is_org_defined,
         variable_ref_map,
         variable_abs_address_map,
         compiled_line_offset_maps,
@@ -585,6 +588,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let addr_bytes = get_label_address_or_push_into_ref(
                         i + 3,
                         label,
+                        is_org_defined,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
@@ -656,6 +660,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        is_org_defined,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
@@ -678,6 +683,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        is_org_defined,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
@@ -700,6 +706,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        is_org_defined,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
@@ -723,6 +730,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        is_org_defined,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
@@ -810,6 +818,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 3,
                         label,
+                        is_org_defined,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
@@ -870,6 +879,7 @@ type Number = Either<u8, u16>;
 fn get_label_address_or_push_into_ref(
     idx: ArrayIndex,
     label: &Label,
+    is_org_defined: bool,
     var_type: VariableType,
     variable_abs_offset_bytes_map: &VariableAddressMap,
     var_ref_map: &mut VariableReferenceMap,
@@ -896,7 +906,13 @@ fn get_label_address_or_push_into_ref(
                     var_ref_map.insert(label.clone(), (var_type, idx));
                     Either::Left(placeholder)
                 }
-                Some(offset) => Either::Right(Either::<u8, u16>::from(offset)),
+                Some(offset) => {
+                    let optional_offset = match is_org_defined {
+                        true => 0x100,
+                        false => 0x00,
+                    };
+                    Either::Right(Either::<u8, u16>::from(offset + optional_offset))
+                }
             }
         }
     }

@@ -571,6 +571,31 @@ mod tests {
             assert_eq!(compiled_instructions, &[0x8B, 0x2E, 0x00, 0x10])
         }
     );
+
+    test_compile!(
+        test_mov_cx_label_without_org,
+        "
+        code:
+        mov cx, code
+
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0xB9, 0x00, 0x00])
+        }
+    );
+
+    test_compile!(
+        test_mov_cx_label_with_org,
+        "
+        org 100h
+        code:
+        mov cx, code
+
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0xB9, 0x00, 0x01])
+        }
+    );
 }
 
 #[cfg(test)]
