@@ -524,7 +524,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
         tokenized_line,
         variable_ref_map,
         variable_abs_address_map,
-        compiled_line_offset_maps
+        compiled_line_offset_maps,
     )?;
 
     match &high_token.token_type.clone() {

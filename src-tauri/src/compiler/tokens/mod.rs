@@ -164,8 +164,8 @@ impl From<[u8; 2]> for SignedU16 {
     }
 }
 
-impl From<Either<u8, u16>> for SignedU16{
-    fn from(val: Either<u8, u16>) -> Self{
+impl From<Either<u8, u16>> for SignedU16 {
+    fn from(val: Either<u8, u16>) -> Self {
         Self::new(val.get_as_u16())
     }
 }
