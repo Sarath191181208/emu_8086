@@ -58,7 +58,7 @@ impl<'a> TokenizedLine<'a> {
                 last_token.column_number + last_token.token_length,
                 self.len_lexed_strings + 1,
                 &exception_str,
-                possible_suggestions.unwrap_or(vec![]),
+                possible_suggestions.unwrap_or_default(),
             ));
         }
         Ok(self.tokens[i])
