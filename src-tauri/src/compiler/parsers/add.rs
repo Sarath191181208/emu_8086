@@ -109,7 +109,7 @@ pub(in crate::compiler) fn parse_add(
                 push_instruction(compiled_bytes, vec![0x04], token, compiled_bytes_ref);
                 push_instruction(compiled_bytes, vec![number], &low_token, compiled_bytes_ref);
             } else {
-                push_instruction(compiled_bytes, vec![0x82], token, compiled_bytes_ref);
+                push_instruction(compiled_bytes, vec![0x80], token, compiled_bytes_ref);
                 push_instruction(
                     compiled_bytes,
                     vec![0xC0 | high_reg.get_as_idx()],
@@ -461,7 +461,7 @@ mod test8bit {
 
     // add ah and 0x12
     test_compile!(add_ah_0x12, "ADD AH, 0x12", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x82, 0xC4, 0x12]);
+        assert_eq!(instructions, &[0x80, 0xC4, 0x12]);
     });
 
     // test bl + var
