@@ -596,6 +596,14 @@ mod tests {
             assert_eq!(compiled_instructions, &[0xB9, 0x00, 0x01])
         }
     );
+
+    test_compile!(
+        test_mov_bp_bin_number,
+        "MOV BP, 01000b",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0xBD, 0b1000, 0x00])
+        }
+    );
 }
 
 #[cfg(test)]
@@ -737,6 +745,14 @@ mod tests8bit {
         "mov cl, [bx + di + 0x10]",
         |compiled_instructions: &Vec<u8>| {
             assert_eq!(compiled_instructions, &[0x8A, 0x49, 0x10])
+        }
+    );
+
+    test_compile!(
+        mov_dh_bin_num,
+        "MOV DH, 01000b",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &[0xB6, 0b1000])
         }
     );
 }
