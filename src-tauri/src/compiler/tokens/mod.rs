@@ -238,7 +238,7 @@ impl SignedU16 {
             }
         }
         if self.is_negative && self.val <= 0x80 {
-            if self.val == 0x00{
+            if self.val == 0x00 {
                 return Ok(Either::Left(0x00));
             }
             Ok(Either::Left(0xFF - (self.val as u8) + 1_u8))

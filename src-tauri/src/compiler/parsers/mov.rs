@@ -612,7 +612,6 @@ mod tests {
             assert_eq!(instructions, &[0xBC, 0x20, 0x00]);
         }
     );
-
 }
 
 #[cfg(test)]

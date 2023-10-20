@@ -432,7 +432,7 @@ mod tests16bit {
         assert_eq!(instructions, &[0x83, 0xC5, 0x40]);
     });
 
-        test_compile!(
+    test_compile!(
         add_cx_0x10_0x20_0x30,
         "Add Cx, 0x10 - 0x20 + 0x30",
         |instructions: &Vec<u8>| {
