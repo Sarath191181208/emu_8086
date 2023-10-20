@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 
-use crate::compiler::{
-    compilation_error::CompilationError,
-    suggestions_utils::get_all_registers_and_variable_suggestions,
-    tokenized_line::TokenizedLine,
-    tokens::{Assembly8086Tokens, Token},
-    types_structs::{Label, LineNumber, VariableAddressMap},
-    CompiledBytesReference, CompiledLineLabelRef,
+use crate::{
+    compiler::{
+        compilation_error::CompilationError,
+        suggestions_utils::get_all_registers_and_variable_suggestions,
+        tokenized_line::TokenizedLine,
+        tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
+        types_structs::{Label, LineNumber, VariableAddressMap},
+        CompiledBytesReference, CompiledLineLabelRef,
+    },
+    convert_and_push_instructions,
 };
 
 use super::utils::push_instruction;
@@ -24,14 +27,16 @@ pub(in crate::compiler) fn parse_jmp(
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     variable_address_map: Option<&VariableAddressMap>,
-    label_idx_map: &mut HashMap<String, (Token, usize)>,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
+    let mut i = i;
     let token = tokenized_line.get(
         i,
         "This shouldn't happen, Please report this".to_string(),
         None,
     )?;
+
     let high_token = tokenized_line.get(
         i + 1,
         "Expected arguments after JMP got nothing".to_string(),
@@ -39,17 +44,33 @@ pub(in crate::compiler) fn parse_jmp(
             variable_address_map,
         )]),
     )?;
+    let is_offset = matches!(
+        &high_token.token_type,
+        Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Offset)
+    );
+    if is_offset {
+        i += 1;
+    }
+
+    let high_token = tokenized_line.get(
+        i + 1,
+        "Expected arguments after JMP got nothing".to_string(),
+        Some(vec![get_all_registers_and_variable_suggestions(
+            variable_address_map,
+        )]),
+    )?;
+
     match &high_token.token_type {
         Assembly8086Tokens::Character(label) => {
             // let offset_bytes_from_line_and_is_label_before_ref = compiled_line_ref_with_offset_maps.find_label_offset(label, line_number );
 
             let offset_bytes_from_line_and_is_label_before_ref =
-                match compiled_line_ref_with_offset_maps {
-                    None => None,
-                    Some(compiled_line_ref_with_offset_maps) => {
-                        compiled_line_ref_with_offset_maps.find_label_offset(label, line_number)
-                    }
-                };
+                get_offset_bytes_from_line_from_maps(
+                    label,
+                    line_number,
+                    is_offset,
+                    compiled_line_ref_with_offset_maps,
+                );
 
             match offset_bytes_from_line_and_is_label_before_ref {
                 None => {
@@ -65,41 +86,40 @@ pub(in crate::compiler) fn parse_jmp(
                     };
                     let placeholder_or_variable_val_len =
                         placeholder_or_variable_val.len() + 1 - placeholder_or_variable_ins.len();
-                    push_instruction(
+                    convert_and_push_instructions!(
                         compiled_bytes,
-                        placeholder_or_variable_ins,
-                        token,
                         compiled_bytes_ref,
-                    );
-                    push_instruction(
-                        compiled_bytes,
-                        placeholder_or_variable_val,
-                        high_token,
-                        compiled_bytes_ref,
+                        (
+                            token => placeholder_or_variable_ins,
+                            high_token => placeholder_or_variable_val
+                        )
                     );
                     let ins_idx = compiled_bytes.len() - placeholder_or_variable_val_len;
-                    label_idx_map.insert(label.to_string(), (high_token.clone(), ins_idx));
+                    label_idx_map
+                        .insert(label.to_string(), (high_token.clone(), ins_idx, is_offset));
                     Ok(i + 2)
                 }
                 Some((offset_bytes, is_jmp_after_label)) => {
                     match calc_offset(offset_bytes, is_jmp_after_label) {
                         Offset::U8(offset) => {
-                            push_instruction(compiled_bytes, vec![0xEB], token, compiled_bytes_ref);
-                            push_instruction(
+                            convert_and_push_instructions!(
                                 compiled_bytes,
-                                vec![offset],
-                                high_token,
                                 compiled_bytes_ref,
+                                (
+                                    token => vec![0xEB],
+                                    high_token => vec![offset]
+                                )
                             );
                             Ok(i + 2)
                         }
                         Offset::U16(offset) => {
-                            push_instruction(compiled_bytes, vec![0xE9], token, compiled_bytes_ref);
-                            push_instruction(
+                            convert_and_push_instructions!(
                                 compiled_bytes,
-                                vec![(offset & 0xFF) as u8, (offset >> 8) as u8],
-                                high_token,
                                 compiled_bytes_ref,
+                                (
+                                    token => vec![0xE9],
+                                    high_token => offset.to_le_bytes().to_vec()
+                                )
                             );
                             Ok(i + 3)
                         }
@@ -117,6 +137,29 @@ pub(in crate::compiler) fn parse_jmp(
                 high_token.token_type
             ),
         )),
+    }
+}
+
+fn get_offset_bytes_from_line_from_maps(
+    label: &Label,
+    line_number: LineNumber,
+    is_offset: bool,
+    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
+) -> Option<(u16, bool)> {
+    match compiled_line_ref_with_offset_maps {
+        None => None,
+        Some(compiled_line_ref_with_offset_maps) => {
+            match compiled_line_ref_with_offset_maps.find_label_offset(label, line_number) {
+                None => {
+                    if is_offset {
+                        return compiled_line_ref_with_offset_maps
+                            .find_var_as_label_offset(label, line_number);
+                    }
+                    None
+                }
+                Some(a) => Some(a),
+            }
+        }
     }
 }
 
@@ -292,6 +335,28 @@ mod test_16_bit_jmp_compile {
             let high_bits = compiled_instructions[len_ins - 1];
             assert_eq!(low_bits, 0x7E);
             assert_eq!(high_bits, 0xFF);
+        }
+    );
+
+    test_compile!(
+        jmp_offset_var16bit,
+        "
+        Var dw 0x10
+        JMP offset var
+        ",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x10, 0x00, 0xEB, 0xFC]);
+        }
+    );
+
+    test_compile!(
+        jmp_offset_var8bit,
+        "
+        Var db 0x10
+        JMP offset var
+        ",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x10, 0xEB, 0xFD]);
         }
     );
 }

@@ -5,7 +5,7 @@ use super::{
 };
 
 pub struct TokenizedLine<'a> {
-    tokens: &'a Vec<&'a Token>,
+    pub(crate) tokens: &'a Vec<&'a Token>,
     len_lexed_strings: u32,
 }
 

@@ -46,10 +46,11 @@ use self::{
         assembler_directives::AssemblerDirectives, data::DefineData, Assembly8086Tokens, Token,
     },
     types_structs::{
-        ArrayIndex, CompiledBytesReference, CompiledLine, IsLabelBeforeRef, Label, LabelAddressMap,
-        LabelRefrenceList, LineNumber, MacroBoundsDefintionMap, MacroReferenceList,
-        ProcDefinitionLineNumberMap, ProcReferenceList, VariableAddressDefinitionMap,
-        VariableAddressMap, VariableReferenceList, VariableType,
+        ArrayIndex, CompiledBytesIndexedLineNumber, CompiledBytesReference, CompiledLine,
+        IsLabelBeforeRef, Label, LabelAddressMap, LabelRefrenceList, LineNumber,
+        MacroBoundsDefintionMap, MacroReferenceList, ProcDefinitionLineNumberMap,
+        ProcReferenceList, VariableAddressDefinitionMap, VariableAddressMap, VariableReferenceList,
+        VariableType,
     },
     utils::get_jmp_code_compiled_line,
 };
@@ -127,7 +128,7 @@ fn compile(
                     )?;
                     temp_line
                         .label_idx_map
-                        .insert("code".to_string(), (high_token.clone(), i));
+                        .insert("code".to_string(), (high_token.clone(), i, false));
                     compiled_line.extend(temp_line);
                     i += 1;
                 }
@@ -453,6 +454,7 @@ fn compile(
 
 pub(crate) struct CompiledLineLabelRef<'a> {
     compiled_bytes: &'a [Vec<u8>],
+    var_line_num_map: &'a HashMap<Label, (VariableType, CompiledBytesIndexedLineNumber)>,
     label_addr_map: &'a HashMap<UniCase<String>, LineNumber>,
     proc_compiled_bytes_line_start_map: &'a ProcDefinitionStartAndEndBytesMap,
 }
@@ -482,6 +484,22 @@ impl<'a> CompiledLineLabelRef<'a> {
         };
         let (offset, is_label_before_ref) =
             calc_offset(self.compiled_bytes, line_number, *label_addr);
+        Some((offset, is_label_before_ref))
+    }
+
+    pub fn find_var_as_label_offset(
+        &self,
+        label: &Label,
+        line_number: LineNumber,
+    ) -> Option<(u16, bool)> {
+        println!("var map: {:?}", self.var_line_num_map);
+        let var_defn_line_num = self.var_line_num_map.get(label);
+        let var_defn_line_num = match var_defn_line_num {
+            None => return None,
+            Some(var_defn_line_num) => var_defn_line_num.1,
+        };
+        let (offset, is_label_before_ref) =
+            calc_offset(self.compiled_bytes, line_number, var_defn_line_num);
         Some((offset, is_label_before_ref))
     }
 
@@ -556,6 +574,10 @@ fn mark_labels(
 
     label_addr_map: &LabelAddressMap,
 
+    var_ref_compiled_bytes_line_num_map: &HashMap<
+        Label,
+        (VariableType, CompiledBytesIndexedLineNumber),
+    >,
     var_addr_def_map: &VariableAddressDefinitionMap,
     var_abs_addr_map: &mut VariableAddressMap,
 
@@ -578,6 +600,7 @@ fn mark_labels(
                 compiled_bytes,
                 label_addr_map,
                 proc_compiled_bytes_line_start_map,
+                var_line_num_map: var_ref_compiled_bytes_line_num_map,
                 // is_org_defined,
             }),
             Some(var_abs_addr_map),
@@ -606,6 +629,7 @@ fn mark_labels(
             compiled_bytes,
             compiled_bytes_ref,
             label_addr_map,
+            var_ref_compiled_bytes_line_num_map,
             var_addr_def_map,
             var_abs_addr_map,
             proc_compiled_bytes_line_start_map,
@@ -1205,6 +1229,8 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
 
     let mut proc_compiled_bytes_line_number_map = ProcDefinitionStartAndEndBytesMap::new();
 
+    let mut labels_used_as_offsets = Vec::new();
+
     for (i, line) in lexer.tokens.iter().enumerate() {
         match compile(i, line, is_org_defined, None, None) {
             Ok(compiled_line) => {
@@ -1332,8 +1358,11 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
                 }
 
                 // Pushing all the labels that reference a particular label
-                for (label_str, (token, _)) in compiled_line.label_idx_map {
+                for (label_str, (token, _, is_offset)) in compiled_line.label_idx_map {
                     let label = UniCase::new(label_str);
+                    if is_offset {
+                        labels_used_as_offsets.push(label.clone());
+                    }
                     label_ref.push((
                         label.clone(),
                         token,
@@ -1535,6 +1564,9 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
             ));
         }
         if let Some((VariableType::Byte, line_number)) = var_addr_def_map.get(label) {
+            if labels_used_as_offsets.contains(label) {
+                continue;
+            }
             label_errors = true;
             let var_token = get_label_token_from_line(lexer, *line_number, label).unwrap();
             compilation_errors.push(CompilationError::error_with_token(
@@ -1579,6 +1611,7 @@ pub(crate) fn compile_lines_perform_var_label_substiution(
         compiled_bytes_lines_vec,
         compiled_bytes_ref_lines_vec,
         &label_compiled_bytes_line_number_map,
+        &var_compiled_bytes_line_number_map,
         var_addr_def_map,
         &mut var_abs_addr_map,
         &proc_compiled_bytes_line_number_map,

@@ -20,7 +20,7 @@ pub(in crate::compiler) fn parse_loop(
     line_number: LineNumber,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-    label_idx_map: &mut HashMap<String, (Token, usize)>,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
@@ -81,7 +81,7 @@ pub(in crate::compiler) fn parse_loop(
                         )
                     );
                     // this represents that this variable is used and needs to be defined
-                    label_idx_map.insert(label.to_string(), (label_token.clone(), i + 1));
+                    label_idx_map.insert(label.to_string(), (label_token.clone(), i + 1, false));
                     Ok(i + 1)
                 }
             }

@@ -72,13 +72,14 @@ impl CompiledBytesReference {
     }
 }
 
+type AsOffset = bool; // This variable is used to check if a variable is being used as an offset
 /// This is a helper struct to pack and send all the vars needed to compile a line
 #[derive(Debug)]
 pub(crate) struct CompiledLine {
     pub compiled_bytes: Vec<u8>,
     pub compiled_bytes_ref: Vec<CompiledBytesReference>,
     pub labels: Vec<String>,
-    pub label_idx_map: std::collections::HashMap<String, (Token, TokenIndex)>,
+    pub label_idx_map: std::collections::HashMap<String, (Token, TokenIndex, AsOffset)>,
     pub variable_reference_map: VariableReferenceMap,
     pub variable_abs_address_map: VariableAddressDefinitionMap,
 
