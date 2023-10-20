@@ -96,7 +96,7 @@ pub(in crate::compiler) fn parse_sub(
                 );
             }
 
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register8bitNumber {
             high_token,
@@ -125,7 +125,7 @@ pub(in crate::compiler) fn parse_sub(
                     )
                 );
             }
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register16bitAndAddress {
             high_token,
@@ -178,7 +178,7 @@ pub(in crate::compiler) fn parse_sub(
                     &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register8bitAndAddress {
             high_token,
@@ -240,7 +240,7 @@ pub(in crate::compiler) fn parse_sub(
                    &low_token=> vec![num]
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register16bitAndIndexedAddress {
             high_token,
@@ -418,6 +418,15 @@ mod tests16bit {
             assert_eq!(instructions, &[0x2B, 0x53, 0x60]);
         }
     );
+
+    // sub bx, 0x10 - 0x20 + 0x30   
+    test_compile!(
+        sub_bx_0x10_0x20_0x30,
+        "SUB BX, 0x10 - 0x20 + 0x30",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x83, 0xEB, 0x20]);
+        }
+    );
 }
 
 #[cfg(test)]
@@ -512,6 +521,14 @@ mod tests8bit {
         "SUB BL, [BP] + [0x10] + DI + 0x20 + 0x30",
         |instructions: &Vec<u8>| {
             assert_eq!(instructions, &[0x2A, 0x5B, 0x60]);
+        }
+    );
+
+    test_compile!(
+        sub_cl_0x10_0x20_0x30,
+        "SUB CL, 0x10 - 0x20 + 0x30",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x80, 0xE9, 0x20]);
         }
     );
 }

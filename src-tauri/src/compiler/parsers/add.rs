@@ -96,7 +96,7 @@ pub(in crate::compiler) fn parse_add(
                 push_instruction(compiled_bytes, data_ins, &low_token, compiled_bytes_ref);
             }
 
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register8bitNumber {
             high_token,
@@ -118,7 +118,7 @@ pub(in crate::compiler) fn parse_add(
                 );
                 push_instruction(compiled_bytes, vec![number], &low_token, compiled_bytes_ref);
             }
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register16bitAndAddress {
             high_token,
@@ -171,7 +171,7 @@ pub(in crate::compiler) fn parse_add(
                     &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register8bitAndAddress {
             high_token,
@@ -233,7 +233,7 @@ pub(in crate::compiler) fn parse_add(
                    &low_token=> vec![num]
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         AddressingMode::Register16bitAndIndexedAddress {
             high_token,
@@ -431,6 +431,14 @@ mod tests16bit {
     test_compile!(add_bp_0100o, "ADD BP, 0100o", |instructions: &Vec<u8>| {
         assert_eq!(instructions, &[0x83, 0xC5, 0x40]);
     });
+
+        test_compile!(
+        add_cx_0x10_0x20_0x30,
+        "Add Cx, 0x10 - 0x20 + 0x30",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x83, 0xC1, 0x20]);
+        }
+    );
 }
 
 #[cfg(test)]
@@ -539,4 +547,12 @@ mod test8bit {
     test_compile!(add_al_010o, "ADD AL, 010o", |instructions: &Vec<u8>| {
         assert_eq!(instructions, &[0x04, 0x08]);
     });
+
+    test_compile!(
+        add_bl_0x10_0x20_0x30,
+        "ADD bl, 0x10 - 0x20 + 0x30",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0x80, 0xC3, 0x20]);
+        }
+    );
 }

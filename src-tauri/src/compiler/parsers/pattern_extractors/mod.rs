@@ -319,7 +319,7 @@ fn get_compact_ins<'a>(
                             "The sum of the values overflows",
                         ));
                     }
-                    stack.push(StackItem::Number(low_token, res));
+                    stack.push(StackItem::Number(low_token, res.negate()));
                 }
             }
         }
@@ -330,9 +330,7 @@ fn get_compact_ins<'a>(
         match item {
             StackItem::Register16bit(_) => {}
             StackItem::Number(_, num) => {
-                if num.val != 0 {
-                    offset = Some(num);
-                }
+                offset = Some(num);
             }
         }
     }
@@ -343,10 +341,8 @@ fn get_compact_ins<'a>(
             "This shouldn't happen, Please report this".to_string(),
             None,
         )?;
-        return Err(CompilationError::new_without_suggestions(
-            token.line_number,
-            token.column_number,
-            token.token_length,
+        return Err(CompilationError::error_with_token(
+            token,
             "Expected either bx or bp got both",
         ));
     }
@@ -357,10 +353,8 @@ fn get_compact_ins<'a>(
             "This shouldn't happen, Please report this".to_string(),
             None,
         )?;
-        return Err(CompilationError::new_without_suggestions(
-            token.line_number,
-            token.column_number,
-            token.token_length,
+        return Err(CompilationError::error_with_token(
+            token,
             "Expected either si or di got both",
         ));
     }
@@ -519,6 +513,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
         compiled_line_offset_maps,
     )?
     .unwrap_or(high_token.clone());
+
     let high_token = &compact_high_token;
     let compact_low_token = get_compact_ins(
         compact_high_until + 1,

@@ -92,7 +92,7 @@ pub(in crate::compiler) fn parse_mov(
                    &low_token=> vec![ins, ins2]
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         // MOV AL..BH, 0x00..0xFF
         AddressingMode::Register8bitNumber {
@@ -110,7 +110,7 @@ pub(in crate::compiler) fn parse_mov(
                 )
             );
 
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         // MOV AX..DI, 0x100
         AddressingMode::Register16bitAndAddress {
@@ -193,7 +193,7 @@ pub(in crate::compiler) fn parse_mov(
                     &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         // MOV AL..BH, 0x100
         AddressingMode::Register8bitAndAddress {
@@ -283,7 +283,7 @@ pub(in crate::compiler) fn parse_mov(
                    &low_token=> vec![num]
                 )
             );
-            Ok(i + 3)
+            Ok(tokenized_line.len())
         }
         // MOV AX..DI, [BX] | [BP] | [SI] | [DI] | [BX + SI] | [BX + DI] | [BP + SI] | [BP + DI]
         AddressingMode::Register16bitAndIndexedAddress {
@@ -604,6 +604,15 @@ mod tests {
             assert_eq!(compiled_instructions, &[0xBD, 0b1000, 0x00])
         }
     );
+
+    test_compile!(
+        mov_sp_0x10_0x20_0x30,
+        "MOV SP, 0x10 - 0x20 + 0x30",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0xBC, 0x20, 0x00]);
+        }
+    );
+
 }
 
 #[cfg(test)]
@@ -752,5 +761,13 @@ mod tests8bit {
         mov_dh_bin_num,
         "MOV DH, 01000b",
         |compiled_instructions: &Vec<u8>| { assert_eq!(compiled_instructions, &[0xB6, 0b1000]) }
+    );
+
+    test_compile!(
+        mov_ah_0x10_0x20_0x30,
+        "MOV Ah, 0x10 - 0x20 + 0x30 - 0x20",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[0xB4, 0x00]);
+        }
     );
 }
