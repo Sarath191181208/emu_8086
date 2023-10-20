@@ -751,8 +751,6 @@ mod tests8bit {
     test_compile!(
         mov_dh_bin_num,
         "MOV DH, 01000b",
-        |compiled_instructions: &Vec<u8>| {
-            assert_eq!(compiled_instructions, &[0xB6, 0b1000])
-        }
+        |compiled_instructions: &Vec<u8>| { assert_eq!(compiled_instructions, &[0xB6, 0b1000]) }
     );
 }

@@ -426,6 +426,11 @@ mod tests16bit {
             assert_eq!(instructions, &[0x05, 0x05, 0x00, 0x40, 0x8B, 0xC3]);
         }
     );
+
+    // Add bp, 0100o
+    test_compile!(add_bp_0100o, "ADD BP, 0100o", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x83, 0xC5, 0x40]);
+    });
 }
 
 #[cfg(test)]
@@ -529,4 +534,9 @@ mod test8bit {
             assert_eq!(instructions, &[0x02, 0xB4, 0x00, 0x20]);
         }
     );
+
+    // test add al, 010o
+    test_compile!(add_al_010o, "ADD AL, 010o", |instructions: &Vec<u8>| {
+        assert_eq!(instructions, &[0x04, 0x08]);
+    });
 }

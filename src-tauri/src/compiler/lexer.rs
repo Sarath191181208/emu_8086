@@ -191,6 +191,10 @@ impl Lexer {
             if let Ok(number) = u16::from_str_radix(stripped_token, 2) {
                 return Some(Assembly8086Tokens::Number16bit(number));
             }
+        } else if let Some(stripped_token) = token_string.strip_suffix('o') {
+            if let Ok(number) = u16::from_str_radix(stripped_token, 8) {
+                return Some(Assembly8086Tokens::Number16bit(number));
+            }
         } else if let Ok(number) = token_string.parse::<u16>() {
             return Some(Assembly8086Tokens::Number16bit(number));
         }
@@ -212,6 +216,10 @@ impl Lexer {
             }
         } else if let Some(stripped_token) = token_string.strip_suffix('b') {
             if let Ok(number) = u8::from_str_radix(stripped_token, 2) {
+                return Some(Assembly8086Tokens::Number8bit(number));
+            }
+        } else if let Some(stripped_token) = token_string.strip_suffix('o') {
+            if let Ok(number) = u8::from_str_radix(stripped_token, 8) {
                 return Some(Assembly8086Tokens::Number8bit(number));
             }
         } else if let Ok(number) = token_string.parse::<u8>() {
