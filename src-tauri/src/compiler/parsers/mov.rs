@@ -517,6 +517,23 @@ mod tests {
     );
 
     test_compile!(
+        test_mov_ax_offset_var,
+        "
+        org 100h 
+        .data 
+        var dw 1_0h
+        code:
+        mov ax, offset var
+        ",
+        |compiled_instructions: &Vec<u8>| {
+            assert_eq!(
+                compiled_instructions,
+                &[0xEB, 0x02, 0x10, 0x00, 0xB8, 0x02, 0x01]
+            )
+        }
+    );
+
+    test_compile!(
         test_mov_bx_bp,
         "mov bx, [bp]",
         |compiled_instructions: &Vec<u8>| {

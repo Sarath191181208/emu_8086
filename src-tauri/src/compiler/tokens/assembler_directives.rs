@@ -12,4 +12,6 @@ pub(crate) enum AssemblerDirectives {
 
     Macro,
     EndM,
+
+    Offset,
 }

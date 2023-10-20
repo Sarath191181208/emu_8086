@@ -9,6 +9,7 @@ use crate::{
         },
         tokenized_line::TokenizedLine,
         tokens::{
+            assembler_directives::AssemblerDirectives,
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
             registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
@@ -139,6 +140,7 @@ fn get_compact_ins<'a>(
     let mut is_bp_in_line = (false, 0_u32);
     let mut is_si_in_line = (false, 0_u32);
     let mut is_di_in_line = (false, 0_u32);
+    let mut is_offset_directive_defined = false;
     let mut offset: Option<SignedU16> = None;
 
     // use stack to convert the expression into a postifx one
@@ -206,6 +208,9 @@ fn get_compact_ins<'a>(
             }
             Assembly8086Tokens::OpenSquareBracket | Assembly8086Tokens::CloseSquareBracket => {
                 operator_stack.push(StackOperator::Plus)
+            }
+            Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Offset) => {
+                is_offset_directive_defined = true;
             }
             Assembly8086Tokens::Character(label) => {
                 let addr_bytes = get_label_address_or_push_into_ref(
@@ -375,9 +380,11 @@ fn get_compact_ins<'a>(
     let column_number = first_ins.column_number;
     let token_length = last_ins.column_number + last_ins.token_length - first_ins.column_number;
 
-    if !is_bx_in_line.0 && !is_bp_in_line.0 && !is_si_in_line.0 && !is_di_in_line.0 {
+    if is_offset_directive_defined
+        || (!is_bx_in_line.0 && !is_bp_in_line.0 && !is_si_in_line.0 && !is_di_in_line.0)
+    {
         if let Some(num_type) = offset {
-            if open_sqaure_bracket_exists {
+            if open_sqaure_bracket_exists && !is_offset_directive_defined {
                 return Ok(Some(Token {
                     line_number,
                     column_number,
