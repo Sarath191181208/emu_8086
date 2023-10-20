@@ -176,9 +176,8 @@ impl Lexer {
     }
 
     fn parse_num_u16(&self, token_string: &str) -> Option<Assembly8086Tokens> {
-        // try to parse numberr that is in 0x0011 format and
-        // also in the format of 011h and also in the base 10 format
-        // and return the number in the base 10 format
+        // try to parse number that is in different formats and return the number as a tokentype
+        let token_string = token_string.replace("_", "");
         if let Some(stripped_token) = token_string.strip_prefix("0x") {
             if let Ok(number) = u16::from_str_radix(stripped_token, 16) {
                 return Some(Assembly8086Tokens::Number16bit(number));
@@ -203,9 +202,8 @@ impl Lexer {
     }
 
     fn parse_num_u8(&self, token_string: &str) -> Option<Assembly8086Tokens> {
-        // try to parse numberr that is in 0x0011 format and
-        // also in the format of 011h and also in the base 10 format
-        // and return the number in the base 10 format
+        // try to parse number that is in different formats and return the number as a tokentype
+        let token_string = token_string.replace("_", "");
         if let Some(stripped_token) = token_string.strip_prefix("0x") {
             if let Ok(number) = u8::from_str_radix(stripped_token, 16) {
                 return Some(Assembly8086Tokens::Number8bit(number));
