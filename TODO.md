@@ -2,6 +2,7 @@
 - [ ] For same parameter names in macro definitions.
 - [ ] Unused macros.
 ## To support: 
+- [ ] `push` and `pop` for `regs`.    
 - [ ] Support Some `interrupts`.
 - [ ] inline macro editor fn.
 - [ ] creating a formatter.
