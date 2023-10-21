@@ -240,6 +240,7 @@ impl CPU {
     pub fn execute(&mut self, mem: &mut Memory) -> Option<Interrupt> {
         let opcode = self.consume_instruction(mem);
         match opcode {
+            // ADD [0x1234], AL
             0x00 => self.execute_add_address_and_8bit_register(mem),
 
             // ADD [0x1234], AX
