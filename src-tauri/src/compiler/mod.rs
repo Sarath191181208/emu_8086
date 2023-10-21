@@ -437,6 +437,19 @@ fn compile(
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "OUT", 2)?;
                 Ok(compiled_line)
             }
+            Instructions::Push => {
+                // i = parse_push(
+                //     &tokenized_line,
+                //     i,
+                //     compiled_bytes,
+                //     compiled_bytes_ref,
+                //     variable_ref_map,
+                //     variable_address_map,
+                // )?;
+                // error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "PUSH", 1)?;
+                // Ok(compiled_line)
+                todo!()
+            },
         },
         Assembly8086Tokens::AssemblerDirectives(_) => Ok(compiled_line),
 
