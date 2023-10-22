@@ -11,10 +11,10 @@ use crate::{
         suggestions_utils::get_all_registers_and_variable_suggestions,
         tokenized_line::TokenizedLine,
         tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
-        types_structs::{Label, LineNumber, VariableAddressMap},
-        CompiledLineLabelRef,
+        types_structs::{Label, LineNumber, VariableAddressMap, CompiledBytesReference},
+        CompiledLineLabelRef, parsers::utils::push_instruction,
     },
-    utils::Either,
+    utils::Either, convert_and_push_instructions,
 };
 
 pub(in crate::compiler) enum Offset {
@@ -91,6 +91,54 @@ pub(in crate::compiler) fn parse_single_ins_labels(
         )),
     }
 }
+
+pub(in crate::compiler) fn match_ins_to_bytes_single_ins_with_label_and_offset_label(
+    i: usize,
+    token: &Token,
+    high_token: &Token,
+    instruction_compile_data: OffsetInstructionCompileData,
+    addressing_mode: Offset,
+    compiled_bytes: &mut Vec<u8>,
+compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+) -> usize{
+    match addressing_mode{
+        Offset::U8(offset) => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => instruction_compile_data.ins_8bit,
+                    high_token => vec![offset]
+                )
+            );
+            i + 1
+        }
+        Offset::U16(offset) => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => instruction_compile_data.ins_16bit,
+                    high_token => offset.to_le_bytes().to_vec()
+                )
+            );
+            i + 2
+        }
+        Offset::Pointer(addr) => {
+            convert_and_push_instructions!(
+            compiled_bytes,
+            compiled_bytes_ref,
+            (
+                token => instruction_compile_data.pointer_offset_instruciton,
+                high_token => addr.to_le_bytes().to_vec()
+            )
+            );
+            i + 2
+        }
+    }
+
+}
+
 
 pub(in crate::compiler) fn parse_token_high_token_and_is_offset_defined<'a>(
     tokenized_line: &'a TokenizedLine,

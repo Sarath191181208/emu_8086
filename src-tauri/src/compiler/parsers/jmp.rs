@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 
-use crate::{
-    compiler::{
-        compilation_error::CompilationError,
-        tokenized_line::TokenizedLine,
-        tokens::Token,
-        types_structs::{LineNumber, VariableAddressMap},
-        CompiledBytesReference, CompiledLineLabelRef,
-    },
-    convert_and_push_instructions,
+use crate::compiler::{
+    compilation_error::CompilationError,
+    tokenized_line::TokenizedLine,
+    tokens::Token,
+    types_structs::{LineNumber, VariableAddressMap},
+    CompiledBytesReference, CompiledLineLabelRef,
 };
 
-use super::{utils::push_instruction, pattern_extractors::offset_label_pattern::{OffsetInstructionCompileData, parse_token_high_token_and_is_offset_defined, parse_single_ins_labels, OffsetMaps, Offset}};
+use super::pattern_extractors::offset_label_pattern::{
+    match_ins_to_bytes_single_ins_with_label_and_offset_label, parse_single_ins_labels,
+    parse_token_high_token_and_is_offset_defined, OffsetInstructionCompileData, OffsetMaps,
+};
 
 #[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn parse_jmp(
@@ -24,13 +24,13 @@ pub(in crate::compiler) fn parse_jmp(
     label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
+    let (i, token, high_token, is_offset) =
+        parse_token_high_token_and_is_offset_defined(tokenized_line, i, variable_address_map)?;
 
-    let (i, token, high_token, is_offset) = parse_token_high_token_and_is_offset_defined(tokenized_line, i, variable_address_map)?;
-
-    let instruction_compile_data = OffsetInstructionCompileData{
+    let instruction_compile_data = OffsetInstructionCompileData {
         pointer_offset_instruciton: vec![0xFF, 0x26],
-        ins_8bit :  vec![0xEB],
-        ins_16bit : vec![0xE9],
+        ins_8bit: vec![0xEB],
+        ins_16bit: vec![0xE9],
         bytes_of_8bit_ins: 1,
         bytes_of_16bit_ins: 2,
         is_offset,
@@ -41,7 +41,7 @@ pub(in crate::compiler) fn parse_jmp(
         "JMP",
         high_token,
         &instruction_compile_data,
-        OffsetMaps{
+        OffsetMaps {
             label_idx_map,
             compiled_line_ref_with_offset_maps,
             variable_address_map,
@@ -57,55 +57,6 @@ pub(in crate::compiler) fn parse_jmp(
         compiled_bytes,
         compiled_bytes_ref,
     ))
-
-}
-
-fn match_ins_to_bytes_single_ins_with_label_and_offset_label(
-    i: usize,
-    token: &Token,
-    high_token: &Token,
-    instruction_compile_data: OffsetInstructionCompileData,
-    addressing_mode: Offset,
-    compiled_bytes: &mut Vec<u8>,
-compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-) -> usize{
-
-    match addressing_mode{
-        Offset::U8(offset) => {
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => instruction_compile_data.ins_8bit,
-                    high_token => vec![offset]
-                )
-            );
-            i + 1
-        }
-        Offset::U16(offset) => {
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => instruction_compile_data.ins_16bit,
-                    high_token => offset.to_le_bytes().to_vec()
-                )
-            );
-            i + 2
-        }
-        Offset::Pointer(addr) => {
-            convert_and_push_instructions!(
-            compiled_bytes,
-            compiled_bytes_ref,
-            (
-                token => instruction_compile_data.pointer_offset_instruciton,
-                high_token => addr.to_le_bytes().to_vec()
-            )
-            );
-            i + 2
-        }
-    }
-
 }
 
 #[cfg(test)]
