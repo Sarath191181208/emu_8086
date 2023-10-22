@@ -33,6 +33,13 @@ impl Either<u8, u16> {
             Either::Right(x) => x.to_le_bytes().to_vec(),
         }
     }
+
+    pub fn to_le_bytes_vec(&self) -> Vec<u8>{
+        match &self {
+            Either::Left(x) => x.to_le_bytes().to_vec(),
+            Either::Right(x) => x.to_le_bytes().to_vec(),
+        }
+    }
 }
 
 impl Either<i8, i16> {
