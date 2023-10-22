@@ -25,7 +25,7 @@ use super::utils::check_comma;
 
 pub(in super::super) mod compile_two_arguments_patterns;
 pub(in super::super) mod offset_label_pattern;
-pub(in super) mod utils;
+pub(in crate::compiler) mod utils;
 
 pub(crate) enum AddressingMode {
     Registers16bit {

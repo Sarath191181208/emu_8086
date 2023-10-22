@@ -11,7 +11,7 @@ use crate::{
     utils::Either,
 };
 
-pub(super) fn evaluate_ins<'a>(
+pub(in crate::compiler) fn evaluate_ins<'a>(
     start_index: usize,
     end_index: usize,
     tokenized_line: &'a TokenizedLine<'a>,
