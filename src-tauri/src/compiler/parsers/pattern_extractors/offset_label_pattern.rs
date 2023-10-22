@@ -82,6 +82,14 @@ pub(in crate::compiler) fn parse_single_ins_labels(
             }
         }
 
+        Assembly8086Tokens::Number8bit(num) => {
+            Ok(Offset::U8(*num))
+        }
+
+        Assembly8086Tokens::Number16bit(num) => {
+            Ok(Offset::U16(*num))
+        }
+
         _ => Err(CompilationError::error_with_token(
             token,
             &format!(
