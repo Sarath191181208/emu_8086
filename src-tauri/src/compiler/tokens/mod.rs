@@ -218,6 +218,10 @@ impl SignedU16 {
         }
     }
 
+    pub(crate) fn abs_value(self) -> u16 {
+        self.val
+    }
+
     pub(crate) fn as_num_token(self) -> Result<Assembly8086Tokens, &'static str> {
         match self.as_num() {
             Ok(num) => match num {
