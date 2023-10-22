@@ -36,7 +36,7 @@ pub(in crate::compiler) fn parse_jmp(
         is_offset,
     };
 
-    match parse_single_ins_labels(
+    let offset_case = parse_single_ins_labels(
         line_number,
         "JMP",
         high_token,
@@ -46,7 +46,31 @@ pub(in crate::compiler) fn parse_jmp(
             compiled_line_ref_with_offset_maps,
             variable_address_map,
         },
-    )? {
+    )?;
+
+    Ok(match_ins_to_bytes_single_ins_with_label_and_offset_label(
+        i,
+        token,
+        high_token,
+        instruction_compile_data,
+        offset_case,
+        compiled_bytes,
+        compiled_bytes_ref,
+    ))
+
+}
+
+fn match_ins_to_bytes_single_ins_with_label_and_offset_label(
+    i: usize,
+    token: &Token,
+    high_token: &Token,
+    instruction_compile_data: OffsetInstructionCompileData,
+    addressing_mode: Offset,
+    compiled_bytes: &mut Vec<u8>,
+compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+) -> usize{
+
+    match addressing_mode{
         Offset::U8(offset) => {
             convert_and_push_instructions!(
                 compiled_bytes,
@@ -56,7 +80,7 @@ pub(in crate::compiler) fn parse_jmp(
                     high_token => vec![offset]
                 )
             );
-            Ok(i + 1)
+            i + 1
         }
         Offset::U16(offset) => {
             convert_and_push_instructions!(
@@ -67,7 +91,7 @@ pub(in crate::compiler) fn parse_jmp(
                     high_token => offset.to_le_bytes().to_vec()
                 )
             );
-            Ok(i + 2)
+            i + 2
         }
         Offset::Pointer(addr) => {
             convert_and_push_instructions!(
@@ -78,9 +102,10 @@ pub(in crate::compiler) fn parse_jmp(
                 high_token => addr.to_le_bytes().to_vec()
             )
             );
-            Ok(i + 2)
+            i + 2
         }
     }
+
 }
 
 #[cfg(test)]
