@@ -33,6 +33,16 @@ impl Registers16bit {
         }
     }
 
+    pub fn get_segment_as_idx(&self) -> Result<u8, &'static str> {
+        match self {
+            Registers16bit::ES => Ok(0),
+            Registers16bit::CS => Ok(1),
+            Registers16bit::SS => Ok(2),
+            Registers16bit::DS => Ok(1),
+            _ => Err("Invalid register for this operation"),
+        }
+    }
+
     pub fn is_segment(&self) -> bool {
         match self {
             Registers16bit::CS | Registers16bit::DS | Registers16bit::ES | Registers16bit::SS => {
