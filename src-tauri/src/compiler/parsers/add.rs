@@ -68,12 +68,13 @@ pub(in crate::compiler) fn parse_add(
             let is_ax = high_reg_idx == 0;
             if is_ax {
                 let number = num.get_as_u16();
-                push_instruction(compiled_bytes, vec![0x05], token, compiled_bytes_ref);
-                push_instruction(
+                convert_and_push_instructions!(
                     compiled_bytes,
-                    vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                    &low_token,
                     compiled_bytes_ref,
+                    (
+                        token => vec![0x05],
+                        &low_token => number.to_le_bytes().to_vec()
+                    )
                 );
             } else {
                 let number = num.get_as_u16();
@@ -82,7 +83,7 @@ pub(in crate::compiler) fn parse_add(
                     Either::Left(_) => 0x83,
                 };
                 let data_ins = match num {
-                    Either::Right(_) => vec![(number & 0xFF) as u8, (number >> 8) as u8],
+                    Either::Right(_) => number.to_le_bytes().to_vec(),
                     Either::Left(x) => vec![x],
                 };
 
@@ -168,7 +169,7 @@ pub(in crate::compiler) fn parse_add(
                 (
                     token => vec![0x81, 0x06],
                    &high_token=> address_bytes.to_vec(),
-                    &low_token => vec![(num & 0xFF) as u8, (num >> 8) as u8]
+                    &low_token => num.to_le_bytes().to_vec()
                 )
             );
             Ok(tokenized_line.len())
