@@ -1,32 +1,20 @@
 use strum_macros::{Display, EnumIter, EnumString, IntoStaticStr};
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumString, Display, IntoStaticStr, EnumIter, Hash)]
+#[strum(ascii_case_insensitive)]
 pub(crate) enum Registers16bit {
-    #[strum(ascii_case_insensitive)]
     AX,
-    #[strum(ascii_case_insensitive)]
     BX,
-    #[strum(ascii_case_insensitive)]
     CX,
-    #[strum(ascii_case_insensitive)]
     DX,
-    #[strum(ascii_case_insensitive)]
     SI,
-    #[strum(ascii_case_insensitive)]
     DI,
-    #[strum(ascii_case_insensitive)]
     BP,
-    #[strum(ascii_case_insensitive)]
     SP,
-    #[strum(ascii_case_insensitive)]
     CS,
-    #[strum(ascii_case_insensitive)]
     DS,
-    #[strum(ascii_case_insensitive)]
     ES,
-    #[strum(ascii_case_insensitive)]
     SS,
-    #[strum(ascii_case_insensitive)]
     IP,
 }
 
