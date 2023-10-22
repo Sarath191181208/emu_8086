@@ -10,6 +10,7 @@ use crate::{
         CompiledBytesReference, CompiledLineLabelRef,
     },
     convert_and_push_instructions,
+    utils::Either,
 };
 
 use super::utils::push_instruction;
@@ -17,19 +18,77 @@ use super::utils::push_instruction;
 enum Offset {
     U8(u8),
     U16(u16),
+    Pointer(u16),
 }
 
-#[allow(clippy::too_many_arguments)]
-pub(in crate::compiler) fn parse_jmp(
-    tokenized_line: &TokenizedLine,
-    i: usize,
+struct OffsetMaps<'a>{
+    label_idx_map: &'a mut HashMap<String, (Token, usize, bool)>,
+    compiled_line_ref_with_offset_maps: Option<&'a CompiledLineLabelRef<'a>>,
+    variable_address_map: Option<&'a VariableAddressMap>,
+}
+
+struct OffsetInstructionCompileData{
+    pointer_offset_instruciton : Vec<u8>,
+    ins_8bit : Vec<u8>,
+    ins_16bit : Vec<u8>,
+    bytes_of_8bit_ins : u8,
+    bytes_of_16bit_ins : u16,
+    is_offset : bool,
+}
+
+fn parse_single_ins_labels(
     line_number: LineNumber,
-    compiled_bytes: &mut Vec<u8>,
-    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-    variable_address_map: Option<&VariableAddressMap>,
-    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
-    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
-) -> Result<usize, CompilationError> {
+    instruction_name: &str,
+    token: &Token,
+    instruction_compile_data: &OffsetInstructionCompileData,
+    offset_maps: OffsetMaps,
+) -> Result<Offset, CompilationError> {
+    let is_offset_defined = instruction_compile_data.is_offset;
+    match &token.token_type {
+        Assembly8086Tokens::Character(label) => {
+            let offset_bytes_from_line_and_is_label_before_ref =
+                get_offset_bytes_from_line_from_maps(
+                    label,
+                    line_number,
+                    is_offset_defined,
+                    offset_maps.compiled_line_ref_with_offset_maps,
+                );
+
+            if offset_bytes_from_line_and_is_label_before_ref.is_none() {
+               offset_maps.label_idx_map.insert(label.to_string(), (token.clone(), 1, is_offset_defined));
+            }
+
+            let (offset_bytes, is_jmp_after_label) =
+                offset_bytes_from_line_and_is_label_before_ref.unwrap_or((0, false));
+
+            if let Some(addr) = get_address(label, offset_maps.variable_address_map) {
+                if !is_offset_defined {
+                    return Ok(Offset::Pointer(u16::from_le_bytes(addr)));
+                }
+            }
+
+            match calc_offset(
+                offset_bytes,
+                is_jmp_after_label,
+                instruction_compile_data.bytes_of_8bit_ins,
+                instruction_compile_data.bytes_of_16bit_ins,
+            ) {
+                Either::Left(num) => Ok(Offset::U8(num)),
+                Either::Right(num) => Ok(Offset::U16(num)),
+            }
+        }
+
+        _ => Err(CompilationError::error_with_token(
+            token,
+            &format!(
+                "Can't compile {:?} as the first argument to {}, Expected a label, offset",
+                instruction_name, token.token_type
+            ),
+        )),
+    }
+}
+
+fn parse_token_high_token_and_is_offset_defined<'a>(tokenized_line: &'a TokenizedLine, i: usize, variable_address_map: Option<&VariableAddressMap>) -> Result<(usize, &'a Token, &'a Token, bool), CompilationError> {
     let mut i = i;
     let token = tokenized_line.get(
         i,
@@ -60,83 +119,76 @@ pub(in crate::compiler) fn parse_jmp(
         )]),
     )?;
 
-    match &high_token.token_type {
-        Assembly8086Tokens::Character(label) => {
-            // let offset_bytes_from_line_and_is_label_before_ref = compiled_line_ref_with_offset_maps.find_label_offset(label, line_number );
+    Ok((i, token, high_token, is_offset))
+}
 
-            let offset_bytes_from_line_and_is_label_before_ref =
-                get_offset_bytes_from_line_from_maps(
-                    label,
-                    line_number,
-                    is_offset,
-                    compiled_line_ref_with_offset_maps,
-                );
+#[allow(clippy::too_many_arguments)]
+pub(in crate::compiler) fn parse_jmp(
+    tokenized_line: &TokenizedLine,
+    i: usize,
+    line_number: LineNumber,
+    compiled_bytes: &mut Vec<u8>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+    variable_address_map: Option<&VariableAddressMap>,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
+    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
+) -> Result<usize, CompilationError> {
 
-            match offset_bytes_from_line_and_is_label_before_ref {
-                None => {
-                    // try to get the bytes from the variable_address_map
-                    let address = get_address(label, variable_address_map);
-                    let placeholder_or_variable_val = match address {
-                        None => vec![0x00],
-                        Some(address) => address.to_vec(),
-                    };
-                    let placeholder_or_variable_ins = match address {
-                        None => vec![0xEB],
-                        Some(_) => vec![0xFF, 0x26],
-                    };
-                    let placeholder_or_variable_val_len =
-                        placeholder_or_variable_val.len() + 1 - placeholder_or_variable_ins.len();
-                    convert_and_push_instructions!(
-                        compiled_bytes,
-                        compiled_bytes_ref,
-                        (
-                            token => placeholder_or_variable_ins,
-                            high_token => placeholder_or_variable_val
-                        )
-                    );
-                    let ins_idx = compiled_bytes.len() - placeholder_or_variable_val_len;
-                    label_idx_map
-                        .insert(label.to_string(), (high_token.clone(), ins_idx, is_offset));
-                    Ok(i + 2)
-                }
-                Some((offset_bytes, is_jmp_after_label)) => {
-                    match calc_offset(offset_bytes, is_jmp_after_label) {
-                        Offset::U8(offset) => {
-                            convert_and_push_instructions!(
-                                compiled_bytes,
-                                compiled_bytes_ref,
-                                (
-                                    token => vec![0xEB],
-                                    high_token => vec![offset]
-                                )
-                            );
-                            Ok(i + 2)
-                        }
-                        Offset::U16(offset) => {
-                            convert_and_push_instructions!(
-                                compiled_bytes,
-                                compiled_bytes_ref,
-                                (
-                                    token => vec![0xE9],
-                                    high_token => offset.to_le_bytes().to_vec()
-                                )
-                            );
-                            Ok(i + 3)
-                        }
-                    }
-                }
-            }
+    let (i, token, high_token, is_offset) = parse_token_high_token_and_is_offset_defined(tokenized_line, i, variable_address_map)?;
+
+    let instruction_compile_data = OffsetInstructionCompileData{
+        pointer_offset_instruciton: vec![0xFF, 0x26],
+        ins_8bit :  vec![0xEB],
+        ins_16bit : vec![0xE9],
+        bytes_of_8bit_ins: 1,
+        bytes_of_16bit_ins: 2,
+        is_offset,
+    };
+
+    match parse_single_ins_labels(
+        line_number,
+        "JMP",
+        high_token,
+        &instruction_compile_data,
+        OffsetMaps{
+            label_idx_map,
+            compiled_line_ref_with_offset_maps,
+            variable_address_map,
+        },
+    )? {
+        Offset::U8(offset) => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => instruction_compile_data.ins_8bit,
+                    high_token => vec![offset]
+                )
+            );
+            Ok(i + 1)
         }
-
-        _ => Err(CompilationError::new_without_suggestions(
-            high_token.line_number,
-            high_token.column_number,
-            high_token.token_length,
-            &format!(
-                "Can't compile {:?} as the first argument to JMP, Expected a label, offset",
-                high_token.token_type
-            ),
-        )),
+        Offset::U16(offset) => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => instruction_compile_data.ins_16bit,
+                    high_token => offset.to_le_bytes().to_vec()
+                )
+            );
+            Ok(i + 2)
+        }
+        Offset::Pointer(addr) => {
+            convert_and_push_instructions!(
+            compiled_bytes,
+            compiled_bytes_ref,
+            (
+                token => instruction_compile_data.pointer_offset_instruciton,
+                high_token => addr.to_le_bytes().to_vec()
+            )
+            );
+            Ok(i + 2)
+        }
     }
 }
 
@@ -163,21 +215,26 @@ fn get_offset_bytes_from_line_from_maps(
     }
 }
 
-fn calc_offset(offset_bytes: u16, is_jmp_after_label: bool) -> Offset {
+fn calc_offset(
+    offset_bytes: u16,
+    is_jmp_after_label: bool,
+    small_ins_offset: u8,
+    long_ins_offset: u16,
+) -> Either<u8, u16> {
     // TODO: handle overflow of offset_bytes i.e line limit exceed
     if is_jmp_after_label {
-        let offset = 0xFF - offset_bytes - 1;
+        let offset = 0xFF - offset_bytes - small_ins_offset as u16;
         if offset > 0x7F && offset_bytes < 0x100 {
-            Offset::U8(offset as u8)
+            Either::Left(offset as u8)
         } else {
-            Offset::U16(0xFFFF - offset_bytes - 2)
+            Either::Right(0xFFFF - offset_bytes - long_ins_offset)
         }
     } else {
         let offset = offset_bytes;
         if offset < 0x80 {
-            Offset::U8(offset as u8)
+            Either::Left(offset as u8)
         } else {
-            Offset::U16(offset_bytes)
+            Either::Right(offset_bytes)
         }
     }
 }
@@ -190,7 +247,7 @@ fn get_address(
         None => None,
         Some(variable_address_map) => variable_address_map
             .get(label)
-            .map(|(_, address)| [(address & 0xFF) as u8, (address >> 8) as u8]),
+            .map(|(_, address)| address.to_le_bytes()),
     }
 }
 
