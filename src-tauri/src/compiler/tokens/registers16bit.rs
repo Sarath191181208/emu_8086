@@ -44,4 +44,13 @@ impl Registers16bit {
             _ => Err("Invalid register for this operation"),
         }
     }
+
+    pub fn is_segment(&self) -> bool {
+        match self {
+            Registers16bit::CS | Registers16bit::DS | Registers16bit::ES | Registers16bit::SS => {
+                true
+            }
+            _ => false,
+        }
+    }
 }
