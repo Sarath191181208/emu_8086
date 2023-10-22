@@ -44,11 +44,9 @@ impl Registers16bit {
     }
 
     pub fn is_segment(&self) -> bool {
-        match self {
-            Registers16bit::CS | Registers16bit::DS | Registers16bit::ES | Registers16bit::SS => {
-                true
-            }
-            _ => false,
-        }
+        matches!(
+            self,
+            Registers16bit::CS | Registers16bit::DS | Registers16bit::ES | Registers16bit::SS
+        )
     }
 }
