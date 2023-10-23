@@ -31,7 +31,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
         return Ok(None);
     }
     // check if there is an openSquareBracket in tokenized_line[start_index..end_index] use iter()
-    let open_sqaure_bracket_exists = tokenized_line
+    let mut open_sqaure_bracket_exists = tokenized_line
         .slice(start_index, end_index)
         .iter()
         .any(|token| token.token_type == Assembly8086Tokens::OpenSquareBracket);
@@ -125,6 +125,8 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                     var_ref_map,
                     compiled_line_offset_maps,
                 );
+
+                open_sqaure_bracket_exists = true;
 
                 let val = match addr_bytes {
                     Either::Left(val) => Ok(SignedU16::from(val)),
