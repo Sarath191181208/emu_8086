@@ -2,6 +2,7 @@
 - [ ] For same parameter names in macro definitions.
 - [ ] Unused macros.
 ## To support: 
+- [ ] 🐞FIX: jmp to number 
 - [ ] `push` and `pop` for `regs`.    
 - [ ] Support Some `interrupts`.
 - [ ] inline macro editor fn.
