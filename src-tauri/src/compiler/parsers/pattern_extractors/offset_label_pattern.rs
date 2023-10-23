@@ -8,13 +8,18 @@ use std::collections::HashMap;
 use crate::{
     compiler::{
         compilation_error::CompilationError,
+        parsers::utils::push_instruction,
         suggestions_utils::get_all_registers_and_variable_suggestions,
         tokenized_line::TokenizedLine,
-        tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
-        types_structs::{Label, LineNumber, VariableAddressMap, CompiledBytesReference},
-        CompiledLineLabelRef, parsers::utils::push_instruction,
+        tokens::{
+            assembler_directives::AssemblerDirectives,
+            indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, SignedU16, Token,
+        },
+        types_structs::{CompiledBytesReference, Label, LineNumber, VariableAddressMap},
+        CompiledLineLabelRef,
     },
-    utils::Either, convert_and_push_instructions,
+    convert_and_push_instructions,
+    utils::Either,
 };
 
 pub(in crate::compiler) enum Offset {
@@ -29,20 +34,22 @@ pub(in crate::compiler) struct OffsetMaps<'a> {
     pub variable_address_map: Option<&'a VariableAddressMap>,
 }
 
-pub(in crate::compiler) struct OffsetInstructionCompileData {
-    pub pointer_offset_instruciton: Vec<u8>,
+pub(in crate::compiler) struct LabeledInstructionCompileData {
     pub ins_8bit: Vec<u8>,
     pub ins_16bit: Vec<u8>,
+    pub pointer_offset_instruction: Vec<u8>,
+
     pub bytes_of_8bit_ins: u8,
     pub bytes_of_16bit_ins: u16,
+
     pub is_offset: bool,
 }
 
-pub(in crate::compiler) fn parse_single_ins_labels(
+pub(in crate::compiler) fn parse_single_label_or_variable(
     line_number: LineNumber,
     instruction_name: &str,
     token: &Token,
-    instruction_compile_data: &OffsetInstructionCompileData,
+    instruction_compile_data: &LabeledInstructionCompileData,
     offset_maps: OffsetMaps,
 ) -> Result<Offset, CompilationError> {
     let is_offset_defined = instruction_compile_data.is_offset;
@@ -82,14 +89,6 @@ pub(in crate::compiler) fn parse_single_ins_labels(
             }
         }
 
-        Assembly8086Tokens::Number8bit(num) => {
-            Ok(Offset::U8(*num))
-        }
-
-        Assembly8086Tokens::Number16bit(num) => {
-            Ok(Offset::U16(*num))
-        }
-
         _ => Err(CompilationError::error_with_token(
             token,
             &format!(
@@ -104,12 +103,12 @@ pub(in crate::compiler) fn match_ins_to_bytes_single_ins_with_label_and_offset_l
     i: usize,
     token: &Token,
     high_token: &Token,
-    instruction_compile_data: OffsetInstructionCompileData,
+    instruction_compile_data: LabeledInstructionCompileData,
     addressing_mode: Offset,
     compiled_bytes: &mut Vec<u8>,
-compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-) -> usize{
-    match addressing_mode{
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+) -> usize {
+    match addressing_mode {
         Offset::U8(offset) => {
             convert_and_push_instructions!(
                 compiled_bytes,
@@ -132,26 +131,26 @@ compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
             );
             i + 2
         }
-        Offset::Pointer(addr) => {
+
+        Offset::Pointer(offset) => {
             convert_and_push_instructions!(
-            compiled_bytes,
-            compiled_bytes_ref,
-            (
-                token => instruction_compile_data.pointer_offset_instruciton,
-                high_token => addr.to_le_bytes().to_vec()
-            )
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => instruction_compile_data.pointer_offset_instruction,
+                    high_token => offset.to_le_bytes().to_vec()
+                )
             );
             i + 2
         }
     }
-
 }
-
 
 pub(in crate::compiler) fn parse_token_high_token_and_is_offset_defined<'a>(
     tokenized_line: &'a TokenizedLine,
     i: usize,
     variable_address_map: Option<&VariableAddressMap>,
+    instruction_name: &str,
 ) -> Result<(usize, &'a Token, &'a Token, bool), CompilationError> {
     let mut i = i;
     let token = tokenized_line.get(
@@ -162,7 +161,7 @@ pub(in crate::compiler) fn parse_token_high_token_and_is_offset_defined<'a>(
 
     let high_token = tokenized_line.get(
         i + 1,
-        "Expected arguments after JMP got nothing".to_string(),
+        format!("Expected arguments after {} got nothing", instruction_name),
         Some(vec![get_all_registers_and_variable_suggestions(
             variable_address_map,
         )]),
@@ -177,7 +176,7 @@ pub(in crate::compiler) fn parse_token_high_token_and_is_offset_defined<'a>(
 
     let high_token = tokenized_line.get(
         i + 1,
-        "Expected arguments after JMP got nothing".to_string(),
+        format!("Expected arguments after {} got nothing", instruction_name),
         Some(vec![get_all_registers_and_variable_suggestions(
             variable_address_map,
         )]),
