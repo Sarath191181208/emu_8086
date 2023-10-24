@@ -38,7 +38,7 @@ use self::{
     parsers::{
         add::parse_add, call::parse_call, dec::parse_dec, in_ins::parse_in, inc::parse_inc,
         jmp::parse_jmp, loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, out_ins::parse_out,
-        pattern_extractors::parse_two_arguments_line, sub::parse_sub,
+        pattern_extractors::parse_two_arguments_line, push::parse_push, sub::parse_sub,
         utils::iterate_with_seperator, var::parse_var_declaration,
     },
     tokenized_line::TokenizedLine,
@@ -169,6 +169,7 @@ fn compile(
                     i,
                     is_org_defined,
                     "MOV",
+                    &mut compiled_line.label_idx_map,
                     variable_ref_map,
                     variable_address_map.unwrap_or(&HashMap::default()),
                     compiled_line_offset_maps,
@@ -191,6 +192,7 @@ fn compile(
                     i,
                     is_org_defined,
                     "ADD",
+                    &mut compiled_line.label_idx_map,
                     variable_ref_map,
                     variable_address_map.unwrap_or(&VariableAddressMap::default()),
                     compiled_line_offset_maps,
@@ -214,6 +216,7 @@ fn compile(
                     i,
                     is_org_defined,
                     "SUB",
+                    &mut compiled_line.label_idx_map,
                     variable_ref_map,
                     variable_address_map.unwrap_or(&VariableAddressMap::default()),
                     compiled_line_offset_maps,
@@ -438,18 +441,20 @@ fn compile(
                 Ok(compiled_line)
             }
             Instructions::Push => {
-                // i = parse_push(
-                //     &tokenized_line,
-                //     i,
-                //     compiled_bytes,
-                //     compiled_bytes_ref,
-                //     variable_ref_map,
-                //     variable_address_map,
-                // )?;
-                // error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "PUSH", 1)?;
-                // Ok(compiled_line)
-                todo!()
-            },
+                i = parse_push(
+                    &tokenized_line,
+                    i,
+                    is_org_defined,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    variable_ref_map,
+                    variable_address_map,
+                    &mut compiled_line.label_idx_map,
+                    compiled_line_offset_maps,
+                )?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "PUSH", 1)?;
+                Ok(compiled_line)
+            }
         },
         Assembly8086Tokens::AssemblerDirectives(_) => Ok(compiled_line),
 
@@ -618,11 +623,11 @@ fn mark_labels(
             }),
             Some(var_abs_addr_map),
         )?;
+        let prev_compiled_bytes_len = compiled_bytes[line_number].len();
 
         compiled_bytes[line_number] = compiled_tokens.compiled_bytes;
         compiled_bytes_ref[line_number] = compiled_tokens.compiled_bytes_ref;
 
-        let prev_compiled_bytes_len = compiled_bytes[line_number].len();
         let curr_compiled_bytes_len = compiled_bytes[line_number].len();
 
         if prev_compiled_bytes_len != curr_compiled_bytes_len {
@@ -633,7 +638,12 @@ fn mark_labels(
                 compiled_bytes,
                 is_org_defined,
             );
-            return Ok(false);
+
+            if idx != 0 {
+                return Ok(false);
+            } else {
+                continue;
+            }
         }
 
         if mark_labels(
