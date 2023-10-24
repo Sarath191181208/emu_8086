@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     compiler::{
         compilation_error::CompilationError,
@@ -115,6 +117,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
     i: usize,
     is_org_defined: bool,
     ins: &'a str,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     variable_ref_map: &mut VariableReferenceMap,
     variable_abs_address_map: &VariableAddressMap,
     compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
@@ -145,6 +148,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
         compact_high_until,
         tokenized_line,
         is_org_defined,
+        label_idx_map,
         variable_ref_map,
         variable_abs_address_map,
         compiled_line_offset_maps,
@@ -157,6 +161,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
         tokenized_line.len(),
         tokenized_line,
         is_org_defined,
+        label_idx_map,
         variable_ref_map,
         variable_abs_address_map,
         compiled_line_offset_maps,

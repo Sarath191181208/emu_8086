@@ -1,8 +1,14 @@
+use std::collections::HashMap;
+
 use crate::{
     compiler::{
         compilation_error::CompilationError,
         tokenized_line::TokenizedLine,
-        tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, SignedU16, Token, indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit},
+        tokens::{
+            assembler_directives::AssemblerDirectives,
+            indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
+            Assembly8086Tokens, SignedU16, Token,
+        },
         types_structs::{
             ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType,
         },
@@ -16,6 +22,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
     end_index: usize,
     tokenized_line: &'a TokenizedLine<'a>,
     is_org_defined: bool,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     var_ref_map: &mut VariableReferenceMap,
     variable_abs_address_map: &VariableAddressMap,
     compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
@@ -57,6 +64,15 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
         Plus,
         Minus,
     }
+
+    #[derive(PartialEq)]
+    enum IndexingType {
+        LabelIndexing,
+        VariableIndexing,
+        Undefined,
+    }
+
+    let mut indexing_type = IndexingType::Undefined;
 
     let mut stack = Vec::<StackItem>::new();
     let mut operator_stack = Vec::<StackOperator>::new();
@@ -116,7 +132,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                 is_offset_directive_defined = true;
             }
             Assembly8086Tokens::Character(label) => {
-                let addr_bytes = get_label_address_or_push_into_ref(
+                let is_address_or_num = get_label_address_or_push_into_ref(
                     i,
                     label,
                     is_org_defined,
@@ -126,14 +142,33 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                     compiled_line_offset_maps,
                 );
 
-                open_sqaure_bracket_exists = true;
-
-                let val = match addr_bytes {
-                    Either::Left(val) => Ok(SignedU16::from(val)),
-                    Either::Right(val) => Ok(SignedU16::from(val)),
-                }?;
-
-                stack.push(StackItem::Number(token, val));
+                match is_address_or_num {
+                    Either::Left(addr_byte) => {
+                        if indexing_type == IndexingType::LabelIndexing {
+                            return Err(CompilationError::error_with_token(
+                                token,
+                                "Can't use a label along with a variable in the same expression",
+                            ));
+                        }
+                        label_idx_map.insert(
+                            label.to_string(),
+                            (token.clone(), i, is_offset_directive_defined),
+                        );
+                        open_sqaure_bracket_exists = true;
+                        stack.push(StackItem::Number(token, SignedU16::from(addr_byte)));
+                        indexing_type = IndexingType::VariableIndexing;
+                    }
+                    Either::Right(num) => {
+                        if indexing_type == IndexingType::VariableIndexing {
+                            return Err(CompilationError::error_with_token(
+                                token,
+                                "Can't use a variable along with a label in the same expression",
+                            ));
+                        }
+                        stack.push(StackItem::Number(token, SignedU16::from(num)));
+                        indexing_type = IndexingType::LabelIndexing;
+                    }
+                }
             }
 
             _ => {
