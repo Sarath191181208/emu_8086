@@ -14,15 +14,13 @@ use crate::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
             registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
-        types_structs::{
-            VariableAddressMap, VariableReferenceMap, VariableType,
-        },
+        types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
         CompiledLineLabelRef,
     },
     utils::Either,
 };
 
-use self::utils::{get_label_address_or_push_into_ref, evaluate_ins};
+use self::utils::{evaluate_ins, get_label_address_or_push_into_ref};
 use super::utils::check_comma;
 
 pub(in super::super) mod compile_two_arguments_patterns;
@@ -112,6 +110,7 @@ pub(crate) enum AddressingMode {
     },
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn parse_two_arguments_line<'a>(
     tokenized_line: &'a TokenizedLine<'a>,
     i: usize,
@@ -266,7 +265,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
                 Some(
                     // try to get label if it doesn't exists show 8bit suggestions else match no the tye of the var and show suggestions
-                    if let Some((var_type, _)) = variable_ref_map.get(&label) {
+                    if let Some((var_type, _)) = variable_ref_map.get(label) {
                         match var_type {
                             VariableType::Byte => vec![
                                 get_all_8bit_registers_suggestions(),
@@ -296,7 +295,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 Assembly8086Tokens::Number16bit(num) => {
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
-                        &label,
+                        label,
                         is_org_defined,
                         VariableType::Word,
                         variable_abs_address_map,
@@ -319,7 +318,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 Assembly8086Tokens::Register16bit(low_token_register_type) => {
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
-                        &label,
+                        label,
                         is_org_defined,
                         VariableType::Word,
                         variable_abs_address_map,
@@ -342,7 +341,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 Assembly8086Tokens::Number8bit(num) => {
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
-                        &label,
+                        label,
                         is_org_defined,
                         VariableType::Byte,
                         variable_abs_address_map,
@@ -366,7 +365,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 Assembly8086Tokens::Register8bit(low_token_reg_type) => {
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
-                        &label,
+                        label,
                         is_org_defined,
                         VariableType::Byte,
                         variable_abs_address_map,

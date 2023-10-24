@@ -17,6 +17,7 @@ use crate::{
     utils::Either,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn evaluate_ins<'a>(
     start_index: usize,
     end_index: usize,

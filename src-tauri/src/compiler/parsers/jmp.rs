@@ -24,8 +24,12 @@ pub(in crate::compiler) fn parse_jmp(
     label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
-    let (i, token, high_token, is_offset) =
-        parse_token_high_token_and_is_offset_defined(tokenized_line, i, variable_address_map, "JMP")?;
+    let (i, token, high_token, is_offset) = parse_token_high_token_and_is_offset_defined(
+        tokenized_line,
+        i,
+        variable_address_map,
+        "JMP",
+    )?;
 
     let instruction_compile_data = LabeledInstructionCompileData {
         pointer_offset_instruction: vec![0xFF, 0x26],
@@ -218,14 +222,17 @@ mod test_16_bit_jmp_compile {
         var2 dw 0x200
         ",
         |instructions: &Vec<u8>| {
-            assert_eq!(instructions, &[
-                0xEB, 0x02,  // org 
-                0x00, 0x10,  // Var
-                0xFF, 0x26,  0x02, 0x01, // JMP
-                0xFF, 0x26, 0x10, 0x01, // JMP
-                0x8B, 0x87, 0x00, 0x01, // MOV
-                0x00, 0x02, // Var2
-                ]);
+            assert_eq!(
+                instructions,
+                &[
+                    0xEB, 0x02, // org
+                    0x00, 0x10, // Var
+                    0xFF, 0x26, 0x02, 0x01, // JMP
+                    0xFF, 0x26, 0x10, 0x01, // JMP
+                    0x8B, 0x87, 0x00, 0x01, // MOV
+                    0x00, 0x02, // Var2
+                ]
+            );
         }
     );
 

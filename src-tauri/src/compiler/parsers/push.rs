@@ -6,10 +6,11 @@ use crate::{
         parsers::utils::push_instruction,
         tokenized_line::TokenizedLine,
         tokens::{indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, Token},
-        types_structs::{LineNumber, VariableAddressMap, VariableReferenceMap},
+        types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledBytesReference, CompiledLineLabelRef,
     },
-    convert_and_push_instructions, utils::Either,
+    convert_and_push_instructions,
+    utils::Either,
 };
 
 use super::pattern_extractors::{
@@ -33,8 +34,12 @@ pub(in crate::compiler) fn parse_push(
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let prev_i = i;
-    let (i, token, high_token, is_offset) =
-        parse_token_high_token_and_is_offset_defined(tokenized_line, i, variable_address_map, "PUSH")?;
+    let (i, token, high_token, is_offset) = parse_token_high_token_and_is_offset_defined(
+        tokenized_line,
+        i,
+        variable_address_map,
+        "PUSH",
+    )?;
 
     let new_token = evaluate_ins(
         prev_i + 1,
@@ -117,7 +122,7 @@ pub(in crate::compiler) fn parse_push(
                         }
                     };
 
-                    match num{
+                    match num {
                         Either::Left(num_u8) => {
                             convert_and_push_instructions!(
                                 compiled_bytes,
@@ -127,7 +132,7 @@ pub(in crate::compiler) fn parse_push(
                                     high_token => vec![ 0x70 | reg_idx, num_u8]
                                 )
                             );
-                        },
+                        }
                         Either::Right(num_u16) => {
                             convert_and_push_instructions!(
                                 compiled_bytes,
@@ -137,7 +142,7 @@ pub(in crate::compiler) fn parse_push(
                                     high_token => vec![ 0xB0 | reg_idx, num_u16.to_le_bytes()[0], num_u16.to_le_bytes()[1]]
                                 )
                             );
-                        },
+                        }
                     }
                 }
                 None => {
@@ -204,7 +209,7 @@ pub(in crate::compiler) fn parse_push(
             );
             Ok(tokenized_line.len())
         }
-        
+
         _ => Err(CompilationError::error_with_token(
             token,
             &format!(
@@ -296,5 +301,5 @@ mod push_ins_test {
         lab:
         ",
         &[0xEB, 0x02, 0x01, 0x01, 0x68, 0x07, 0x02]
-    ); 
+    );
 }

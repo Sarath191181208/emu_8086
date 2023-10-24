@@ -179,7 +179,7 @@ impl SignedU16 {
     }
 
     pub fn to_le_bytes_vec(&self) -> Vec<u8> {
-        match self.as_num().unwrap(){
+        match self.as_num().unwrap() {
             Either::Left(val) => val.to_le_bytes().to_vec(),
             Either::Right(val) => val.to_le_bytes().to_vec(),
         }
@@ -223,10 +223,6 @@ impl SignedU16 {
             val: self.val,
             is_negative: !self.is_negative,
         }
-    }
-
-    pub(crate) fn abs_value(self) -> u16 {
-        self.val
     }
 
     pub(crate) fn as_num_token(self) -> Result<Assembly8086Tokens, &'static str> {

@@ -22,18 +22,13 @@ macro_rules! test_compile {
     };
 }
 
-
 #[macro_export]
-macro_rules! compile_and_compare_ins{
+macro_rules! compile_and_compare_ins {
     ($test_name: ident, $code: expr, $expected_ins: expr) => {
-        test_compile!(
-            $test_name,
-            $code,
-            |compiled_instructions: &Vec<u8>| {
-                assert_eq!(compiled_instructions, &$expected_ins);
-            }
-        );
-    }
+        test_compile!($test_name, $code, |compiled_instructions: &Vec<u8>| {
+            assert_eq!(compiled_instructions, &$expected_ins);
+        });
+    };
 }
 
 #[allow(dead_code)]

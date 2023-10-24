@@ -11,10 +11,7 @@ use crate::{
         parsers::utils::push_instruction,
         suggestions_utils::get_all_registers_and_variable_suggestions,
         tokenized_line::TokenizedLine,
-        tokens::{
-            assembler_directives::AssemblerDirectives,
-            indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, SignedU16, Token,
-        },
+        tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
         types_structs::{CompiledBytesReference, Label, LineNumber, VariableAddressMap},
         CompiledLineLabelRef,
     },

@@ -30,7 +30,7 @@ impl IndexedAddressingTypes {
         }
     }
 
-    pub fn get_offset_and_default_bp_to_0(&self) -> Option<Offset>{
+    pub fn get_offset_and_default_bp_to_0(&self) -> Option<Offset> {
         match self {
             IndexedAddressingTypes::BP(offset) => match offset {
                 Some(offset) => Some(*offset),
