@@ -178,6 +178,13 @@ impl SignedU16 {
         }
     }
 
+    pub fn to_le_bytes_vec(&self) -> Vec<u8> {
+        match self.as_num().unwrap(){
+            Either::Left(val) => val.to_le_bytes().to_vec(),
+            Either::Right(val) => val.to_le_bytes().to_vec(),
+        }
+    }
+
     pub fn overflowing_add(self, other: Self) -> (Self, bool) {
         match (self.is_negative, other.is_negative) {
             (false, false) | (true, true) => {
