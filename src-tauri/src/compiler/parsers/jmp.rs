@@ -9,8 +9,8 @@ use crate::compiler::{
 };
 
 use super::pattern_extractors::offset_label_pattern::{
-    match_ins_to_bytes_single_ins_with_label_and_offset_label, parse_single_ins_labels,
-    parse_token_high_token_and_is_offset_defined, OffsetInstructionCompileData, OffsetMaps,
+    match_ins_to_bytes_single_ins_with_label_and_offset_label, parse_single_label_or_variable,
+    parse_token_high_token_and_is_offset_defined, LabeledInstructionCompileData, OffsetMaps,
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -25,10 +25,10 @@ pub(in crate::compiler) fn parse_jmp(
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let (i, token, high_token, is_offset) =
-        parse_token_high_token_and_is_offset_defined(tokenized_line, i, variable_address_map)?;
+        parse_token_high_token_and_is_offset_defined(tokenized_line, i, variable_address_map, "JMP")?;
 
-    let instruction_compile_data = OffsetInstructionCompileData {
-        pointer_offset_instruciton: vec![0xFF, 0x26],
+    let instruction_compile_data = LabeledInstructionCompileData {
+        pointer_offset_instruction: vec![0xFF, 0x26],
         ins_8bit: vec![0xEB],
         ins_16bit: vec![0xE9],
         bytes_of_8bit_ins: 1,
@@ -36,7 +36,7 @@ pub(in crate::compiler) fn parse_jmp(
         is_offset,
     };
 
-    let offset_case = parse_single_ins_labels(
+    let offset_case = parse_single_label_or_variable(
         line_number,
         "JMP",
         high_token,
@@ -200,6 +200,32 @@ mod test_16_bit_jmp_compile {
             let high_bits = compiled_instructions[len_ins - 1];
             assert_eq!(low_bits, 0x7E);
             assert_eq!(high_bits, 0xFF);
+        }
+    );
+
+    test_compile!(
+        jmp_offset_var16bit_with_org,
+        "
+        org 100h
+        .data  
+        var dw 0x1000 
+        code:            
+        jmp var  
+        jmp var2         
+        
+        mov ax, bx + 0x100
+           
+        var2 dw 0x200
+        ",
+        |instructions: &Vec<u8>| {
+            assert_eq!(instructions, &[
+                0xEB, 0x02,  // org 
+                0x00, 0x10,  // Var
+                0xFF, 0x26,  0x02, 0x01, // JMP
+                0xFF, 0x26, 0x10, 0x01, // JMP
+                0x8B, 0x87, 0x00, 0x01, // MOV
+                0x00, 0x02, // Var2
+                ]);
         }
     );
 
