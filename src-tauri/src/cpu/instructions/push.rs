@@ -1,4 +1,8 @@
-use crate::{cpu::CPU, memory::Memory, consts::{Byte, U20}};
+use crate::{
+    consts::{Byte, U20},
+    cpu::CPU,
+    memory::Memory,
+};
 
 impl CPU {
     pub(in crate::cpu) fn execute_push_es(&mut self, mem: &mut Memory) {
@@ -18,35 +22,39 @@ impl CPU {
         self.push_stack(mem, value);
     }
 
-    pub(in crate::cpu) fn execute_push_word_register(&mut self, mem: &mut Memory, ins: Byte){
+    pub(in crate::cpu) fn execute_push_word_register(&mut self, mem: &mut Memory, ins: Byte) {
         let instruction_byte_of_push_ax = 0x50;
         let value = self.get_16bit_register_by_index(ins - instruction_byte_of_push_ax);
         self.push_stack(mem, value);
     }
 
-    
-    pub(in crate::cpu) fn execute_push_indexed_addressing_no_offset (&mut self, mem: &mut Memory){
+    pub(in crate::cpu) fn execute_push_indexed_addressing_no_offset(&mut self, mem: &mut Memory) {
         let type_of_idx_addressing = self.consume_instruction(mem);
-        match type_of_idx_addressing{
-            0x36 => { // i.e pointer addressing 
+        match type_of_idx_addressing {
+            0x36 => {
+                // i.e pointer addressing
                 let address = self.consume_word(mem);
                 let value = self.read_word_from_pointer(mem, address);
                 self.push_stack(mem, value);
-            },
-            0x30..=0x37 => { // i.e indexed addressing
+            }
+            0x30..=0x37 => {
+                // i.e indexed addressing
                 let reg_idx = type_of_idx_addressing - 0x30;
                 let offset = self.get_offset_from_index_of_indexed_registers(reg_idx);
                 let value = self.read_word_from_u20(mem, offset);
                 self.push_stack(mem, value);
             }
-            _ => panic!("Invalid instruction byte for push indexed addressing without offset")
+            _ => panic!("Invalid instruction byte for push indexed addressing without offset"),
         }
     }
 
-    pub(in crate::cpu) fn execute_push_indexed_addressing_with_8bit_offset (&mut self, mem: &mut Memory){
+    pub(in crate::cpu) fn execute_push_indexed_addressing_with_8bit_offset(
+        &mut self,
+        mem: &mut Memory,
+    ) {
         let type_of_idx_addressing = self.consume_instruction(mem);
-        
-        match type_of_idx_addressing{
+
+        match type_of_idx_addressing {
             0x70..=0x77 => {
                 let u8_offset = self.consume_instruction(mem);
                 let reg_idx = type_of_idx_addressing - 0x70;
@@ -55,10 +63,28 @@ impl CPU {
                 let value = self.read_word_from_u20(mem, offset);
                 self.push_stack(mem, value);
             }
-            _ => panic!("Invalid instruction byte for push indexed addressing with 8bit offset")
+            _ => panic!("Invalid instruction byte for push indexed addressing with 8bit offset"),
         }
     }
 
+    pub(in crate::cpu) fn execute_push_indexed_addressing_with_16bit_offset(
+        &mut self,
+        mem: &mut Memory,
+    ) {
+        let type_of_idx_addressing = self.consume_instruction(mem);
+
+        match type_of_idx_addressing {
+            0xB0..=0xB7 => {
+                let reg_idx = type_of_idx_addressing - 0xB0;
+                let u16_offset = self.consume_word(mem);
+                let offset = self.get_offset_from_index_of_indexed_registers(reg_idx);
+                let offset = offset + U20::from(u16_offset);
+                let value = self.read_word_from_u20(mem, offset);
+                self.push_stack(mem, value);
+            }
+            _ => panic!("Invalid instruction byte for push indexed addressing with 8bit offset"),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -180,4 +206,23 @@ mod test {
         );
     }
 
+    #[test]
+    fn push_var_with_16bit_offset() {
+        compile_and_test_str(
+            "
+            org 100h
+            .data
+            var dw 0x101
+            code:
+            mov bx, 0x02
+            push [bx + 0x100]
+            ",
+            3,
+            |cpu: &CPU, mem: &Memory| {
+                // cpu.print_stack(mem);
+                assert_eq!(cpu.stack_pointer, 0xFFFC);
+                assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x0101);
+            },
+        );
+    }
 }

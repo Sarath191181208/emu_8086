@@ -455,6 +455,8 @@ impl CPU {
                     0x30..=0x37 => self.execute_push_indexed_addressing_no_offset(mem),
                     // PUSH indexed addr with 8bit-offset
                     0x70..=0x77 => self.execute_push_indexed_addressing_with_8bit_offset(mem),
+                    // PUSH indexed addr with 16bit-offset
+                    0xB0..=0xB7 => self.execute_push_indexed_addressing_with_16bit_offset(mem),
                     // BIOS DI
                     0xFF => {
                         let int = self.execute_bios_di(mem);
