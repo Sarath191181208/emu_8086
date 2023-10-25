@@ -48,6 +48,8 @@ export const langRules: languages.IMonarchLanguage = {
       [/ *ORG/, "directive.org"],
       [/ *(\.data|data)/, "directive.data"],
       [/ *(\.code|code)/, "directive.code"],
+      [/ *offset/, "directive.offset"],
+
       // labels
       [/\w+:/, "label"],
       // also if the last character is a h then it is a hex number
@@ -94,6 +96,7 @@ export const langTheme: editor.IStandaloneThemeData = {
     { token: "directive.org", foreground: "#c586c0" },
     { token: "directive.data", foreground: "#c586c0" },
     { token: "directive.code", foreground: "#c586c0" },
+    { token: "directive.offset", foreground: "#569CD6" },
     { token: "directives", foreground: "#c586c0" },
     { token: "label", foreground: "#6b7280" },
     { token: "registers16bit", foreground: "#9CDCFE" },
