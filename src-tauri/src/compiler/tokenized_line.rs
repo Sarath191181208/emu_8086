@@ -29,6 +29,12 @@ impl<'a> TokenizedLine<'a> {
         &self.tokens[start..end]
     }
 
+    pub(crate) fn find_token(&self, token: Assembly8086Tokens) -> Option<usize> {
+        self.tokens
+            .iter()
+            .position(|token_| token_.token_type == token)
+    }
+
     pub(crate) fn find_comma(&self) -> Option<usize> {
         self.tokens
             .iter()
