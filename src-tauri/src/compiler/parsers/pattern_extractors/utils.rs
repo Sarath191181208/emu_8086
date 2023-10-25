@@ -51,7 +51,8 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
     let mut is_bp_in_line = (false, 0_u32);
     let mut is_si_in_line = (false, 0_u32);
     let mut is_di_in_line = (false, 0_u32);
-    let mut is_offset_directive_defined = false;
+    let offset_token_enum = Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Offset);
+    let mut is_offset_directive_defined = tokenized_line.find_token(offset_token_enum).is_some();
     let mut offset: Option<SignedU16> = None;
 
     // use stack to convert the expression into a postifx one
@@ -136,10 +137,13 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                 let is_address_or_num = get_label_address_or_push_into_ref(
                     i,
                     label,
+                    token,
                     is_org_defined,
+                    is_offset_directive_defined,
                     VariableType::Word,
                     variable_abs_address_map,
                     var_ref_map,
+                    label_idx_map,
                     compiled_line_offset_maps,
                 );
 
@@ -424,13 +428,17 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
 type Address = [u8; 2];
 type Number = Either<u8, u16>;
 
+#[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn get_label_address_or_push_into_ref(
     idx: ArrayIndex,
     label: &Label,
+    token: &Token,
     is_org_defined: bool,
+    is_offset_directive_defined: bool,
     var_type: VariableType,
     variable_abs_offset_bytes_map: &VariableAddressMap,
     var_ref_map: &mut VariableReferenceMap,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Either<Address, Number> {
     let placeholder = [0x00, 0x00];
@@ -451,7 +459,14 @@ pub(in crate::compiler) fn get_label_address_or_push_into_ref(
             };
             match offset {
                 None => {
-                    var_ref_map.insert(label.clone(), (var_type, idx));
+                    if !is_offset_directive_defined {
+                        var_ref_map.insert(label.clone(), (var_type, idx));
+                    } else {
+                        label_idx_map.insert(
+                            label.to_string(),
+                            (token.clone(), idx, is_offset_directive_defined),
+                        );
+                    }
                     Either::Left(placeholder)
                 }
                 Some(offset) => {

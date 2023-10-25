@@ -224,10 +224,13 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let addr_bytes = get_label_address_or_push_into_ref(
                         i + 3,
                         label,
+                        &low_token,
                         is_org_defined,
+                        false,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
+                        label_idx_map,
                         compiled_line_offset_maps,
                     );
 
@@ -296,10 +299,13 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        &low_token,
                         is_org_defined,
+                        false,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
+                        label_idx_map,
                         compiled_line_offset_maps,
                     );
 
@@ -319,10 +325,13 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        &low_token,
                         is_org_defined,
+                        false,
                         VariableType::Word,
                         variable_abs_address_map,
                         variable_ref_map,
+                        label_idx_map,
                         compiled_line_offset_maps,
                     );
 
@@ -342,10 +351,13 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        &low_token,
                         is_org_defined,
+                        false,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
+                        label_idx_map,
                         compiled_line_offset_maps,
                     );
 
@@ -366,10 +378,13 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 1,
                         label,
+                        &low_token,
                         is_org_defined,
+                        false,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
+                        label_idx_map,
                         compiled_line_offset_maps,
                     );
 
@@ -454,10 +469,13 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     let address_bytes = get_label_address_or_push_into_ref(
                         i + 3,
                         label,
+                        &low_token,
                         is_org_defined,
+                        false,
                         VariableType::Byte,
                         variable_abs_address_map,
                         variable_ref_map,
+                        label_idx_map,
                         compiled_line_offset_maps,
                     );
 

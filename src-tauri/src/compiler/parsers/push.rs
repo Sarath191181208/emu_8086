@@ -34,12 +34,13 @@ pub(in crate::compiler) fn parse_push(
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let prev_i = i;
-    let (i, token, high_token, is_offset) = parse_token_high_token_and_is_offset_defined(
-        tokenized_line,
-        i,
-        variable_address_map,
-        "PUSH",
-    )?;
+    let (i, token, high_token, is_offset_directive_defined) =
+        parse_token_high_token_and_is_offset_defined(
+            tokenized_line,
+            i,
+            variable_address_map,
+            "PUSH",
+        )?;
 
     let new_token = evaluate_ins(
         prev_i + 1,
@@ -62,7 +63,7 @@ pub(in crate::compiler) fn parse_push(
         ins_16bit: vec![0x68],
         bytes_of_8bit_ins: 1,
         bytes_of_16bit_ins: 2,
-        is_offset,
+        is_offset: is_offset_directive_defined,
         pointer_offset_instruction: vec![0xFF, 0x36],
     };
 
@@ -164,10 +165,13 @@ pub(in crate::compiler) fn parse_push(
             let either_pointer_or_num = get_label_address_or_push_into_ref(
                 1,
                 label,
+                high_token,
                 is_org_defined,
+                is_offset_directive_defined,
                 VariableType::Word,
                 variable_address_map.unwrap_or(&VariableAddressMap::new()),
                 var_ref_map,
+                label_idx_map,
                 compiled_line_ref_with_offset_maps,
             );
 
@@ -296,7 +300,7 @@ mod push_ins_test {
         &[0xEB, 0x02, 0x01, 0x01, 0x68, 0x02, 0x01]
     );
 
-        compile_and_compare_ins!(
+    compile_and_compare_ins!(
         push_offset_8bit_variable,
         "
         org 100h 
@@ -305,7 +309,7 @@ mod push_ins_test {
         code:
         push offset var1 
         ",
-        &[0xEB, 0x02, 0x01, 0x01, 0xFF, 0x36, 0x02, 0x01]
+        &[0xEB, 0x01, 0x10, 0x68, 0x02, 0x01]
     );
 
     compile_and_compare_ins!(
