@@ -15,6 +15,7 @@ pub(crate) enum Instructions {
     Ret,
 
     Push,
+    Pop,
 
     Proc,
     EndP,
