@@ -186,42 +186,45 @@ impl SignedU16 {
     }
 
     pub fn overflowing_add(self, other: Self) -> (Self, bool) {
-        match (self.is_negative, other.is_negative) {
-            (false, false) | (true, true) => {
-                let (res, overflow) = self.val.overflowing_add(other.val);
-                (
-                    Self {
-                        val: res,
-                        is_negative: self.is_negative,
-                    },
-                    overflow,
-                )
-            }
-            (false, true) | (true, false) => {
-                let (res, overflow) = self.val.overflowing_sub(other.val);
-                (
-                    Self {
-                        val: res,
-                        is_negative: if other.val > self.val {
-                            other.is_negative
-                        } else {
-                            self.is_negative
-                        },
-                    },
-                    overflow,
-                )
-            }
-        }
+        let val = self.as_i16();
+        let other = other.as_i16();
+        let (val, is_overflow) = val.overflowing_add(other);
+        (
+            Self {
+                val: val as u16,
+                is_negative: val < 0,
+            },
+            is_overflow,
+        )
     }
 
     pub fn overflowing_sub(self, other: Self) -> (Self, bool) {
-        self.overflowing_add(other.negate())
+        let val = self.as_i16();
+        let other = other.as_i16();
+        let (val, is_overflow) = val.overflowing_sub(other);
+        (
+            Self {
+                val: val as u16,
+                is_negative: val < 0,
+            },
+            is_overflow,
+        )
     }
 
     pub(crate) fn negate(self) -> Self {
         Self {
             val: self.val,
             is_negative: !self.is_negative,
+        }
+    }
+
+    fn as_i16(self) -> i16 {
+        match self.as_num(){
+            Ok(num) => match num {
+                Either::Left(num) =>   (num as i8) as i16,
+                Either::Right(num) => num as i16,
+            },
+            Err(_) => 0
         }
     }
 
