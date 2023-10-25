@@ -1,4 +1,4 @@
-use crate::{cpu::CPU, memory::Memory, consts::Byte};
+use crate::{cpu::CPU, memory::Memory, consts::{Byte, U20}};
 
 impl CPU {
     pub(in crate::cpu) fn execute_push_es(&mut self, mem: &mut Memory) {
@@ -42,6 +42,23 @@ impl CPU {
             _ => panic!("Invalid instruction byte for push indexed addressing without offset")
         }
     }
+
+    pub(in crate::cpu) fn execute_push_indexed_addressing_with_8bit_offset (&mut self, mem: &mut Memory){
+        let type_of_idx_addressing = self.consume_instruction(mem);
+        
+        match type_of_idx_addressing{
+            0x70..=0x77 => {
+                let u8_offset = self.consume_instruction(mem);
+                let reg_idx = type_of_idx_addressing - 0x70;
+                let offset = self.get_offset_from_index_of_indexed_registers(reg_idx);
+                let offset = offset + U20::from(u8_offset);
+                let value = self.read_word_from_u20(mem, offset);
+                self.push_stack(mem, value);
+            }
+            _ => panic!("Invalid instruction byte for push indexed addressing with 8bit offset")
+        }
+    }
+
 }
 
 #[cfg(test)]
@@ -139,6 +156,26 @@ mod test {
                 // cpu.print_stack(mem);
                 assert_eq!(cpu.stack_pointer, 0xFFFC);
                 assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x101);
+            },
+        );
+    }
+
+    #[test]
+    fn push_var_with_8bit_offset() {
+        compile_and_test_str(
+            "
+            org 100h
+            .data
+            var dw 0x101
+            code:
+            mov bx, 0x102
+            push [bx + 1]
+            ",
+            3,
+            |cpu: &CPU, mem: &Memory| {
+                // cpu.print_stack(mem);
+                assert_eq!(cpu.stack_pointer, 0xFFFC);
+                assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0xBB01);
             },
         );
     }
