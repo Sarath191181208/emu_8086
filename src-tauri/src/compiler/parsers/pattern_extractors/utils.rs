@@ -264,8 +264,8 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                     let (res, overflow) = val_high.overflowing_sub(val_low);
                     if overflow {
                         return Err(CompilationError::error_between_tokens(
-                            high_token,
                             low_token,
+                            high_token,
                             "The sum of the values overflows",
                         ));
                     }

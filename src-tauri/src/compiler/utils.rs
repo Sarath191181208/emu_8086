@@ -39,7 +39,7 @@ impl CompilationError {
         CompilationError::new_without_suggestions(
             token1.line_number,
             token1.column_number,
-            token2.column_number + token2.token_length - token1.column_number,
+            (token2.column_number + token2.token_length) - token1.column_number,
             msg,
         )
     }
