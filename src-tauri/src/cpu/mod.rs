@@ -258,6 +258,19 @@ impl CPU {
             // ADD AX, 0x1234 i.e immediate addressing
             0x05 => self.add_ax_in_immediate_addressing(mem),
 
+            // PUSH ES
+            0x06 => self.execute_push_es(mem),
+
+            // PUSH CS
+            0x0E => self.execute_push_cs(mem),
+
+            // PUSH SS
+            0x16 => self.execute_push_ss(mem),
+
+            // PUSH DS
+            0x1E => self.execute_push_ds(mem),
+
+
             // SUB [0x1234], AL
             0x28 => self.execute_sub_direct_addr_8bit_register(mem),
 
@@ -280,6 +293,9 @@ impl CPU {
             0x40..=0x47 => self.execute_inc_word_register(opcode),
             // DEC 16bit register
             0x48..=0x4F => self.execute_dec_word_register(opcode),
+
+            // PUSH 16bit register
+            0x50..=0x57 => self.execute_push_word_register(mem, opcode),
 
             // ADD, SUB 8bit register, immediate_addressing
             0x80 => {
