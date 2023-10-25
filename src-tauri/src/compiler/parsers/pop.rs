@@ -19,9 +19,7 @@ use crate::{
 };
 
 use super::{
-    pattern_extractors::{
-        utils::{evaluate_ins, get_label_address_or_push_into_ref},
-    },
+    pattern_extractors::utils::{evaluate_ins, get_label_address_or_push_into_ref},
     utils::THIS_SHOULDNT_HAPPEN,
 };
 
@@ -145,7 +143,7 @@ pub(in crate::compiler) fn parse_pop(
                         compiled_bytes_ref,
                         (
                             token => vec![0x8F],
-                            high_token => vec![ 0x00 | reg_idx]
+                            high_token => vec![ reg_idx]
                         )
                     );
                 }
@@ -192,21 +190,19 @@ pub(in crate::compiler) fn parse_pop(
             Ok(tokenized_line.len())
         }
 
-        _ => {
-            return Err(CompilationError::error_with_token(
-                high_token,
-                &format!(
-                    "Expected a Register (or) Segment (or) Address got {:?}",
-                    high_token.token_type
-                ),
-            ))
-        }
+        _ => Err(CompilationError::error_with_token(
+            high_token,
+            &format!(
+                "Expected a Register (or) Segment (or) Address got {:?}",
+                high_token.token_type
+            ),
+        )),
     }
 }
 
 #[cfg(test)]
 mod push_ins_test {
-    use crate::{compile_and_compare_ins, test_compile, compiler::compile_str};
+    use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
 
     compile_and_compare_ins!(
         test_pop_16bit_reg_and_segments,
@@ -227,7 +223,7 @@ mod push_ins_test {
         vec![0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, 0x1F, 0x17, 0x07]
     );
 
-        compile_and_compare_ins!(
+    compile_and_compare_ins!(
         test_segment_regs_with_and_without_offset,
         "
             POP [BX]
@@ -235,7 +231,6 @@ mod push_ins_test {
             pop [bx + 0x90 - 0x10 + 0x10 + 0x20]
 
         ",
-        vec![0x8F, 0x07, 0x8F, 0x47, 0x10, 0x8F, 0x87, 0xB0, 0x00 ]
+        vec![0x8F, 0x07, 0x8F, 0x47, 0x10, 0x8F, 0x87, 0xB0, 0x00]
     );
-
 }

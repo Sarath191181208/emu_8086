@@ -173,7 +173,7 @@ impl From<Either<u8, u16>> for SignedU16 {
 impl From<i16> for SignedU16 {
     fn from(val: i16) -> Self {
         let is_negative = val < 0;
-        let val = val.abs() as u16;
+        let val = val.unsigned_abs();
         Self { val, is_negative }
     }
 }
@@ -197,20 +197,14 @@ impl SignedU16 {
         let val = self.as_i16();
         let other = other.as_i16();
         let (val, is_overflow) = val.overflowing_add(other);
-        (
-            Self::from(val),
-            is_overflow,
-        )
+        (Self::from(val), is_overflow)
     }
 
     pub fn overflowing_sub(self, other: Self) -> (Self, bool) {
         let val = self.as_i16();
         let other = other.as_i16();
         let (val, is_overflow) = val.overflowing_sub(other);
-        (
-            Self::from(val),
-            is_overflow,
-        )
+        (Self::from(val), is_overflow)
     }
 
     pub(crate) fn negate(self) -> Self {
@@ -221,12 +215,12 @@ impl SignedU16 {
     }
 
     fn as_i16(self) -> i16 {
-        match self.as_num(){
+        match self.as_num() {
             Ok(num) => match num {
-                Either::Left(num) =>   (num as i8) as i16,
+                Either::Left(num) => (num as i8) as i16,
                 Either::Right(num) => num as i16,
             },
-            Err(_) => 0
+            Err(_) => 0,
         }
     }
 

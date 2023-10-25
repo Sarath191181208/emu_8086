@@ -14,8 +14,8 @@ use crate::{
     utils::Either,
 };
 
-// define a static string 
-pub const THIS_SHOULDNT_HAPPEN:&'static str = "This shouldn't happen, Please report this!";
+// define a static string
+pub const THIS_SHOULDNT_HAPPEN: &str = "This shouldn't happen, Please report this!";
 
 fn get_as_0xnf_in_0x3f_increment_pattern(n: u8, high_reg_idx: u8, low_reg_idx: u8) -> u8 {
     let ins = n | (high_reg_idx / 2) << 4;
