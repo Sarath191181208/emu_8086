@@ -254,6 +254,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                             "The sum of the values overflows",
                         ));
                     }
+                    dbg!(val_high, "+", val_low, "= ", res);
                     stack.push(StackItem::Number(low_token, res));
                 }
                 (
