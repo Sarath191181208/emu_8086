@@ -660,6 +660,12 @@ fn mark_labels(
             idx + 1,
         )? {
             return Ok(true);
+        } else{
+            if idx != 0 {
+                return Ok(false);
+            } else {
+                continue;
+            }
         }
     }
     Ok(false)
