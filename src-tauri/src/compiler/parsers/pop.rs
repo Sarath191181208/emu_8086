@@ -95,7 +95,7 @@ pub(in crate::compiler) fn parse_pop(
                     high_token => val.to_le_bytes_vec()
                 )
             );
-            Ok(i + 1)
+            Ok(tokenized_line.len())
         }
 
         Assembly8086Tokens::IndexedAddressing(idx_addr) => {
@@ -232,5 +232,19 @@ mod push_ins_test {
 
         ",
         vec![0x8F, 0x07, 0x8F, 0x47, 0x10, 0x8F, 0x87, 0xB0, 0x00]
+    );
+
+    compile_and_compare_ins!(
+        test_var_and_var_with_offset,
+        "
+        org 100h 
+        .data 
+        var1 dw 0x1234
+        var2 dw 0x5678
+        code: 
+            pop var1
+            pop var2 + 0x10
+        ",
+        [0xEB, 0x04,0x34, 0x12, 0x78, 0x56, 0x8F, 0x06, 0x02, 0x01, 0x8F, 0x06, 0x14, 0x01]
     );
 }
