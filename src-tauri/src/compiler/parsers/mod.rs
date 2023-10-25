@@ -9,6 +9,7 @@ pub mod loop_ins;
 pub mod mov;
 pub mod mul;
 pub mod out_ins;
+pub mod pop;
 pub mod push;
 pub mod sub;
 pub mod var;

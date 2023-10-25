@@ -39,7 +39,7 @@ use self::{
         add::parse_add, call::parse_call, dec::parse_dec, in_ins::parse_in, inc::parse_inc,
         jmp::parse_jmp, loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, out_ins::parse_out,
         pattern_extractors::parse_two_arguments_line, push::parse_push, sub::parse_sub,
-        utils::iterate_with_seperator, var::parse_var_declaration,
+        utils::iterate_with_seperator, var::parse_var_declaration, pop::parse_pop,
     },
     tokenized_line::TokenizedLine,
     tokens::{
@@ -453,6 +453,21 @@ fn compile(
                     compiled_line_offset_maps,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "PUSH", 1)?;
+                Ok(compiled_line)
+            }
+            Instructions::Pop => {
+                i = parse_pop(
+                    &tokenized_line,
+                    i,
+                    is_org_defined,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    variable_ref_map,
+                    variable_address_map,
+                    &mut compiled_line.label_idx_map,
+                    compiled_line_offset_maps,
+                )?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "POP", 1)?;
                 Ok(compiled_line)
             }
         },
