@@ -13,6 +13,7 @@ pub mod iret;
 pub mod loop_ins;
 pub mod out_ins;
 pub mod ret;
+pub mod push;
 
 pub mod test_macro;
 
