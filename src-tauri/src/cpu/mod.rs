@@ -451,6 +451,8 @@ impl CPU {
                     0x0E => self.execute_dec_address_16bit(mem),
                     // JMP [0x1234]
                     0x26 => self.execute_jmp_abs_address(mem),
+                    // PUSH indexed addr no offset 
+                    0x30..=0x37 => self.execute_push_indexed_addressing_no_offset(mem),
                     // BIOS DI
                     0xFF => {
                         let int = self.execute_bios_di(mem);
