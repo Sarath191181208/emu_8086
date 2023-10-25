@@ -296,6 +296,18 @@ mod push_ins_test {
         &[0xEB, 0x02, 0x01, 0x01, 0x68, 0x02, 0x01]
     );
 
+        compile_and_compare_ins!(
+        push_offset_8bit_variable,
+        "
+        org 100h 
+        .data 
+        var1 db 0x10
+        code:
+        push offset var1 
+        ",
+        &[0xEB, 0x02, 0x01, 0x01, 0xFF, 0x36, 0x02, 0x01]
+    );
+
     compile_and_compare_ins!(
         push_offset_label,
         "
