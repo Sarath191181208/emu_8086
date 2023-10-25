@@ -170,6 +170,14 @@ impl From<Either<u8, u16>> for SignedU16 {
     }
 }
 
+impl From<i16> for SignedU16 {
+    fn from(val: i16) -> Self {
+        let is_negative = val < 0;
+        let val = val.abs() as u16;
+        Self { val, is_negative }
+    }
+}
+
 impl SignedU16 {
     pub fn new(val: u16) -> Self {
         Self {
@@ -190,10 +198,7 @@ impl SignedU16 {
         let other = other.as_i16();
         let (val, is_overflow) = val.overflowing_add(other);
         (
-            Self {
-                val: val as u16,
-                is_negative: val < 0,
-            },
+            Self::from(val),
             is_overflow,
         )
     }
@@ -203,10 +208,7 @@ impl SignedU16 {
         let other = other.as_i16();
         let (val, is_overflow) = val.overflowing_sub(other);
         (
-            Self {
-                val: val as u16,
-                is_negative: val < 0,
-            },
+            Self::from(val),
             is_overflow,
         )
     }
