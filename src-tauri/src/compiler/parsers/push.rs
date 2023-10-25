@@ -6,7 +6,7 @@ use crate::{
         parsers::utils::push_instruction,
         tokenized_line::TokenizedLine,
         tokens::{indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, Token},
-        types_structs::{VariableAddressMap, VariableReferenceMap},
+        types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
         CompiledBytesReference, CompiledLineLabelRef,
     },
     convert_and_push_instructions,
@@ -15,10 +15,10 @@ use crate::{
 
 use super::pattern_extractors::{
     offset_label_pattern::{
-        match_ins_to_bytes_single_ins_with_label_and_offset_label, parse_single_label_or_variable,
-        parse_token_high_token_and_is_offset_defined, LabeledInstructionCompileData, OffsetMaps,
+        match_ins_to_bytes_single_ins_with_label_and_offset_label,
+        parse_token_high_token_and_is_offset_defined, LabeledInstructionCompileData, Offset,
     },
-    utils::evaluate_ins,
+    utils::{evaluate_ins, get_label_address_or_push_into_ref},
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -160,18 +160,24 @@ pub(in crate::compiler) fn parse_push(
             Ok(tokenized_line.len())
         }
 
-        Assembly8086Tokens::Character(_) => {
-            let offset_case = parse_single_label_or_variable(
-                0, // making the line number as 0 because the offset taken by push must be absolute and not relative
-                "PUSH",
-                high_token,
-                &instruction_compile_data,
-                OffsetMaps {
-                    label_idx_map,
-                    compiled_line_ref_with_offset_maps,
-                    variable_address_map,
+        Assembly8086Tokens::Character(label) => {
+            let either_pointer_or_num = get_label_address_or_push_into_ref(
+                1,
+                label,
+                is_org_defined,
+                VariableType::Word,
+                variable_address_map.unwrap_or(&VariableAddressMap::new()),
+                var_ref_map,
+                compiled_line_ref_with_offset_maps,
+            );
+
+            let offset_case = match either_pointer_or_num {
+                Either::Left(pointer_array) => Offset::Pointer(u16::from_le_bytes(pointer_array)),
+                Either::Right(u8_or_u16) => match u8_or_u16 {
+                    Either::Left(u8_val) => Offset::U8(u8_val),
+                    Either::Right(u16_val) => Offset::U16(u16_val),
                 },
-            )?;
+            };
 
             match_ins_to_bytes_single_ins_with_label_and_offset_label(
                 i,

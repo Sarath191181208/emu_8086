@@ -85,6 +85,16 @@ impl CPU {
             _ => panic!("Invalid instruction byte for push indexed addressing with 8bit offset"),
         }
     }
+
+    pub(in crate::cpu) fn execute_push_16bit_number(&mut self, mem: &mut Memory) {
+        let addr = self.consume_word(mem);
+        self.push_stack(mem, addr);
+    }
+
+    pub(in crate::cpu) fn execute_push_8bit_number(&mut self, mem: &mut Memory) {
+        let addr = self.consume_instruction(mem);
+        self.push_stack(mem, addr as u16);
+    }
 }
 
 #[cfg(test)]
@@ -222,6 +232,33 @@ mod test {
                 // cpu.print_stack(mem);
                 assert_eq!(cpu.stack_pointer, 0xFFFC);
                 assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x0101);
+            },
+        );
+    }
+
+    #[test]
+    fn push_16bit_offset_label() {
+        compile_and_test_str(
+            "
+            org 100h
+            .data
+            var dw 0x101
+            code:
+            push offset var
+            label:
+            push label
+            push label+0x10
+            ",
+            4,
+            |cpu: &CPU, mem: &Memory| {
+                // cpu.print_stack(mem);
+                assert_eq!(cpu.stack_pointer, 0xFFF8);
+                let stack_values = [0x0102, 0x0107, 0x0117];
+                let mut sp = 0xFFFC;
+                for val in stack_values.iter() {
+                    assert_eq!(cpu.read_word_from_pointer(mem, sp), *val);
+                    sp -= 2;
+                }
             },
         );
     }

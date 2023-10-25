@@ -270,7 +270,6 @@ impl CPU {
             // PUSH DS
             0x1E => self.execute_push_ds(mem),
 
-
             // SUB [0x1234], AL
             0x28 => self.execute_sub_direct_addr_8bit_register(mem),
 
@@ -296,6 +295,12 @@ impl CPU {
 
             // PUSH 16bit register
             0x50..=0x57 => self.execute_push_word_register(mem, opcode),
+
+            // PUSH label/offset_u16
+            0x68 => self.execute_push_16bit_number(mem),
+
+            // PUSH label/offset_u8
+            0x6A => self.execute_push_8bit_number(mem),
 
             // ADD, SUB 8bit register, immediate_addressing
             0x80 => {
@@ -451,7 +456,7 @@ impl CPU {
                     0x0E => self.execute_dec_address_16bit(mem),
                     // JMP [0x1234]
                     0x26 => self.execute_jmp_abs_address(mem),
-                    // PUSH indexed addr no offset 
+                    // PUSH indexed addr no offset
                     0x30..=0x37 => self.execute_push_indexed_addressing_no_offset(mem),
                     // PUSH indexed addr with 8bit-offset
                     0x70..=0x77 => self.execute_push_indexed_addressing_with_8bit_offset(mem),
