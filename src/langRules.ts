@@ -17,6 +17,14 @@ export const langRules: languages.IMonarchLanguage = {
     "call",
     "hlt",
     "ret",
+
+    "push",
+
+    "int",
+    "iret",
+
+    "in",
+    "out",
   ],
   registers16bit: ["ax", "bx", "cx", "dx", "si", "di", "sp", "bp"],
   registers8bit: ["al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"],
