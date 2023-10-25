@@ -20,7 +20,6 @@ use crate::{
 
 use super::{
     pattern_extractors::{
-        offset_label_pattern::Offset,
         utils::{evaluate_ins, get_label_address_or_push_into_ref},
     },
     utils::THIS_SHOULDNT_HAPPEN,
@@ -236,7 +235,7 @@ mod push_ins_test {
             pop [bx + 0x90 - 0x10 + 0x10 + 0x20]
 
         ",
-        vec![0x8F, 0x07, 0x8F, 0x47, 0x10, 0x8F, 0x87, 0x00, 0x01 ]
+        vec![0x8F, 0x07, 0x8F, 0x47, 0x10, 0x8F, 0x87, 0xB0, 0x00 ]
     );
 
 }
