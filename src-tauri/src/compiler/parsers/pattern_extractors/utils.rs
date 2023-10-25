@@ -424,7 +424,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
 type Address = [u8; 2];
 type Number = Either<u8, u16>;
 
-pub(super) fn get_label_address_or_push_into_ref(
+pub(in crate::compiler) fn get_label_address_or_push_into_ref(
     idx: ArrayIndex,
     label: &Label,
     is_org_defined: bool,
