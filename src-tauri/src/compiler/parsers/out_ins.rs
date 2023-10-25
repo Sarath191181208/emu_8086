@@ -93,10 +93,7 @@ pub(in crate::compiler) fn parse_out(
 
                     None => Err(CompilationError::error_with_token(
                         low_token,
-                        &format!(
-                            "Expected 8bit number (or) DX got {:?} instead",
-                            low_token.token_type
-                        ),
+                        &format!("Expected AL (or) AX got {:?} instead", low_token.token_type),
                     )),
                 }
             }
@@ -104,7 +101,7 @@ pub(in crate::compiler) fn parse_out(
         _ => Err(CompilationError::error_with_token(
             token,
             &format!(
-                "Expected DX (or) 8bit number {:?} instead",
+                "Expected DX (or) 8bit number got {:?} instead",
                 high_token.token_type
             ),
         )),
