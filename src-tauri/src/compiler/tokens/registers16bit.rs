@@ -38,7 +38,7 @@ impl Registers16bit {
             Registers16bit::ES => Ok(0),
             Registers16bit::CS => Ok(1),
             Registers16bit::SS => Ok(2),
-            Registers16bit::DS => Ok(1),
+            Registers16bit::DS => Ok(3),
             _ => Err("Invalid register for this operation"),
         }
     }
