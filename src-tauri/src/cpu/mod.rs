@@ -337,8 +337,6 @@ impl CPU {
             0x8F => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
-                    // POP [0x1234]
-                    0x06 => self.execute_pop_address(mem),
                     // POP [bx] 
                     0x00..=0x07 => self.execute_pop_indexed_addressing_no_offset(mem),
                     // POP [bx + 8bit]
@@ -520,9 +518,9 @@ impl CPU {
     //     mem.write_byte_with_u20(offset, data);
     // }
 
-    // fn write_word_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Word) {
-    //     mem.write_word_with_u20(offset, data);
-    // }
+    fn write_word_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Word) {
+        mem.write_word_with_u20(offset, data);
+    }
 
     fn write_byte_from_pointer(&self, mem: &mut Memory, pointer: Word, data: Byte) {
         mem.write_byte(self.data_segment, pointer, data);
