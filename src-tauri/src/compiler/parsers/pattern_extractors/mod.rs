@@ -53,6 +53,7 @@ pub(crate) enum AddressingMode {
         address_bytes: [u8; 2],
         register_type: Registers16bit,
     },
+
     Register16bitAndIndexedAddress {
         high_token: Token,
         low_token: Token,
@@ -509,6 +510,62 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     len_lexed_strings - high_token.column_number - high_token.token_length,
                     &format!(
                         "Expected a 8bit value after {} got {:?} insted",
+                        ins, &low_token.token_type
+                    ),
+                )),
+            }
+        }
+
+        Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::Offset(offset)) => {
+            let offset_val = offset.as_u16();
+            check_comma(tokenized_line, high_token, compact_high_until)?;
+            let low_token = tokenized_line.get(
+                i + 3,
+                format!("Expected 16bit value after {:?} got nothing", high_token).to_string(),
+                Some(vec![
+                    get_all_16bit_registers_suggestions(),
+                    get_all_16bit_variables_suggestions(Some(variable_abs_address_map)),
+                    get_8bit_number_suggestion(),
+                    get_16bit_number_suggestion(),
+                ]),
+            )?;
+            let low_token = match compact_low_token {
+                Some(low_token) => low_token,
+                None => low_token.clone(),
+            };
+            match &low_token.token_type {
+                Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::AddressAnd16bitNumber {
+                    high_token: compact_high_token,
+                    low_token: low_token.clone(),
+                    address_bytes: offset_val.to_le_bytes(),
+                    num: *num,
+                }),
+
+                Assembly8086Tokens::Register16bit(reg) => Ok(AddressingMode::AddressAnd16bitRegister {
+                    high_token: compact_high_token,
+                    low_token: low_token.clone(),
+                    address_bytes: offset_val.to_le_bytes(),
+                    register_type: reg.clone(),
+                }),
+
+                Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::AddressAnd8bitNumber {
+                    high_token: compact_high_token,
+                    low_token: low_token.clone(),
+                    address_bytes: offset_val.to_le_bytes(),
+                    num: *num,
+                }),
+
+                Assembly8086Tokens::Register8bit(reg) => Ok(AddressingMode::AddressAnd8bitRegister {
+                    high_token: compact_high_token,
+                    low_token: low_token.clone(),
+                    address_bytes: offset_val.to_le_bytes(),
+                    register_type: reg.clone(),
+                }),
+
+                _ => Err(CompilationError::error_with_token(
+                    &low_token,
+                    &format!(
+                        "Expected a 16bit/8bit value after {} got {:?} insted",
                         ins, &low_token.token_type
                     ),
                 )),
