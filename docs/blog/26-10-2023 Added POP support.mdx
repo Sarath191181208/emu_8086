@@ -1,0 +1,35 @@
+---
+authors: 
+    name: Vangipuram Srinivasa Sarath Chandra 
+    title: Tech enthusiast
+    url: https://github.com/Sarath191181208
+    image_url: https://avatars.githubusercontent.com/u/74459981?v=4
+---
+# Pop Support
+
+## Compilation of the pop instruction
+
+|         Operand          |          Opcode          |                       Description                       | Example instruction |
+| :----------------------: | :----------------------: | :-----------------------------------------------------: | :-----------------: |
+|          reg16           |          0x58+rw           |               Pop top of stack into reg16               |       ` pop ax `        |
+|          mem16           |    0x8F 0x06 16BIT-addr    |               Pop top of stack into mem16               |    `pop [0x0100]`     |
+|  indexed with no offset  |      0x8F 0x00..0x07       |        Pop top of stack into index given by regs        |     `pop [bx+si]`     |
+| indexed with byte offset | 0x8F 0x40..0x47 16bit-addr | Pop top of stack into index given by regs + byte offset |  `pop [bx+0x01]`   |
+| indexed with word offset | 0x8F 0x80..0x87 16bit-addr | Pop top of stack into index given by regs + word offset | `pop [bx+0x0100]`  |
+
+## Execution of the pop instruction
+
+Made the `pop` instruction execution working.
+Addressing modes of the `pop` instruction implemented are:
+
+- Register addressing mode, ex - `pop ax`
+- Direct addressing mode, ex - `pop [0x1234]`
+- Variable addressing mode, ex - `pop [var]`
+- Indirect addressing mode, ex - `pop [bx]`
+- Indexed addressing mode, ex - `pop [bx+si]`
+
+Algorithm:
+```
+operand = SS:[SP] (top of the stack)
+SP = SP + 2
+```
