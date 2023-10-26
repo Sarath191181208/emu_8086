@@ -12,8 +12,8 @@ pub mod int;
 pub mod iret;
 pub mod loop_ins;
 pub mod out_ins;
+pub mod pop;
 pub mod push;
-pub mod pop; 
 
 pub mod ret;
 
