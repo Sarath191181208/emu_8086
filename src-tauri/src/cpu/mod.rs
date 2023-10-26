@@ -237,6 +237,10 @@ impl CPU {
         let _ = self.consume_instruction(mem);
     }
 
+    fn execute_unknown_ins(&mut self, mem: &mut Memory, _opcode: Byte) {
+        self.execute_nop(mem);
+    }
+
     pub fn execute(&mut self, mem: &mut Memory) -> Option<Interrupt> {
         let opcode = self.consume_instruction(mem);
         match opcode {
@@ -261,14 +265,22 @@ impl CPU {
             // PUSH ES
             0x06 => self.execute_push_es(mem),
 
+            // POP ES
+            0x07 => self.execute_pop_es(mem),
+
             // PUSH CS
             0x0E => self.execute_push_cs(mem),
+            0x0F => self.execute_unknown_ins(mem, opcode),
 
             // PUSH SS
             0x16 => self.execute_push_ss(mem),
+            // POP SS
+            0x17 => self.execute_pop_ss(mem),
 
             // PUSH DS
             0x1E => self.execute_push_ds(mem),
+            // POP DS
+            0x1F => self.execute_pop_ds(mem),
 
             // SUB [0x1234], AL
             0x28 => self.execute_sub_direct_addr_8bit_register(mem),
@@ -295,6 +307,9 @@ impl CPU {
 
             // PUSH 16bit register
             0x50..=0x57 => self.execute_push_word_register(mem, opcode),
+
+            // POP 16bit register
+            0x58..=0x5F => self.execute_pop_word_register(mem, opcode),
 
             // PUSH label/offset_u16
             0x68 => self.execute_push_16bit_number(mem),
@@ -337,15 +352,18 @@ impl CPU {
             0x8F => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
-                    // POP [bx] 
+                    // POP [bx]
                     0x00..=0x07 => self.execute_pop_indexed_addressing_no_offset(mem),
                     // POP [bx + 8bit]
                     0x40..=0x47 => self.execute_pop_indexed_addressing_with_8bit_offset(mem),
                     // POP [bx + 16bit]
                     0x80..=0x87 => self.execute_pop_indexed_addressing_with_16bit_offset(mem),
                     // POP 16bit register
-                    0xC0..=0xC7 => self.execute_pop_word_register(mem),
-                    _ => self.execute_nop(mem),
+                    0xC0..=0xC7 => {
+                        let ins = self.consume_instruction(mem);
+                        self.execute_pop_word_register(mem, ins);
+                    }
+                    _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
 
