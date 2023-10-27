@@ -9,10 +9,12 @@ on:
     branches: ["main"]
     paths:
       - "docusaurus/**"
+      - ".github/workflows/docs.yml"
   pull_request:
     branches: ["main"]
     paths:
       - "docusaurus/**"
+      - ".github/workflows/docs.yml"
 
 permissions:
   contents: write
