@@ -541,12 +541,14 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     num: *num,
                 }),
 
-                Assembly8086Tokens::Register16bit(reg) => Ok(AddressingMode::AddressAnd16bitRegister {
-                    high_token: compact_high_token,
-                    low_token: low_token.clone(),
-                    address_bytes: offset_val.to_le_bytes(),
-                    register_type: reg.clone(),
-                }),
+                Assembly8086Tokens::Register16bit(reg) => {
+                    Ok(AddressingMode::AddressAnd16bitRegister {
+                        high_token: compact_high_token,
+                        low_token: low_token.clone(),
+                        address_bytes: offset_val.to_le_bytes(),
+                        register_type: reg.clone(),
+                    })
+                }
 
                 Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::AddressAnd8bitNumber {
                     high_token: compact_high_token,
@@ -555,12 +557,14 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     num: *num,
                 }),
 
-                Assembly8086Tokens::Register8bit(reg) => Ok(AddressingMode::AddressAnd8bitRegister {
-                    high_token: compact_high_token,
-                    low_token: low_token.clone(),
-                    address_bytes: offset_val.to_le_bytes(),
-                    register_type: reg.clone(),
-                }),
+                Assembly8086Tokens::Register8bit(reg) => {
+                    Ok(AddressingMode::AddressAnd8bitRegister {
+                        high_token: compact_high_token,
+                        low_token: low_token.clone(),
+                        address_bytes: offset_val.to_le_bytes(),
+                        register_type: reg.clone(),
+                    })
+                }
 
                 _ => Err(CompilationError::error_with_token(
                     &low_token,
