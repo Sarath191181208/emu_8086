@@ -69,6 +69,7 @@ pub(crate) enum Assembly8086Tokens {
     // [bx|dx + si|di + 0x10]
     // [0x1234]
     IndexedAddressing(IndexedAddressingTypes),
+    ByteIndexedAddressing(IndexedAddressingTypes),
 
     // Define data
     Data(data::DefineData),
@@ -97,6 +98,7 @@ impl std::fmt::Display for Assembly8086Tokens {
             Assembly8086Tokens::CloseSquareBracket => write!(f, "]"),
             Assembly8086Tokens::Plus => write!(f, "+"),
             Assembly8086Tokens::IndexedAddressing(_) => write!(f, "IndexedAddressing"),
+            Assembly8086Tokens::ByteIndexedAddressing(_) => write!(f, "ByteIndexedAddressing"),
             Assembly8086Tokens::Minus => write!(f, "-"),
         }
     }
