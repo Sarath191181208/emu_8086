@@ -3,6 +3,7 @@
 - [ ] Unused macros.
 ## To support: 
 - [ ] 🐞FIX: jmp to number 
+- [ ] Better error messages.r̥r̥r̥r̥r̥
 - [ ] `push` and `pop` for `regs`.    
 - [ ] Support Some `interrupts`.
 - [ ] inline macro editor fn.
