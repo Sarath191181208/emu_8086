@@ -6,7 +6,8 @@ authors:
   image_url: https://avatars.githubusercontent.com/u/74459981?v=4
 ---
 
-# Refactored conditional check of variable type into the evaluate_ins function And added ByteIndexedAddressing in Assembly8086Tokens
+# 🛠️ Refactor 
+🛠️ Refactor conditional check of variable type into the evaluate_ins function And added ByteIndexedAddressing in Assembly8086Tokens
 
 ## Refactor conditional check
 
@@ -15,26 +16,26 @@ authors:
   The fowlling is the example of what I am talking about:
 
 ```rust
-    // ./src-tauri/src/compiler/parsers/mov.rs
-    let mov_ins = if is_variable_defined_as_16bit(
-        &variable_abs_offset_map,
-        get_token_as_label(&high_token),
-    ) {
-        0xC7
-    } else {
-        0xC6
-    };
+// ./src-tauri/src/compiler/parsers/mov.rs
+let mov_ins = if is_variable_defined_as_16bit(
+    &variable_abs_offset_map,
+    get_token_as_label(&high_token),
+) {
+    0xC7
+} else {
+    0xC6
+};
 ```
 
 This is a repetative logic and we can mess up quite easily therefore we have refactored this into the evaluate_ins function the following is the example of the same:
 
 ```rust
-    // ./src-tauri/src/compiler/parsers/pattern_extractors/utils.rs 181:5
-    let var_type = variable_abs_address_map
-        .get(label)
-        .unwrap_or(&(VariableType::Word, 0))
-        .0;
-    variable_type = Some(var_type);
+// ./src-tauri/src/compiler/parsers/pattern_extractors/utils.rs 181:5
+let var_type = variable_abs_address_map
+    .get(label)
+    .unwrap_or(&(VariableType::Word, 0))
+    .0;
+variable_type = Some(var_type);
 ```
 
 ## Removal of parsing chracter in parse fn and moved it into evaluate ins
@@ -43,17 +44,17 @@ The `parse_two_arguments_line` was incharge of handing the substitution of varia
 
 This is what the `parse_two_arguments_line` was doing before: 
 ```rust 
-    match high_token{
-        match low_token{ 
-            Assembly8086Tokens::Character(label) => {
-                let addr_bytes_or_num = get_label_address_or_push_into_ref();
-                match addr_bytes_or_num{
-                    bytes => AddressingMode::RegisterAndAddress
-                    num => AddressingMode::Registers16bitNumber
-                }
+match high_token{
+    match low_token{ 
+        Assembly8086Tokens::Character(label) => {
+            let addr_bytes_or_num = get_label_address_or_push_into_ref();
+            match addr_bytes_or_num{
+                bytes => AddressingMode::RegisterAndAddress
+                num => AddressingMode::Registers16bitNumber
             }
         }
     }
+}
 
 ```
 
@@ -64,9 +65,9 @@ This logic has now been converted into the `evaluate_ins` fn where it is already
 I have recently known that there exists ByteIndexedAddressing in the 8086 processor, it is a mode where you can change/access byte of the memory like when defining the variable as byte. You can also do this in a differnent way therefore to merge all of the uses into a sinlge entity to represent and match easily I have added ByteIndexedAddressing in Assembly8086Tokens. The following is the example of the same:
 
 My discovery: 
-```asm
-    MOV b.[BX], 0x0A ; moves 0x0A into the byte of the memory pointed by BX
-    MOV w.[BX], 0x0A ; moves 0x00_0A into the word of the memory pointed by BX
+```asm6502
+MOV b.[BX], 0x0A ; moves 0x0A into the byte of the memory pointed by BX
+MOV w.[BX], 0x0A ; moves 0x00_0A into the word of the memory pointed by BX
 ```
 
 As this is the case to represent both `b.[BX]` and `var db` I have added ByteIndexedAddressing in Assembly8086Tokens.
