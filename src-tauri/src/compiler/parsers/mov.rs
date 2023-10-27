@@ -3,9 +3,7 @@ use std::vec;
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        parsers::utils::{get_token_as_label, is_variable_defined_as_16bit},
         tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
-        types_structs::VariableAddressMap,
         CompiledBytesReference, TokenizedLine,
     },
     convert_and_push_instructions,
@@ -29,7 +27,6 @@ pub(in crate::compiler) fn parse_mov(
     i: usize,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-    variable_abs_offset_map: Option<&VariableAddressMap>,
     addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
@@ -266,25 +263,36 @@ pub(in crate::compiler) fn parse_mov(
             address_bytes,
             num,
         } => {
-            let mov_ins = if is_variable_defined_as_16bit(
-                &variable_abs_offset_map,
-                get_token_as_label(&high_token),
-            ) {
-                0xC7
-            } else {
-                0xC6
-            };
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => vec![mov_ins, 0x06],
+                    token => vec![0xC7, 0x06],
+                   &high_token=> address_bytes.to_vec(),
+                   &low_token=> (num as u16).to_le_bytes().to_vec()
+                )
+            );
+            Ok(tokenized_line.len())
+        }
+
+        AddressingMode::ByteAddressAnd8bitNumber {
+            high_token,
+            low_token,
+            address_bytes,
+            num,
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0xC6, 0x06],
                    &high_token=> address_bytes.to_vec(),
                    &low_token=> vec![num]
                 )
             );
             Ok(tokenized_line.len())
         }
+
         // MOV AX..DI, [BX] | [BP] | [SI] | [DI] | [BX + SI] | [BX + DI] | [BP + SI] | [BP + DI]
         AddressingMode::Register16bitAndIndexedAddress {
             high_token,
@@ -511,7 +519,7 @@ mod tests {
         |compiled_instructions: &Vec<u8>| {
             assert_eq!(
                 compiled_instructions,
-                &[0xEB, 0x02, 0x10, 0x00, 0xC7, 0x06, 0x02, 0x01, 0x01]
+                &[0xEB, 0x02, 0x10, 0x00, 0xC7, 0x06, 0x02, 0x01, 0x01, 0x00]
             )
         }
     );

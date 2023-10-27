@@ -34,10 +34,25 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
     {
         return Ok(None);
     }
-    // if the start index and end index have difference 1 then it means that the instruction is compact
+
+    // if start token is a register return we don't want to evaluate it
     if (end_index - start_index) == 1 {
-        return Ok(None);
+        let start_token = tokenized_line.get(
+            start_index,
+            "This shouldn't happen, Please report this".to_string(),
+            None,
+        )?;
+
+        match start_token.token_type {
+            Assembly8086Tokens::Register16bit(_)
+            | Assembly8086Tokens::Register8bit(_)
+            | Assembly8086Tokens::Instruction(_) => {
+                return Ok(None);
+            }
+            _ => {}
+        }
     }
+
     // check if there is an openSquareBracket in tokenized_line[start_index..end_index] use iter()
     let mut open_sqaure_bracket_exists = tokenized_line
         .slice(start_index, end_index)
@@ -75,6 +90,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
     }
 
     let mut indexing_type = IndexingType::Undefined;
+    let mut variable_type = None;
 
     let mut stack = Vec::<StackItem>::new();
     let mut operator_stack = Vec::<StackOperator>::new();
@@ -104,12 +120,10 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                     stack.push(StackItem::Register16bit(token));
                 }
                 _ => {
-                    return Err(CompilationError::new_without_suggestions(
-                        token.line_number,
-                        token.column_number,
-                        token.token_length,
+                    return Err(CompilationError::error_with_token(
+                        token,
                         &format!(
-                            "Expected a 16bit register got {:?} insted",
+                            "Expected a 16bit register only **BX, SI, DI & BP** are valid but got {:?} insted",
                             token.token_type
                         ),
                     ));
@@ -140,7 +154,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                     token,
                     is_org_defined,
                     is_offset_directive_defined,
-                    VariableType::Word,
+                    VariableType::Byte,
                     variable_abs_address_map,
                     var_ref_map,
                     label_idx_map,
@@ -155,13 +169,20 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                                 "Can't use a label along with a variable in the same expression",
                             ));
                         }
-                        label_idx_map.insert(
-                            label.to_string(),
-                            (token.clone(), i, is_offset_directive_defined),
-                        );
+                        if is_offset_directive_defined {
+                            label_idx_map.insert(
+                                label.to_string(),
+                                (token.clone(), i, is_offset_directive_defined),
+                            );
+                        }
                         open_sqaure_bracket_exists = true;
                         stack.push(StackItem::Number(token, SignedU16::from(addr_byte)));
                         indexing_type = IndexingType::VariableIndexing;
+                        let var_type = variable_abs_address_map
+                            .get(label)
+                            .unwrap_or(&(VariableType::Word, 0))
+                            .0;
+                        variable_type = Some(var_type);
                     }
                     Either::Right(num) => {
                         if indexing_type == IndexingType::VariableIndexing {
@@ -326,6 +347,19 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
     let column_number = first_ins.column_number;
     let token_length = last_ins.column_number + last_ins.token_length - first_ins.column_number;
 
+    fn get_indexed_addressing(
+        addressing_type: IndexedAddressingTypes,
+        variable_type: VariableType,
+    ) -> Assembly8086Tokens {
+        // Assembly8086Tokens::IndexedAddressing(addressing_type)
+        match variable_type {
+            VariableType::Byte => Assembly8086Tokens::ByteIndexedAddressing(addressing_type),
+            VariableType::Word => Assembly8086Tokens::IndexedAddressing(addressing_type),
+        }
+    }
+
+    let variable_type = variable_type.unwrap_or(VariableType::Word);
+
     if is_offset_directive_defined
         || (!is_bx_in_line.0 && !is_bp_in_line.0 && !is_si_in_line.0 && !is_di_in_line.0)
     {
@@ -335,8 +369,9 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                     line_number,
                     column_number,
                     token_length,
-                    token_type: Assembly8086Tokens::IndexedAddressing(
+                    token_type: get_indexed_addressing(
                         IndexedAddressingTypes::Offset(num_type),
+                        variable_type,
                     ),
                 }));
             }

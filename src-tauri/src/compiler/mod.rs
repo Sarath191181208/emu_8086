@@ -179,7 +179,6 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    variable_address_map,
                     addressing_mode,
                 )?;
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "MOV", 2)?;
@@ -202,7 +201,6 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    variable_address_map,
                     addressing_mode,
                 )?;
 
@@ -226,7 +224,6 @@ fn compile(
                     i,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    variable_address_map,
                     addressing_mode,
                 )?;
 

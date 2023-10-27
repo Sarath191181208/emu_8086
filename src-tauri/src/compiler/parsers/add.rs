@@ -1,7 +1,7 @@
 use crate::{
     compiler::{
         compilation_error::CompilationError, parsers::utils::get_idx_from_reg,
-        tokenized_line::TokenizedLine, types_structs::VariableAddressMap, CompiledBytesReference,
+        tokenized_line::TokenizedLine, CompiledBytesReference,
     },
     convert_and_push_instructions,
     utils::Either,
@@ -17,10 +17,7 @@ use super::{
         },
         AddressingMode,
     },
-    utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, get_token_as_label,
-        is_variable_defined_as_16bit, push_instruction,
-    },
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
 pub(in crate::compiler) fn parse_add(
@@ -28,7 +25,6 @@ pub(in crate::compiler) fn parse_add(
     i: usize,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-    variable_abs_offset_map: Option<&VariableAddressMap>,
     addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
@@ -210,26 +206,36 @@ pub(in crate::compiler) fn parse_add(
             address_bytes,
             num,
         } => {
-            let add_ins = if is_variable_defined_as_16bit(
-                &variable_abs_offset_map,
-                get_token_as_label(&high_token),
-            ) {
-                0x83
-            } else {
-                0x80
-            };
-
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => vec![add_ins, 0x06],
+                    token => vec![0x83, 0x06],
                    &high_token=> address_bytes.to_vec(),
                    &low_token=> vec![num]
                 )
             );
             Ok(tokenized_line.len())
         }
+
+        AddressingMode::ByteAddressAnd8bitNumber {
+            high_token,
+            low_token,
+            address_bytes,
+            num,
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0x80, 0x06],
+                   &high_token=> address_bytes.to_vec(),
+                   &low_token=> vec![num]
+                )
+            );
+            Ok(tokenized_line.len())
+        }
+
         AddressingMode::Register16bitAndIndexedAddress {
             high_token,
             low_token,

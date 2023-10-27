@@ -1,9 +1,7 @@
 use crate::{
     compiler::{
-        compilation_error::CompilationError,
-        parsers::utils::{get_idx_from_reg, get_token_as_label, is_variable_defined_as_16bit},
-        tokenized_line::TokenizedLine,
-        types_structs::{CompiledBytesReference, VariableAddressMap},
+        compilation_error::CompilationError, parsers::utils::get_idx_from_reg,
+        tokenized_line::TokenizedLine, types_structs::CompiledBytesReference,
     },
     convert_and_push_instructions,
     utils::Either,
@@ -27,7 +25,6 @@ pub(in crate::compiler) fn parse_sub(
     i: usize,
     compiled_bytes: &mut Vec<u8>,
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-    variable_abs_offset_map: Option<&VariableAddressMap>,
     addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
     let token = tokenized_line.get(
@@ -222,26 +219,36 @@ pub(in crate::compiler) fn parse_sub(
             address_bytes,
             num,
         } => {
-            let add_ins = if is_variable_defined_as_16bit(
-                &variable_abs_offset_map,
-                get_token_as_label(&high_token),
-            ) {
-                0x83
-            } else {
-                0x80
-            };
-
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => vec![add_ins, 0x2E],
+                    token => vec![0x83, 0x2E],
                    &high_token=> address_bytes.to_vec(),
                    &low_token=> vec![num]
                 )
             );
             Ok(tokenized_line.len())
         }
+
+        AddressingMode::ByteAddressAnd8bitNumber {
+            high_token,
+            low_token,
+            address_bytes,
+            num,
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0x80, 0x2E],
+                   &high_token=> address_bytes.to_vec(),
+                   &low_token=> vec![num]
+                )
+            );
+            Ok(tokenized_line.len())
+        }
+
         AddressingMode::Register16bitAndIndexedAddress {
             high_token,
             low_token,
@@ -334,7 +341,7 @@ mod tests16bit {
 
     // sub di, 0xff
     test_compile!(sub_di_0xff, "SUB DI, 0xff", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x83, 0xEF, 0xff]);
+        assert_eq!(instructions, &[0x81, 0xEF, 0xff, 0x00]);
     });
 
     // sub cx, var
