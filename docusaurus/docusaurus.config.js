@@ -133,7 +133,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['rust', 'asm6502'],
+        additionalLanguages: ['rust', 'asm6502', 'yaml'],
       },
     }),
 };

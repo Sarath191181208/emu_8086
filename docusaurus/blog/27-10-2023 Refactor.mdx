@@ -71,3 +71,54 @@ MOV w.[BX], 0x0A ; moves 0x00_0A into the word of the memory pointed by BX
 ```
 
 As this is the case to represent both `b.[BX]` and `var db` I have added ByteIndexedAddressing in Assembly8086Tokens.
+
+## 📖 DOC:  Setup github actions to automatically deploy docs 
+
+From [Docusaurus](https://docusaurus.io/docs/deployment#deploying-to-github-pages) docs: 
+We have setup a github actions script that looks like this 
+```yaml 
+name: Build Docs
+
+defaults:
+  run:
+    working-directory: ./docusaurus
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "docusaurus/**"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "docusaurus/**"
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm 
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            publish_dir: ./build
+            user_name: Sarath19181208[bot]
+            user_email: vssarathc04+gh_bot_emu8086@gmail.com
+``` 
+To make automatically deploy docs to github pages on every push to main branch.

@@ -1,5 +1,9 @@
 name: Build Docs
 
+defaults:
+  run:
+    working-directory: ./docusaurus
+
 on:
   push:
     branches: ["main"]
@@ -25,20 +29,16 @@ jobs:
           cache: npm 
 
       - name: Install dependencies
-        run: |
-            cd docusaurus
-            npm ci
+        run: npm ci
 
       - name: Build
-        run: |
-            cd docusaurus
-            npm run build
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
             github_token: ${{ secrets.GITHUB_TOKEN }}
-            publish_dir: ./docusaurus/build
+            publish_dir: ./build
             user_name: Sarath19181208[bot]
             user_email: vssarathc04+gh_bot_emu8086@gmail.com
     
