@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://Sarath191181208.github.io/emu_8086/blog</id>
     <title>My Site Blog</title>
-    <updated>2023-10-27T19:01:51.000Z</updated>
+    <updated>2023-10-27T19:14:56.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://Sarath191181208.github.io/emu_8086/blog"/>
     <subtitle>My Site Blog</subtitle>
@@ -11,7 +11,7 @@
         <title type="html"><![CDATA[Pop Support]]></title>
         <id>https://Sarath191181208.github.io/emu_8086/blog/26-10-2023 Added POP support</id>
         <link href="https://Sarath191181208.github.io/emu_8086/blog/26-10-2023 Added POP support"/>
-        <updated>2023-10-27T19:01:51.000Z</updated>
+        <updated>2023-10-27T19:14:56.000Z</updated>
         <summary type="html"><![CDATA[Compilation of the pop instruction]]></summary>
         <content type="html"><![CDATA[<h2 class="anchor anchorWithStickyNavbar_LWe7" id="compilation-of-the-pop-instruction">Compilation of the pop instruction<a href="#compilation-of-the-pop-instruction" class="hash-link" aria-label="Direct link to Compilation of the pop instruction" title="Direct link to Compilation of the pop instruction">​</a></h2><table><thead><tr><th align="center">Operand</th><th align="center">Opcode</th><th align="center">Description</th><th align="center">Example instruction</th></tr></thead><tbody><tr><td align="center">reg16</td><td align="center">0x58+rw</td><td align="center">Pop top of stack into reg16</td><td align="center"><code>pop ax</code></td></tr><tr><td align="center">mem16</td><td align="center">0x8F 0x06 16BIT-addr</td><td align="center">Pop top of stack into mem16</td><td align="center"><code>pop [0x0100]</code></td></tr><tr><td align="center">indexed with no offset</td><td align="center">0x8F 0x00..0x07</td><td align="center">Pop top of stack into index given by regs</td><td align="center"><code>pop [bx+si]</code></td></tr><tr><td align="center">indexed with byte offset</td><td align="center">0x8F 0x40..0x47 16bit-addr</td><td align="center">Pop top of stack into index given by regs + byte offset</td><td align="center"><code>pop [bx+0x01]</code></td></tr><tr><td align="center">indexed with word offset</td><td align="center">0x8F 0x80..0x87 16bit-addr</td><td align="center">Pop top of stack into index given by regs + word offset</td><td align="center"><code>pop [bx+0x0100]</code></td></tr></tbody></table><h2 class="anchor anchorWithStickyNavbar_LWe7" id="execution-of-the-pop-instruction">Execution of the pop instruction<a href="#execution-of-the-pop-instruction" class="hash-link" aria-label="Direct link to Execution of the pop instruction" title="Direct link to Execution of the pop instruction">​</a></h2><p>Made the <code>pop</code> instruction execution working.
 Addressing modes of the <code>pop</code> instruction implemented are:</p><ul><li>Register addressing mode, ex - <code>pop ax</code></li><li>Direct addressing mode, ex - <code>pop [0x1234]</code></li><li>Variable addressing mode, ex - <code>pop [var]</code></li><li>Indirect addressing mode, ex - <code>pop [bx]</code></li><li>Indexed addressing mode, ex - <code>pop [bx+si]</code></li></ul><p>Algorithm:</p><div class="codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">operand = SS:[SP] (top of the stack)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">SP = SP + 2</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>]]></content>
@@ -24,7 +24,7 @@ Addressing modes of the <code>pop</code> instruction implemented are:</p><ul><li
         <title type="html"><![CDATA[🛠️ Refactor]]></title>
         <id>https://Sarath191181208.github.io/emu_8086/blog/27-10-2023 Refactor</id>
         <link href="https://Sarath191181208.github.io/emu_8086/blog/27-10-2023 Refactor"/>
-        <updated>2023-10-27T19:01:51.000Z</updated>
+        <updated>2023-10-27T19:14:56.000Z</updated>
         <summary type="html"><![CDATA[🛠️ Refactor conditional check of variable type into the evaluate_ins function And added ByteIndexedAddressing in Assembly8086Tokens]]></summary>
         <content type="html"><![CDATA[<p>🛠️ Refactor conditional check of variable type into the evaluate_ins function And added ByteIndexedAddressing in Assembly8086Tokens</p><h2 class="anchor anchorWithStickyNavbar_LWe7" id="refactor-conditional-check">Refactor conditional check<a href="#refactor-conditional-check" class="hash-link" aria-label="Direct link to Refactor conditional check" title="Direct link to Refactor conditional check">​</a></h2><ul><li>Refactored conditional check of variable type into the evaluate_ins function
 The code base was having this type of conditional checks for checking if the variable type is defined as Word (or) as byte
@@ -34,5 +34,11 @@ We have setup a github actions script that looks like this </p><div class="langu
             <name>Vangipuram Srinivasa Sarath Chandra</name>
             <uri>https://github.com/Sarath191181208</uri>
         </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[28-10-2023]]></title>
+        <id>https://Sarath191181208.github.io/emu_8086/blog/28-10-2023</id>
+        <link href="https://Sarath191181208.github.io/emu_8086/blog/28-10-2023"/>
+        <updated>2023-10-27T19:14:56.000Z</updated>
     </entry>
 </feed>

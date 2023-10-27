@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[535],{5641:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Pop Support","permalink":"/emu_8086/blog/26-10-2023 Added POP support"},{"title":"\ud83d\udee0\ufe0f Refactor","permalink":"/emu_8086/blog/27-10-2023 Refactor"},{"title":"28-10-2023","permalink":"/emu_8086/blog/28-10-2023"}]}')}}]);
