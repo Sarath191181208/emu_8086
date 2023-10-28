@@ -8,9 +8,9 @@
     <subtitle>My Site Blog</subtitle>
     <icon>https://Sarath191181208.github.io/emu_8086/img/favicon.ico</icon>
     <entry>
-        <title type="html"><![CDATA[Blog CI & Indiviaual Byte/Word Indexing work]]></title>
-        <id>https://Sarath191181208.github.io/emu_8086/blog/2023/10/28/  TEST support </id>
-        <link href="https://Sarath191181208.github.io/emu_8086/blog/2023/10/28/  TEST support "/>
+        <title type="html"><![CDATA[Blog CI + Indiviaual Byte/Word Indexing work]]></title>
+        <id>https://Sarath191181208.github.io/emu_8086/blog/2023/10/28/</id>
+        <link href="https://Sarath191181208.github.io/emu_8086/blog/2023/10/28/"/>
         <updated>2023-10-28T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Blog CI]]></summary>
         <content type="html"><![CDATA[<h2 class="anchor anchorWithStickyNavbar_LWe7" id="blog-ci">Blog CI<a href="#blog-ci" class="hash-link" aria-label="Direct link to Blog CI" title="Direct link to Blog CI">​</a></h2><p>Made the <code>docusaurus</code> compile in the CI/CD pipeline of github actions and made the <code>docusaurus</code> build and deploy to the <code>gh-pages</code> branch of the repository. The <code>gh-pages</code> branch is used to host the website on github pages.
