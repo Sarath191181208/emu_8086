@@ -5,7 +5,7 @@ description: Copies operand2 into operand1.
 
 ## Syntax
 
-```asm
+```asm6502
 MOV operand1, operand2
 ```
 
