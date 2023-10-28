@@ -95,7 +95,6 @@ impl CPU {
 mod test_add_direct_address {
     use crate::cpu::instructions::test_macro::run_code;
 
-
     #[test]
     fn test_ax_var() {
         let code = "
