@@ -45,7 +45,6 @@ impl CPU {
 mod tests {
     use crate::cpu::instructions::test_macro::run_code;
 
-
     #[test]
     fn mov_ax_var() {
         let code = "
