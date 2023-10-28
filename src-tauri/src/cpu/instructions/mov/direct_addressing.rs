@@ -43,25 +43,19 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
+
 
     #[test]
     fn mov_ax_var() {
-        compile_and_test_str(
-            "
+        let code = "
             org 100h
             .data 
             var dw 0x1234
             code: 
             mov ax, var
-            ",
-            2,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x1234);
-            },
-        );
+            ";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x1234);
     }
 }
