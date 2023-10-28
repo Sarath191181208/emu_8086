@@ -117,6 +117,16 @@ const config = {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
         additionalLanguages: ['rust', 'asm6502', 'yaml'],
+        magicComments :[
+          {
+            className: 'code-block-added-line',
+            line: 'Added',
+          },
+          {
+            className: 'code-block-removed-line',
+            line: 'Removed',
+          }
+        ]
       },
     }),
 };
