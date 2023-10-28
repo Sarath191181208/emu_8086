@@ -14,13 +14,13 @@ use crate::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
             registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
-        types_structs::{VariableAddressMap, VariableReferenceMap, VariableType},
+        types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledLineLabelRef,
     },
     utils::Either,
 };
 
-use self::utils::{evaluate_ins, get_label_address_or_push_into_ref};
+use self::utils::evaluate_ins;
 use super::utils::check_comma;
 
 pub(in super::super) mod compile_two_arguments_patterns;
@@ -300,44 +300,6 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     }),
                 },
 
-                Assembly8086Tokens::Character(label) => {
-                    let address_bytes = get_label_address_or_push_into_ref(
-                        i + 3,
-                        label,
-                        &low_token,
-                        is_org_defined,
-                        false,
-                        VariableType::Byte,
-                        variable_abs_address_map,
-                        variable_ref_map,
-                        label_idx_map,
-                        compiled_line_offset_maps,
-                    );
-
-                    match address_bytes {
-                        Either::Left(address_bytes) => Ok(AddressingMode::Register8bitAndAddress {
-                            high_token: compact_high_token,
-                            low_token,
-                            address_bytes,
-                            register_type: high_token_type.clone(),
-                        }),
-                        Either::Right(num) => match num {
-                            Either::Left(num) => Ok(AddressingMode::Register8bitNumber {
-                                high_token: compact_high_token,
-                                low_token,
-                                num,
-                            }),
-                            Either::Right(_) => Err(CompilationError::error_with_token(
-                                token,
-                                &format!(
-                                    "Expected a 8bit value after {} got 16bit value insted",
-                                    ins
-                                ),
-                            )),
-                        },
-                    }
-                }
-
                 _ => Err(CompilationError::new_without_suggestions(
                     token.line_number,
                     high_token.column_number + high_token.token_length + 1,
@@ -353,23 +315,24 @@ pub(crate) fn parse_two_arguments_line<'a>(
         Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::Offset(offset)) => {
             let offset_val = offset.as_u16();
             check_comma(tokenized_line, high_token, compact_high_until)?;
-            let low_token = tokenized_line.get(
-                i + 3,
-                format!(
-                    "Expected 16bit value after {:?} got nothing",
-                    high_token.token_type
-                )
-                .to_string(),
-                Some(vec![
-                    get_all_16bit_registers_suggestions(),
-                    get_all_16bit_variables_suggestions(Some(variable_abs_address_map)),
-                    get_8bit_number_suggestion(),
-                    get_16bit_number_suggestion(),
-                ]),
-            )?;
             let low_token = match compact_low_token {
                 Some(low_token) => low_token,
-                None => low_token.clone(),
+                None => tokenized_line
+                    .get(
+                        compact_high_until + 1,
+                        format!(
+                            "Expected 16bit value after {:?} got nothing",
+                            high_token.token_type
+                        )
+                        .to_string(),
+                        Some(vec![
+                            get_all_16bit_registers_suggestions(),
+                            get_all_16bit_variables_suggestions(Some(variable_abs_address_map)),
+                            get_8bit_number_suggestion(),
+                            get_16bit_number_suggestion(),
+                        ]),
+                    )?
+                    .clone(),
             };
             match &low_token.token_type {
                 Assembly8086Tokens::Number16bit(num) => Ok(AddressingMode::AddressAnd16bitNumber {
