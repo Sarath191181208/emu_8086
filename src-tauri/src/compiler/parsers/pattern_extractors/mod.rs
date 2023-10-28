@@ -381,7 +381,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
             let offset_val = offset.as_u16();
             check_comma(tokenized_line, high_token, compact_high_until)?;
             let low_token = tokenized_line.get(
-                i + 3,
+                comma_pos.unwrap_or(i + 2) + 1,
                 format!(
                     "Expected 16bit value after {:?} got nothing",
                     high_token.token_type
