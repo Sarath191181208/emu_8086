@@ -16,6 +16,7 @@ pub mod pop;
 pub mod push;
 
 pub mod ret;
+pub mod test_ins;
 
 pub mod test_macro;
 
