@@ -137,7 +137,9 @@ fn compile(
                 // push code into compiled_line.labels don't change the other values already in compiled_line
                 compiled_line.labels.push("code".to_string());
             }
-            AssemblerDirectives::Offset | AssemblerDirectives::AsWord | AssemblerDirectives::AsByte => {}
+            AssemblerDirectives::Offset
+            | AssemblerDirectives::AsWord
+            | AssemblerDirectives::AsByte => {}
         }
     }
 

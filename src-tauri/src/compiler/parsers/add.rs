@@ -308,22 +308,21 @@ pub(in crate::compiler) fn parse_add(
 mod tests16bit {
     use crate::{compiler::compile_str, test_compile};
 
-    test_compile!(add_ax_sp, "ADD AX, SP", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x03, 0xC4]);
-    });
-
-    test_compile!(add_ax_0x1234, "ADD AX, 0x1234", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x05, 0x34, 0x12]);
-    });
-
-    test_compile!(add_bx_0xff12, "ADD BX, 0xff12", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x81, 0xC3, 0x12, 0xff]);
-    });
-
-    // test cx + 0x1234
-    test_compile!(add_cx_0x12, "ADD CX, 0x12", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x83, 0xC1, 0x12]);
-    });
+    test_compile!(
+        add_register_and_immediate_value_or_reg,
+        "
+    ADD AX, SP
+    ADD AX, 0x1234
+    ADD BX, 0xff12
+    ADD CX, 0x12
+    ",
+        |instructions: &Vec<u8>| {
+            assert_eq!(
+                instructions,
+                &[0x03, 0xC4, 0x05, 0x34, 0x12, 0x81, 0xC3, 0x12, 0xff, 0x83, 0xC1, 0x12]
+            );
+        }
+    );
 
     // test bx + var
     test_compile!(
@@ -393,23 +392,19 @@ mod tests16bit {
         }
     );
 
-    test_compile!(add_dx_di_ref, "ADD DX, [DI", |instructions: &Vec<u8>| {
-        assert_eq!(instructions, &[0x03, 0x15]);
-    });
-
     test_compile!(
-        add_dx_di_bx_ref_0x70,
-        "ADD DX, Di + 0x20 + 0x30 + BX + 0x10 + BX []+ 0x10",
+        add_dx_di_ref,
+        "
+    ADD DX, [DI
+    ADD DX, Di + 0x20 + 0x30 + BX + 0x10 + BX []+ 0x10
+    ADD DX, SI + 0x2000
+    Add Cx, 0x10 - 0x20 + 0x30
+    ",
         |instructions: &Vec<u8>| {
-            assert_eq!(instructions, &[0x03, 0x51, 0x70]);
-        }
-    );
-
-    test_compile!(
-        add_dx_si_value_ref,
-        "ADD DX, SI + 0x2000",
-        |instructions: &Vec<u8>| {
-            assert_eq!(instructions, &[0x03, 0x94, 0x00, 0x20]);
+            assert_eq!(
+                instructions,
+                &[0x03, 0x15, 0x03, 0x51, 0x70, 0x03, 0x94, 0x00, 0x20, 0x83, 0xC1, 0x20]
+            );
         }
     );
 
@@ -434,10 +429,25 @@ mod tests16bit {
     });
 
     test_compile!(
-        add_cx_0x10_0x20_0x30,
-        "Add Cx, 0x10 - 0x20 + 0x30",
+        add_b_var_0x10,
+        "
+    org 100h
+    .data
+    var dw 0x12
+    var2 db 0x20
+    code:
+    ADD b.[var], 0x10
+    Add b.[var-0x02] b.[0x02], 0x10
+    ADD w.[var], 0x10
+    ",
         |instructions: &Vec<u8>| {
-            assert_eq!(instructions, &[0x83, 0xC1, 0x20]);
+            assert_eq!(
+                instructions,
+                &[
+                    0xEB, 0x03, 0x12, 0x00, 0x20, 0x80, 0x06, 0x02, 0x01, 0x10, 0x80, 0x06, 0x02,
+                    0x01, 0x10, 0x83, 0x06, 0x02, 0x01, 0x10
+                ]
+            );
         }
     );
 }

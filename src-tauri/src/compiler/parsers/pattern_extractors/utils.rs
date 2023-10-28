@@ -147,6 +147,16 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
             Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::Offset) => {
                 is_offset_directive_defined = true;
             }
+            Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::AsByte) => {
+                if variable_type.is_none() {
+                    variable_type = Some(VariableType::Byte);
+                }
+            }
+
+            Assembly8086Tokens::AssemblerDirectives(AssemblerDirectives::AsWord) => {
+                variable_type = Some(VariableType::Word);
+            }
+
             Assembly8086Tokens::Character(label) => {
                 let is_address_or_num = get_label_address_or_push_into_ref(
                     i,
@@ -182,7 +192,10 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                             .get(label)
                             .unwrap_or(&(VariableType::Word, 0))
                             .0;
-                        variable_type = Some(var_type);
+                        // variable_type = Some(var_type);
+                        if var_type == VariableType::Byte {
+                            variable_type = Some(VariableType::Byte);
+                        }
                     }
                     Either::Right(num) => {
                         if indexing_type == IndexingType::VariableIndexing {
@@ -275,7 +288,6 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                             "The sum of the values overflows",
                         ));
                     }
-                    dbg!(val_high, "+", val_low, "= ", res);
                     stack.push(StackItem::Number(low_token, res));
                 }
                 (
