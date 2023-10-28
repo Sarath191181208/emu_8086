@@ -1,0 +1,69 @@
+---
+title: TEST
+description: Performs a bitwise AND operation on the two operands.
+---
+
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import {
+  RegisterAddressingMode,
+  ImmediateAddressingMode,
+  MemoryAddressingMode,
+  RegisterIndirectAddressingMode,
+  BasePlusIndexedAddressingMode,
+  BasePlusIndexPlusDisplacementAddressingMode,
+} from "@site/src/components/AddressingModes";
+
+export const Highlight2 = ({ children, color }) => (
+  <span
+    style={{
+      backgroundColor: color,
+      borderRadius: "2px",
+      color: "#fff",
+      padding: "0.2rem",
+    }}
+  >
+    {children}
+  </span>
+);
+
+## Syntax
+
+```asm6502
+TEST operand1, operand2
+```
+
+## Attributes
+
+| Attribute    | Description                                                                                                                                                |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Size**     | Byte, Word, Doubleword, 3 Bytes, 5 Bytes (or) 6 Bytes                                                                                                      |
+| **Operands** | The first operand is a general-purpose register or memory location. The second operand is a general-purpose register, memory location, or immediate value. |
+| **Action**   | Performs a bitwise AND operation on the two operands. The result is discarded.                                                                             |
+| **Flags**    | <FlagsChangedTable carryFlag={false} overflowFlag={false} zeroFlag="changed" signFlag="changed" parityFlag="changed" />                                    |
+
+## Supported Modes
+
+### Register Addressing
+
+<RegisterAddressingMode instructionName="TEST" />
+
+### Immediate Addressing Mode
+
+<ImmediateAddressingMode instructionName="TEST" />
+
+### MemoryAddressingMode
+
+<MemoryAddressingMode instructionName="TEST" />
+
+### RegisterIndirectAddressingMode
+
+  <RegisterIndirectAddressingMode instructionName="TEST" />
+
+
+### BasePlusIndexedAddressingMode
+
+<BasePlusIndexedAddressingMode instructionName="TEST"/>
+
+### BasePlusIndexPlusDisplacementAddressingMode
+
+<BasePlusIndexPlusDisplacementAddressingMode instructionName="TEST" />
