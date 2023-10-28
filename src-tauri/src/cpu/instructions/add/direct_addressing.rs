@@ -93,115 +93,99 @@ impl CPU {
 
 #[cfg(test)]
 mod test_add_direct_address {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
+
 
     #[test]
     fn test_ax_var() {
-        compile_and_test_str(
-            "
+        let code = "
             org 0x100
             .data 
             var dw 0x1234
             code: 
             ADD AX, var
-            ",
-            2,
-            |cpu: &CPU, _: &Memory| assert_eq!(cpu.ax, 0x1234),
-        );
+            ";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x1234);
     }
 
     #[test]
     fn test_al_var() {
-        compile_and_test_str(
-            "
+        let code = "
             org 0x100
             .data 
             var db 0x12
             code: 
             ADD AL, var
-            ",
-            2,
-            |cpu: &CPU, _: &Memory| assert_eq!(cpu.ax, 0x0012),
-        );
+            ";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x0012);
     }
 
     #[test]
     fn test_var_bx() {
-        compile_and_test_str(
-            "
+        let code = "
             org 0x100
             .data 
             var dw 0x1234
             code: 
             mov bx, 0x1111
             ADD var, BX
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x2345),
-        );
+            ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x2345);
     }
 
     #[test]
     fn test_var_cl() {
-        compile_and_test_str(
-            "
+        let code = "
             org 0x100
             .data 
             var db 0x12
             code: 
             mov cl, 0x11
             ADD var, cl
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x23),
-        );
+            ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x23);
     }
 
     #[test]
     fn test_var_16bit_immediate() {
-        compile_and_test_str(
-            "
+        let code = "
             org 0x100
             .data 
             var dw 0x1234
             code: 
             ADD var, 0x1111
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x2345),
-        );
+            ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x2345);
     }
 
     #[test]
     fn test_var_word_8bit_immediate() {
-        compile_and_test_str(
-            "
+        let code = "
             org 0x100
             .data 
             var dw 0x1234
             code: 
             ADD var, 0x11
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x45),
-        );
+            ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x45);
     }
 
     #[test]
     fn test_var_byte_8bit_immediate() {
-        compile_and_test_str(
-            "
+        let code = "
             org 0x100
             .data 
             var db 0x10
             code: 
             ADD var, 0x20
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x30),
-        );
+            ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x30);
     }
 }
