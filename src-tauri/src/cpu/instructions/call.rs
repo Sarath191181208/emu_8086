@@ -11,16 +11,12 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
     fn no_offset_indexed_add() {
-        compile_and_test_str(
-            "
-    inc ax 
+        let code = "
+        inc ax 
     PROC main 
 
             inc ax
@@ -29,11 +25,9 @@ mod tests {
     CALL main 
     ; this is a commet 
     ; ahh! 
-    inc ax ",
-            4,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 3);
-            },
-        );
+    inc ax 
+    ";
+    let (cpu, _) = run_code(code, 4);
+    assert_eq!(cpu.ax, 3);
     }
 }
