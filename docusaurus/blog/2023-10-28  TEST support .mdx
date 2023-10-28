@@ -112,3 +112,17 @@ negative_flag = res & 0x80 != 0;
 pairity_flag = res.count_ones() % 2 == 0;
 
 ```
+
+## Testing deprecation of functions 
+Some of the old functions which don't use best practices are deprecated and the new functions are used. 
+The functions which are deprecated are:
+- `generate_test` macro
+- `generate_test_with_cycles` macro 
+- `compile_and_test_str` function
+
+In favour of these convoluted function a new api is created for testing. It is both easy and simple to use. The new api is as follows:
+```rust
+let code = "MOV AX, BX"
+let num_cycles = 1;
+run_code(code, num_cycles)
+```
