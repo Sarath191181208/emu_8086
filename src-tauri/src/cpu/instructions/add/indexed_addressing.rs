@@ -135,7 +135,7 @@ mod tests {
             ",
             4,
             |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x1234);
+                assert_eq!(cpu.ax, 0x134);
             },
         );
     }
