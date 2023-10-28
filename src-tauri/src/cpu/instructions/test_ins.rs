@@ -71,7 +71,10 @@ impl CPU {
         self.set_test_ins_flags_from_8bit_res(res);
     }
 
-    pub(in crate::cpu) fn execute_test_word_indexed_addressing_and_number(&mut self, mem: &mut Memory) {
+    pub(in crate::cpu) fn execute_test_word_indexed_addressing_and_number(
+        &mut self,
+        mem: &mut Memory,
+    ) {
         self.consume_instruction(mem); // 0x06
         let addr = self.consume_word(mem);
         let addr_val = self.read_word_from_pointer(mem, addr);
@@ -80,7 +83,10 @@ impl CPU {
         self.set_test_ins_flags_from_16bit_res(res);
     }
 
-    pub(in crate::cpu) fn execute_test_byte_indexed_addressing_and_number(&mut self, mem: &mut Memory) {
+    pub(in crate::cpu) fn execute_test_byte_indexed_addressing_and_number(
+        &mut self,
+        mem: &mut Memory,
+    ) {
         self.consume_instruction(mem); // 0x06
         let addr = self.consume_word(mem);
         let addr_val = self.read_byte_from_pointer(mem, addr);
@@ -145,7 +151,11 @@ impl CPU {
         self.set_test_ins_flags_from_8bit_res(res);
     }
 
-    fn execute_test_16bit_reg_and_indexed_addr_with_8bitoffset(&mut self, mem: &mut Memory, ins: u8) {
+    fn execute_test_16bit_reg_and_indexed_addr_with_8bitoffset(
+        &mut self,
+        mem: &mut Memory,
+        ins: u8,
+    ) {
         let (low_reg, high_reg) = self.get_index_from_0x40_0x7f_pattern(ins);
 
         let mem_addr = self.consume_byte_and_get_cummulative_offset(mem, low_reg);
@@ -156,7 +166,11 @@ impl CPU {
         self.set_test_ins_flags_from_16bit_res(res);
     }
 
-    fn execute_test_8bit_reg_and_indexed_addr_with_8bitoffset(&mut self, mem: &mut Memory, ins: u8) {
+    fn execute_test_8bit_reg_and_indexed_addr_with_8bitoffset(
+        &mut self,
+        mem: &mut Memory,
+        ins: u8,
+    ) {
         let (low_reg, high_reg) = self.get_index_from_0x40_0x7f_pattern(ins);
 
         let mem_addr = self.consume_byte_and_get_cummulative_offset(mem, low_reg);
@@ -167,7 +181,11 @@ impl CPU {
         self.set_test_ins_flags_from_8bit_res(res);
     }
 
-    fn execute_test_16bit_reg_and_indexed_addr_with_16bitoffset(&mut self, mem: &mut Memory, ins: u8) {
+    fn execute_test_16bit_reg_and_indexed_addr_with_16bitoffset(
+        &mut self,
+        mem: &mut Memory,
+        ins: u8,
+    ) {
         let (low_reg, high_reg) = self.get_index_from_0x80_0xbf_pattern(ins);
 
         let mem_addr = self.consume_word_and_get_cummulative_offset(mem, low_reg);
@@ -178,7 +196,11 @@ impl CPU {
         self.set_test_ins_flags_from_16bit_res(res);
     }
 
-    fn execute_test_8bit_reg_and_indexed_addr_with_16bitoffset(&mut self, mem: &mut Memory, ins: u8) {
+    fn execute_test_8bit_reg_and_indexed_addr_with_16bitoffset(
+        &mut self,
+        mem: &mut Memory,
+        ins: u8,
+    ) {
         let (low_reg, high_reg) = self.get_index_from_0x80_0xbf_pattern(ins);
 
         let mem_addr = self.consume_word_and_get_cummulative_offset(mem, low_reg);
@@ -207,13 +229,12 @@ impl CPU {
 }
 
 #[cfg(test)]
-mod test_ins_execution_tests{
+mod test_ins_execution_tests {
     use crate::cpu::instructions::test_macro::run_code;
     use pretty_assertions::assert_eq;
 
-
     #[test]
-    fn test_ax_and_number(){
+    fn test_ax_and_number() {
         let code = "
             mov ax,  0x0F0F 
             test ax, 0x0F0F
@@ -225,7 +246,7 @@ mod test_ins_execution_tests{
     }
 
     #[test]
-    fn test_al_and_number(){
+    fn test_al_and_number() {
         let code = "
             mov al,  0x0F 
             test al, 0x0F
@@ -237,7 +258,7 @@ mod test_ins_execution_tests{
     }
 
     #[test]
-    fn test_16bit_reg_and_16bit_reg(){
+    fn test_16bit_reg_and_16bit_reg() {
         let code = "
             mov ax,  0x000F 
             mov bx,  0x0F0F 
@@ -250,7 +271,7 @@ mod test_ins_execution_tests{
     }
 
     #[test]
-    fn test_8bit_reg_and_8bit_reg(){
+    fn test_8bit_reg_and_8bit_reg() {
         let code = "
             mov al,  0x0F 
             mov bl,  0x0F 
@@ -264,7 +285,7 @@ mod test_ins_execution_tests{
 
     // execute_test_16bit_reg_and_indexed_addr_variable
     #[test]
-    fn test_reg_and_var(){
+    fn test_reg_and_var() {
         let code = "
         org 100h 
         .data 
@@ -280,7 +301,7 @@ mod test_ins_execution_tests{
     }
     // execute_test_16bit_reg_and_indexed_addr_no_offset
     #[test]
-    fn test_reg_and_no_offset(){
+    fn test_reg_and_no_offset() {
         let code = "
         org 100h 
         .data 
@@ -297,7 +318,7 @@ mod test_ins_execution_tests{
     }
     // execute_test_16bit_reg_and_indexed_addr_with_8bitoffset
     #[test]
-    fn test_reg_and_8bit_offset(){
+    fn test_reg_and_8bit_offset() {
         let code = "
         org 100h 
         .data 
@@ -314,7 +335,7 @@ mod test_ins_execution_tests{
     }
     // execute_test_16bit_reg_and_indexed_addr_with_16bitoffset
     #[test]
-    fn test_reg_and_16bit_offset(){
+    fn test_reg_and_16bit_offset() {
         let code = "
         org 100h 
         .data 
@@ -332,7 +353,7 @@ mod test_ins_execution_tests{
 
     // execute_test_8bit_reg_and_indexed_addr_variable
     #[test]
-    fn test_8bit_reg_and_var(){
+    fn test_8bit_reg_and_var() {
         let code = "
         org 100h 
         .data 
@@ -349,7 +370,7 @@ mod test_ins_execution_tests{
 
     // execute_test_8bit_reg_and_indexed_addr_no_offset
     #[test]
-    fn test_8bit_reg_and_no_offset(){
+    fn test_8bit_reg_and_no_offset() {
         let code = "
         org 100h 
         .data 
@@ -367,7 +388,7 @@ mod test_ins_execution_tests{
 
     // execute_test_8bit_reg_and_indexed_addr_with_8bitoffset
     #[test]
-    fn test_8bit_reg_and_8bit_offset(){
+    fn test_8bit_reg_and_8bit_offset() {
         let code = "
         org 100h 
         .data 
@@ -385,7 +406,7 @@ mod test_ins_execution_tests{
 
     // execute_test_8bit_reg_and_indexed_addr_with_16bitoffset
     #[test]
-    fn test_8bit_reg_and_16bit_offset(){
+    fn test_8bit_reg_and_16bit_offset() {
         let code = "
         org 100h 
         .data 
@@ -400,6 +421,4 @@ mod test_ins_execution_tests{
         assert_eq!(cpu.pairity_flag, false);
         assert_eq!(cpu.negative_flag, false);
     }
-
-
 }

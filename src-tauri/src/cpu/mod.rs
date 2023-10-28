@@ -387,10 +387,10 @@ impl CPU {
             // MOV [0x102], AX
             0xA3 => self.execute_mov_direct_addressing_ax(mem),
 
-            // TEST AL, 0x20 
+            // TEST AL, 0x20
             0xA8 => self.execute_test_al_and_number(mem),
 
-            // TEST AX, 0x100 
+            // TEST AX, 0x100
             0xA9 => self.execute_test_ax_and_number(mem),
 
             // MOV 16bit register, 0x1234
