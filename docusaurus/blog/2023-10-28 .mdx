@@ -37,13 +37,53 @@ defaults:
 ```
 
 ## Individual Byte/Word Indexing
+
 The syntax like using `w.[]` and `b.[]` are now working. We can use of the fowlling syntax to make the fowlling work.
+
 ```asm6502
 
 ORG 100h
-.DATA 
+.DATA
   var dw 0x100
-CODE:   
+CODE:
   MOV w.[var], 0x10 ; moves 0x0010 -> [var]
   MOV b.[var], 0x10 ; moves 0x10   -> [var]
 ```
+
+## Compilation of TEST instruction
+
+:::tip What the differnet texts mean in opcode
+
+- `[0x00 0x10]` means that these bytes are derived from memory and address 0x100 is used.
+- `u8` means that the byte is derived from the immediate value and has 1byte as size.
+- `u16` means that the word is derived from the immediate value and has 2bytes as size.
+- `i8` means that the byte is derived from the immediate value is signed and has 1byte size.
+- `i16` means that the word is derived from the immediate value is signed and has 2byte size.
+- `0x00..0xFF` means that these bytes are derived from the instructions/registers.
+
+- `reg16` means that the register is 16-bit. Ex: `AX`, `BX`, `CX`, `DX`, `SP`, `BP`, `SI`, `DI`
+- `reg8` means that the register is 8-bit. Ex: `AL`, `BL`, `CL`, `DL`, `AH`, `BH`, `CH`, `DH`
+- `var16` means that the variable is 16-bit. Ex: `var dw 0x100` or `w.[0x100]`
+- `var8` means that the variable is 8-bit. Ex: `var db 0x100` or `b.[0x100]`
+- `idx16` means that the index is 16-bit. Ex: `w.[BX]` or `w.[SI]` or `w.[DI]`
+- `idx8` means that the index is 8-bit. Ex: `b.[BX]` or `b.[SI]` or `b.[DI]`
+
+:::
+
+The `TEST` instruction is now compiled and working. The `TEST` instruction is used to perform bitwise AND operation on the operands and set the flags accordingly. The `TEST` instruction is compiled into the following code.
+
+|          Operand          |           Opcode            | Size(bytes) |                                 Description                                  | Example instruction    |
+| :-----------------------: | :-------------------------: | :---------: | :--------------------------------------------------------------------------: | ---------------------- |
+|       reg16, reg16        |       0x85 0xC0..0xFF       |      2      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, BX`          |
+|        reg8, reg8         |       0x84 0xC0..0xFF       |      2      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AL, BL`          |
+|         AX, imm16         |       0xA9 0xC0..0xFF       |      3      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, 0x10`        |
+|         AL, imm8          |       0xA8 0xC0..0xFF       |      2      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AL, 0x10`        |
+|     reg16, imm16/imm8     |     0xF7 0xC0..0xFF u16     |      4      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, 0x10`        |
+|        reg8, imm8         |     0xF6 0xC0..0xFF u8      |      3      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AL, 0x10`        |
+| var16/reg16 , reg16/var16 | 0x85 0x06..0x36 [0x02 0x01] |      4      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST [0x100], AX`     |
+|   var8/reg8 , reg8/var8   | 0x84 0x06..0x36 [0x02 0x01] |      4      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST [0x100], AL`     |
+|     var16, imm16/imm8     |  0xF7 0x06 [0x00 0x10] u16  |      6      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST [0x100], 0x10`   |
+|        var8, imm8         |  0xF6 0x06 [0x00 0x10] u8   |      5      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST [0x100], 0x10`   |
+|       reg16, idx16        |       0x85 0x00..0x30       |      2      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, [BX]`        |
+|     reg16, idx16+imm8     |     0x85 0x40..0x70 i8      |      3      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, [BX+0x10]`   |
+|    reg16, idx16+imm16     |     0x85 0x80..0xB0 i16     |      4      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, [BX+0x1000]` |
