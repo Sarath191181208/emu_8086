@@ -5,4 +5,45 @@ authors:
   url: https://github.com/Sarath191181208
   image_url: https://avatars.githubusercontent.com/u/74459981?v=4
 ---
-# Making sure the blog works fine
+
+# Blog CI & Indiviaual Byte/Word Indexing work
+
+## Blog CI
+
+Made the `docusaurus` compile in the CI/CD pipeline of github actions and made the `docusaurus` build and deploy to the `gh-pages` branch of the repository. The `gh-pages` branch is used to host the website on github pages.
+The website is hosted at [https://sarath191181208.github.io/](https://sarath191181208.github.io/)
+Issues faced:
+
+1. The docusaurus build was working, but the blog dates were wrong this is due to the fact that we are using DD-MM-YYYY format in the blog posts and the docusaurus is parsing these dates as UTC+5:30(my local timezone) and converting it into UTC+00:00 This resulted in blogs having 1-day offset errors. This can be fixed by using the YYYY-MM-DD format which the docusaurus treats it as UTC+00:00 format thus not messing up the dates.
+2. The github workflow file was having the publish_dir as `./build` it was actually `./docusaurus/build`, we are using working-directory in the yml but it isn't picked up by the action of actions-gh-pages. This was fixed by changing the publish_dir to `./docusaurus/build`
+
+```yaml
+defaults:
+  run:
+    working-directory: ./docusaurus
+
+  ########################
+  #### workflow config ###
+  ########################
+
+ - name: Deploy to GitHub Pages
+   uses: peaceiris/actions-gh-pages@v3
+   with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+# Removed
+    - publish_dir: ./build
+# Added
+    - publish_dir: ./docusaurus/build
+```
+
+## Individual Byte/Word Indexing
+The syntax like using `w.[]` and `b.[]` are now working. We can use of the fowlling syntax to make the fowlling work.
+```asm6502
+
+ORG 100h
+.DATA 
+  var dw 0x100
+CODE:   
+  MOV w.[var], 0x10 ; moves 0x0010 -> [var]
+  MOV b.[var], 0x10 ; moves 0x10   -> [var]
+```
