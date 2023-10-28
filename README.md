@@ -86,15 +86,15 @@ This project has been licensed under MIT License. Please see the [LICENSE](LICEN
 [forks-url]: https://github.com/Sarath191181208/emu_8086/network/members
 [stars-shield]: https://img.shields.io/github/stars/Sarath191181208/emu_8086.svg?style=for-the-badge
 [stars-url]: https://github.com/Sarath191181208/emu_8086/stargazers
-[issues-shield]: https://img.shields.io/github/issues/Sarath191181208/emu_8086.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/Sarath191181208/emu_8086.svg?style=for-the-badge&color=%2300735a
 [issues-url]: https://github.com/Sarath191181208/emu_8086/issues
 [license-shield]: https://img.shields.io/github/license/Sarath191181208/emu_8086.svg?style=for-the-badge
 [license-url]: https://github.com/Sarath191181208/emu_8086/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/sarath191181208/
-[rust-tests-shield]: https://img.shields.io/github/actions/workflow/status/Sarath191181208/emu_8086/rust.yml?style=for-the-badge&label=Rust%20Tests
+[rust-tests-shield]: https://img.shields.io/github/actions/workflow/status/Sarath191181208/emu_8086/rust.yml?style=for-the-badge&label=Rust%20Tests&color=%2300735a
 [rust-tests-url]: https://github.com/Sarath191181208/emu_8086/actions/workflows/rust.yml
-[docs-build-shield]: https://img.shields.io/github/actions/workflow/status/Sarath191181208/emu_8086/docs.yml?style=for-the-badge&label=Docs%20Build
+[docs-build-shield]: https://img.shields.io/github/actions/workflow/status/Sarath191181208/emu_8086/docs.yml?style=for-the-badge&label=Docs%20Build&color=%2300735a
 [docs-build-url]: https://github.com/Sarath191181208/emu_8086/actions/workflows/docs.yml
 
 [Rust-shield]: https://img.shields.io/badge/-Rust-black.svg?style=for-the-badge&logo=rust&colorB=555
