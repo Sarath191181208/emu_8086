@@ -59,191 +59,114 @@ impl CPU {
 
 #[cfg(test)]
 mod add_immediate_16bit_tests {
-    use crate::{cpu::CPU, generate_test, memory::Memory};
+    use crate::cpu::instructions::test_macro::run_code;
 
-    // test ax+ax
-    generate_test!(
-        add_ax_ax_no_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.write_instructions(mem, &[0x05, 0x34, 0x12]);
-            cpu.ax = 0x1234;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0x2468);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00000000);
-        })
-    );
+    #[test]
+    fn add_ax_ax_no_overflow() {
+        let code = "MOV AX, 0x1234 \n ADD AX, 0x1234";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x2468);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
+    }
 
-    // test ax+ax overflow
-    generate_test!(
-        add_ax_ax_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.write_instructions(mem, &[0x05, 0xFF, 0xFF]);
-            cpu.ax = 0xFFFF;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0xFFFE);
-            assert!(cpu.carry_flag);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00100101)
-        })
-    );
+    #[test]
+    fn add_ax_ax_overflow() {
+        let code = "MOV AX, 0xFFFF \n ADD AX, 0xFFFF";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0xFFFE);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
+    }
 
-    // test ax+ax zero
-    generate_test!(
-        add_ax_ax_zero,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.write_instructions(mem, &[0x05, 0x00, 0x00]);
-            cpu.ax = 0x0000;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0x0000);
-            assert!(cpu.zero_flag);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00010010);
-        })
-    );
+    #[test]
+    fn add_ax_ax_zero() {
+        let code = "MOV AX, 0x0000 \n ADD AX, 0x0000";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x0000);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
+    }
 
-    // test ax+ax negative
-    generate_test!(
-        add_ax_ax_negative,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.write_instructions(mem, &[0x05, 0xFF, 0xFF]);
-            cpu.ax = 0x0001;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0x0000);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00110011);
-        })
-    );
+    #[test]
+    fn add_ax_ax_negative() {
+        let code = "MOV AX, 0x0001 \n ADD AX, 0xFFFF";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x0000);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0011_0011);
+    }
 
-    // test bx + 0x1234
-    generate_test!(
-        add_bx_0x1234,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x81, 0xC3, 0x34, 0x12]);
-            cpu.bx = 0x0001;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.bx, 0x1235);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00010000);
-        })
-    );
+    #[test]
+    fn add_bx_0x1234() {
+        let code = "MOV BX, 0x0001 \n ADD BX, 0x1234";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.bx, 0x1235);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
+    }
 
-    // test bx + 0x1234 overflow
-    generate_test!(
-        add_bx_0x1234_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x81, 0xC3, 0xFF, 0xFF]);
-            cpu.bx = 0xFFFF;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.bx, 0xFFFE);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
-        })
-    );
+    #[test]
+    fn add_bx_0xffff_overflow() {
+        let code = "MOV BX, 0xFFFF \n ADD BX, 0xFFFF";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.bx, 0xFFFE);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
+    }
 
-    // test bx + 0xFFEE
-    generate_test!(
-        add_bx_0xffee,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x83, 0xC3, 0xEE]);
-            cpu.bx = 0xFF01;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.bx, 0xFFEF);
-            assert!(!cpu.overflow_flag);
-            assert!(!cpu.carry_flag);
-        })
-    );
+    #[test]
+    fn add_bx_0xffee() {
+        let code = "MOV BX, 0xFF01 \n ADD BX, 0xFFEE";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.bx, 0xFEEF);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0000_0101);
+    }
 }
 
 #[cfg(test)]
 mod add_immediate_8bit_tests {
-    use crate::{cpu::CPU, generate_test, memory::Memory};
+    use crate::cpu::instructions::test_macro::run_code;
 
-    // test al+0x12
-    generate_test!(
-        add_al_0x12,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x04, 0x12]);
-            cpu.ax = 0x0001;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0x0013);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00000000)
-        })
-    );
+    #[test]
+    fn add_al_0x12() {
+        let code = "MOV AL, 0x01 \n ADD AL, 0x12";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x13);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
+    }
 
-    // test al+0xFF overflow
-    generate_test!(
-        add_al_0x12_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x04, 0xFF]);
-            cpu.ax = 0x00FE;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.ax, 0x00FD);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
-        })
-    );
+    #[test]
+    fn add_al_0xff_overflow() {
+        let code = "MOV AL, 0xFE \n ADD AL, 0xFF";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0xFD);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
+    }
 
-    // add cl + 0x12
-    generate_test!(
-        add_cl_0x12,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC1, 0x12]);
-            cpu.cx = 0x0001;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.cx, 0x0013);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00000000);
-        })
-    );
+    #[test]
+    fn add_cl_0x12() {
+        let code = "MOV CL, 0x01 \n ADD CL, 0x12";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.cx, 0x13);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
+    }
 
-    // add cl + 0xFF overflow
-    generate_test!(
-        add_cl_0xff_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC1, 0xFF]);
-            cpu.cx = 0x00FE;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.cx, 0x00FD);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00100101);
-        })
-    );
+    #[test]
+    fn add_cl_0xff_overflow() {
+        let code = "MOV CL, 0xFE \n ADD CL, 0xFF";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.cx, 0xFD);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
+    }
 
-    // add bh + 0x12
-    generate_test!(
-        add_bh_0x12,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC7, 0x12]);
-            cpu.bx = 0xFF01;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.bx, 0x1101);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00110001);
-        })
-    );
+    #[test]
+    fn add_bh_0x12() {
+        let code = "MOV BX, 0xFF01 \n ADD BH, 0x12";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.bx, 0x1101);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0011_0001);
+    }
 
-    // add bh + 0xFF overflow
-    generate_test!(
-        add_bh_0xff_overflow,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            cpu.instruction_pointer = 0xFFFB;
-            cpu.write_instructions(mem, &[0x80, 0xC7, 0xFF]);
-            cpu.bx = 0x00FE;
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.bx, 0xFFFE);
-            assert_eq!(cpu.get_flags_as_binary(), 0b00010100);
-        })
-    );
+    #[test]
+    fn add_bh_0xff_overflow() {
+        let code = "MOV BX, 0xFF01 \n ADD BH, 0xFF";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.bx, 0xFE01);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
+    }
 }
