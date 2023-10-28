@@ -10,21 +10,12 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        cpu::{instructions::test_macro::compile_code_for_tests, CPU},
-        generate_test_with_cycles,
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
-    generate_test_with_cycles!(
-        ret_test,
-        (|cpu: &mut CPU, mem: &mut Memory| {
-            compile_code_for_tests("ret", cpu, mem);
-            cpu.push_stack(mem, 0x03);
-        }),
-        (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.instruction_pointer, 0x03);
-        }),
-        1
-    );
+    #[test]
+    fn ret_test(){
+        let (cpu, _) = run_code("PUSH 0x03 \n ret", 2);
+        assert_eq!(cpu.instruction_pointer, 0x03);
+    }
+    
 }
