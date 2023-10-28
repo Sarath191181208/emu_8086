@@ -14,4 +14,9 @@ pub(crate) enum AssemblerDirectives {
     EndM,
 
     Offset,
+
+    #[strum(serialize = "w.")]
+    AsWord,
+    #[strum(serialize = "b.")]
+    AsByte,
 }
