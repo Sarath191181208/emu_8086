@@ -87,3 +87,28 @@ The `TEST` instruction is now compiled and working. The `TEST` instruction is us
 |       reg16, idx16        |       0x85 0x00..0x30       |      2      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, [BX]`        |
 |     reg16, idx16+imm8     |     0x85 0x40..0x70 i8      |      3      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, [BX+0x10]`   |
 |    reg16, idx16+imm16     |     0x85 0x80..0xB0 i16     |      4      | Performs bitwise AND operation on the operands and set the flags accordingly | `TEST AX, [BX+0x1000]` |
+
+## Execution of the test instruction
+
+Made the `TEST` instruction execute and set the flags accordingly. The result isn't stored anywhere, only the flags are chaged.
+Algorithm
+
+```rust
+
+// For 16-bit operands
+let res = op1 & op2;
+carry_flag = false;
+overflow_flag = false;
+zero_flag = res == 0;
+negative_flag = res & 0x8000 != 0;
+pairity_flag = res.count_ones() % 2 == 0;
+
+// For 8-bit operands
+let res = op1 & op2;
+carry_flag = false;
+overflow_flag = false;
+zero_flag = res == 0;
+negative_flag = res & 0x80 != 0;
+pairity_flag = res.count_ones() % 2 == 0;
+
+```
