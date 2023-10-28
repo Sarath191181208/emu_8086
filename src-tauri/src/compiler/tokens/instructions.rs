@@ -10,6 +10,7 @@ pub(crate) enum Instructions {
     Sub,
     Mul,
     Jmp,
+    Test,
     Loop,
     Hlt,
     Ret,
