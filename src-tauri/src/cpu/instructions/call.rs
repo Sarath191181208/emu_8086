@@ -27,7 +27,7 @@ mod tests {
     ; ahh! 
     inc ax 
     ";
-    let (cpu, _) = run_code(code, 4);
-    assert_eq!(cpu.ax, 3);
+        let (cpu, _) = run_code(code, 4);
+        assert_eq!(cpu.ax, 3);
     }
 }
