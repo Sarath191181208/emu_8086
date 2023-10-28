@@ -72,14 +72,25 @@ pub(in crate::compiler) fn parse_sub(
                     compiled_bytes_ref,
                 );
             } else {
-                let number = num.get_as_u16();
                 let sub_ins = match num {
                     Either::Right(_) => 0x81,
-                    Either::Left(_) => 0x83,
+                    Either::Left(num_u8) => {
+                        if num_u8 > 0x7F {
+                            0x81
+                        } else {
+                            0x83
+                        }
+                    }
                 };
                 let data_ins = match num {
-                    Either::Right(_) => vec![(number & 0xFF) as u8, (number >> 8) as u8],
-                    Either::Left(x) => vec![x],
+                    Either::Right(x) => x.to_le_bytes().to_vec(),
+                    Either::Left(x) => {
+                        if x > 0x7F {
+                            (x as u16).to_le_bytes().to_vec()
+                        } else {
+                            vec![x]
+                        }
+                    }
                 };
 
                 convert_and_push_instructions!(
