@@ -344,6 +344,12 @@ impl CPU {
                 }
             }
 
+            // TEST AL..DH, reg/mem
+            0x84 => self.execute_test_8bit_reg(mem),
+
+            // TEST AX..DI, reg/mem
+            0x85 => self.execute_test_16bit_reg(mem),
+
             // MOV 16bit register, 16bit register
             0x8A => self.execute_mov_register_byte(mem),
             0x8B => self.execute_mov_register_word(mem),
@@ -380,6 +386,12 @@ impl CPU {
 
             // MOV [0x102], AX
             0xA3 => self.execute_mov_direct_addressing_ax(mem),
+
+            // TEST AL, 0x20 
+            0xA8 => self.execute_test_al_and_number(mem),
+
+            // TEST AX, 0x100 
+            0xA9 => self.execute_test_ax_and_number(mem),
 
             // MOV 16bit register, 0x1234
             0xB0..=0xB7 => self.execute_direct_mov_byte(mem, opcode),
@@ -450,9 +462,13 @@ impl CPU {
             0xF6 => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
+                    // TEST b.[0x100], 0x12
+                    0x06 => self.execute_test_byte_indexed_addressing_and_number(mem),
                     0x26 => self.execute_mul_address_8bit(mem),
+                    // TEST AL..DH, 0x12
+                    0xC0..=0xC7 => self.execute_test_8bit_reg_and_number(mem),
                     0xE0..=0xE7 => self.execute_mul_8bit(mem),
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xF6", opcode),
+                    _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
 
@@ -460,9 +476,13 @@ impl CPU {
             0xF7 => {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
+                    // TEST w.[0x100], 0x1234
+                    0x06 => self.execute_test_word_indexed_addressing_and_number(mem),
                     0x26 => self.execute_mul_address_16bit(mem),
+                    // TEST BX..DI, 0x1234
+                    0xC0..=0xC7 => self.execute_test_16bit_reg_and_number(mem),
                     0xE0..=0xE7 => self.execute_mul_16bit(mem),
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xF7", opcode),
+                    _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
 
