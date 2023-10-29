@@ -4,7 +4,6 @@ use crate::{
         tokenized_line::TokenizedLine, CompiledBytesReference,
     },
     convert_and_push_instructions,
-    cpu::instructions::add,
     utils::Either,
 };
 
