@@ -8,6 +8,7 @@ pub(crate) enum Instructions {
     Inc,
     Dec,
     Sub,
+    And,
     Mul,
     Jmp,
     Test,
