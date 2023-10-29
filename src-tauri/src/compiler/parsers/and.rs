@@ -4,7 +4,8 @@ use crate::{
         tokenized_line::TokenizedLine, CompiledBytesReference,
     },
     convert_and_push_instructions,
-    cpu::instructions::add, utils::Either,
+    cpu::instructions::add,
+    utils::Either,
 };
 
 use super::{
@@ -32,6 +33,7 @@ pub(in crate::compiler) fn parse_and(
 
     let reg_16bit_and_anything_ins = 0x23;
     let reg_8bit_and_anything_ins = 0x22;
+    let indexed_addressing_and_anyting_ins = 0x21;
 
     match addressing_mode {
         AddressingMode::Registers16bit {
@@ -108,11 +110,11 @@ pub(in crate::compiler) fn parse_and(
                     )
                 );
             } else {
-                let and_ins = match num{
-                    Either::Left(_) => vec![0x83], // for 8 bit numbers
+                let and_ins = match num {
+                    Either::Left(_) => vec![0x83],  // for 8 bit numbers
                     Either::Right(_) => vec![0x81], // for 16 bit numbers
                 };
-                let num_vec = match num{
+                let num_vec = match num {
                     Either::Left(val) => vec![val],
                     Either::Right(val) => val.to_le_bytes().to_vec(),
                 };
@@ -134,13 +136,27 @@ pub(in crate::compiler) fn parse_and(
             low_token,
             address_bytes,
             register_type,
-        } => todo!(),
+        } => {
+            let reg_idx = get_idx_from_reg(&high_token, &register_type)?;
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![indexed_addressing_and_anyting_ins],
+                    &high_token => vec![0x06 | reg_idx << 3],
+                    &low_token => address_bytes.to_vec()
+                )
+            );
+            Ok(tokenized_line.len())
+        }
         AddressingMode::AddressAnd16bitNumber {
             high_token,
             low_token,
             address_bytes,
             num,
-        } => todo!(),
+        } => {
+            todo!()
+        },
         AddressingMode::Register8bitNumber {
             high_token,
             low_token,
@@ -211,5 +227,14 @@ mod and_ins_compilation_tests {
     and si, 0x245
     ",
         vec![0x25, 0x10, 0x00, 0x83, 0xE3, 0x10, 0x25, 0x34, 0x12, 0x81, 0xE6, 0x45, 0x02]
+    );
+
+    compile_and_compare_ins!(
+        test_addr_and_reg_16bit,
+        "
+    and [0x1234], ax
+    and [0x1234], bx
+    ",
+        vec![0x21, 0x06, 0x34, 0x12, 0x21, 0x1E, 0x34, 0x12]
     );
 }
