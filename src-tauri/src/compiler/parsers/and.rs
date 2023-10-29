@@ -62,13 +62,13 @@ pub(in crate::compiler) fn parse_and(
             compiled_bytes_ref,
         ),
         AddressingMode::Registers8bit { high_token, low_token } => todo!(),
-        AddressingMode::Registers16bitNumber { high_token, low_token, num } => todo!(),
         AddressingMode::Register8bitNumber { high_token, low_token, num } => todo!(),
         AddressingMode::Register8bitAndIndexedAddress { high_token, low_token, register_type } => todo!(),
         AddressingMode::Register8bitAndIndexedAddressWithOffset { high_token, low_token, register_type, offset } => todo!(),
+        AddressingMode::Registers16bitNumber { high_token, low_token, num } => todo!(),
         AddressingMode::AddressAnd16bitRegister { high_token, low_token, address_bytes, register_type } => todo!(),
-        AddressingMode::AddressAnd16bitNumber { high_token, low_token, address_bytes, num } => todo!(),
         AddressingMode::Register8bitAndAddress { high_token, low_token, address_bytes, register_type } => todo!(),
+        AddressingMode::AddressAnd16bitNumber { high_token, low_token, address_bytes, num } => todo!(),
         AddressingMode::AddressAnd8bitRegister { high_token, low_token, address_bytes, register_type } => todo!(),
         AddressingMode::AddressAnd8bitNumber { high_token, low_token, address_bytes, num } => todo!(),
         AddressingMode::ByteAddressAnd8bitNumber { high_token, low_token, address_bytes, num } => todo!(),
@@ -81,10 +81,14 @@ mod and_ins_compilation_tests{
     use pretty_assertions::assert_eq;
 
     compile_and_compare_ins!(
-        test_test_reg_reg,
+        test_register_as_first_ins,
         "
         and cx, bx
+        and dx, [bx]
+        and sp, [0x1234]
+        and di, [0x12 + si]
+        and ax, [0x1234 + bx]
         ",
-        vec![0x23, 0xCB]
+        vec![0x23, 0xCB, 0x23, 0x17, 0x23, 0x26, 0x34, 0x12, 0x23, 0x7C, 0x12, 0x23, 0x87, 0x34, 0x12]
     );
 }
