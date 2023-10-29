@@ -202,7 +202,19 @@ pub(in crate::compiler) fn parse_and(
             low_token,
             address_bytes,
             register_type,
-        } => todo!(),
+        } => {
+            let reg_idx = register_type.get_as_idx();
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0x20],
+                    &high_token => vec![0x06 | reg_idx << 3],
+                    &low_token => address_bytes.to_vec()
+                )
+            );
+            Ok(tokenized_line.len())
+        }
         AddressingMode::AddressAnd8bitNumber {
             high_token,
             low_token,
@@ -264,7 +276,10 @@ mod and_ins_compilation_tests {
     and al, 0x12
     and ch, 0x24
     ",
-        vec![0x25, 0x10, 0x00, 0x83, 0xE3, 0x10, 0x25, 0x34, 0x12, 0x81, 0xE6, 0x45, 0x02, 0x24, 0x12, 0x80, 0xE5, 0x24]
+        vec![
+            0x25, 0x10, 0x00, 0x83, 0xE3, 0x10, 0x25, 0x34, 0x12, 0x81, 0xE6, 0x45, 0x02, 0x24,
+            0x12, 0x80, 0xE5, 0x24
+        ]
     );
 
     compile_and_compare_ins!(
@@ -272,8 +287,11 @@ mod and_ins_compilation_tests {
         "
     and [0x1234], ax
     and [0x1234], bx
+
+    and [0x123], al 
+    and [0x123], cl
     ",
-        vec![0x21, 0x06, 0x34, 0x12, 0x21, 0x1E, 0x34, 0x12]
+        vec![0x21, 0x06, 0x34, 0x12, 0x21, 0x1E, 0x34, 0x12, 0x20, 0x06, 0x23, 0x01, 0x20, 0x0E, 0x23, 0x01]
     );
 
     compile_and_compare_ins!(
