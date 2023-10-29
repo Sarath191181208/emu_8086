@@ -237,7 +237,18 @@ pub(in crate::compiler) fn parse_and(
             low_token,
             address_bytes,
             num,
-        } => todo!(),
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0x80, 0x26],
+                   &high_token=> address_bytes.to_vec(),
+                   &low_token=> num.to_le_bytes().to_vec()
+                )
+            );
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -314,7 +325,11 @@ mod and_ins_compilation_tests {
         and [0x234], 0x123
         and [0x234], 0x100
         and w.[0x1234], 0x12
+        and b.[0x1234], 0x12
         ",
-        vec![0x81, 0x26, 0x34, 0x02, 0x23, 0x01, 0x81, 0x26, 0x34, 0x02, 0x00, 0x01, 0x83, 0x26, 0x34, 0x12, 0x12]
+        vec![
+            0x81, 0x26, 0x34, 0x02, 0x23, 0x01, 0x81, 0x26, 0x34, 0x02, 0x00, 0x01, 0x83, 0x26,
+            0x34, 0x12, 0x12, 0x80, 0x26, 0x34, 0x12, 0x12
+        ]
     );
 }
