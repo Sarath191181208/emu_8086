@@ -1,0 +1,30 @@
+---
+authors:
+  name: Vangipuram Srinivasa Sarath Chandra
+  title: Tech enthusiast
+  url: https://github.com/Sarath191181208
+  image_url: https://avatars.githubusercontent.com/u/74459981?v=4
+---
+
+# 🛠️ Refactor: moved common logic into a pattern
+
+For instruction like `TEST`, `AND`, `MOV`, `ADD` ... etc. All of these follow a single pattern for their compliation step example 
+
+```asm6502
+MOV AX, BX ; 0x8B 0xC3 
+TEST AX, BX ; 0x85 0xC3 
+
+MOV AX, [BX] ; 0x8B 0x07
+TEST AX, [BX] ; 0x85 0x07
+
+MOV AX, [BX+SI] ; 0x8B 0x00
+TEST AX, [BX+SI] ; 0x85 0x00
+
+MOV AX, [BX+SI+0x1234] ; 0x8B 0x84 0x34 0x12
+TEST AX, [BX+SI+0x1234] ; 0x85 0x84 0x34 0x12
+```
+
+Here 0x8B is the root ins (or) in other words MOV and 0xC3 represents the registers. 
+All of these instructions fowllow this pattern therefore the logic is sent into a sperate file called `src-tauri\src\compiler\parsers\pattern_extractors\compile_first_ins_reg_pattern.rs` and the functions are as follows 
+- `parse_8bitreg_first_addr_mode`
+- `parse_16bitreg_first_addr_mode`
