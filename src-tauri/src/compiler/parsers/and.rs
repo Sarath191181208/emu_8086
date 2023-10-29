@@ -4,7 +4,7 @@ use crate::{
         tokenized_line::TokenizedLine, CompiledBytesReference,
     },
     convert_and_push_instructions,
-    cpu::instructions::add,
+    cpu::instructions::add, utils::Either,
 };
 
 use super::{
@@ -61,7 +61,7 @@ pub(in crate::compiler) fn parse_and(
             compiled_bytes,
             compiled_bytes_ref,
         ),
-                AddressingMode::Registers8bit {
+        AddressingMode::Registers8bit {
             high_token: _,
             low_token: _,
         }
@@ -90,20 +90,86 @@ pub(in crate::compiler) fn parse_and(
             compiled_bytes,
             compiled_bytes_ref,
         ),
-        
-        AddressingMode::Registers16bitNumber { high_token, low_token, num } => todo!(),
-        AddressingMode::AddressAnd16bitRegister { high_token, low_token, address_bytes, register_type } => todo!(),
-        AddressingMode::AddressAnd16bitNumber { high_token, low_token, address_bytes, num } => todo!(),
-        AddressingMode::Register8bitNumber { high_token, low_token, num } => todo!(),
-        AddressingMode::AddressAnd8bitRegister { high_token, low_token, address_bytes, register_type } => todo!(),
-        AddressingMode::AddressAnd8bitNumber { high_token, low_token, address_bytes, num } => todo!(),
-        AddressingMode::ByteAddressAnd8bitNumber { high_token, low_token, address_bytes, num } => todo!(),
+
+        AddressingMode::Registers16bitNumber {
+            high_token,
+            low_token,
+            num,
+        } => {
+            let high_reg_idx = get_idx_from_token(&high_token)?;
+            let is_ax = high_reg_idx == 0;
+            if is_ax {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        token => vec![0x25],
+                        &low_token => num.get_as_u16().to_le_bytes().to_vec()
+                    )
+                );
+            } else {
+                let and_ins = match num{
+                    Either::Left(_) => vec![0x83], // for 8 bit numbers
+                    Either::Right(_) => vec![0x81], // for 16 bit numbers
+                };
+                let num_vec = match num{
+                    Either::Left(val) => vec![val],
+                    Either::Right(val) => val.to_le_bytes().to_vec(),
+                };
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        token => and_ins,
+                        &high_token => vec![0xE0 | high_reg_idx],
+                        &low_token => num_vec
+                    )
+                );
+            }
+
+            Ok(tokenized_line.len())
+        }
+        AddressingMode::AddressAnd16bitRegister {
+            high_token,
+            low_token,
+            address_bytes,
+            register_type,
+        } => todo!(),
+        AddressingMode::AddressAnd16bitNumber {
+            high_token,
+            low_token,
+            address_bytes,
+            num,
+        } => todo!(),
+        AddressingMode::Register8bitNumber {
+            high_token,
+            low_token,
+            num,
+        } => todo!(),
+        AddressingMode::AddressAnd8bitRegister {
+            high_token,
+            low_token,
+            address_bytes,
+            register_type,
+        } => todo!(),
+        AddressingMode::AddressAnd8bitNumber {
+            high_token,
+            low_token,
+            address_bytes,
+            num,
+        } => todo!(),
+        AddressingMode::ByteAddressAnd8bitNumber {
+            high_token,
+            low_token,
+            address_bytes,
+            num,
+        } => todo!(),
     }
 }
 
 #[cfg(test)]
-mod and_ins_compilation_tests{
-        use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
+mod and_ins_compilation_tests {
+    use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
     use pretty_assertions::assert_eq;
 
     compile_and_compare_ins!(
@@ -115,7 +181,10 @@ mod and_ins_compilation_tests{
         and di, [0x12 + si]
         and ax, [0x1234 + bx]
         ",
-        vec![0x23, 0xCB, 0x23, 0x17, 0x23, 0x26, 0x34, 0x12, 0x23, 0x7C, 0x12, 0x23, 0x87, 0x34, 0x12]
+        vec![
+            0x23, 0xCB, 0x23, 0x17, 0x23, 0x26, 0x34, 0x12, 0x23, 0x7C, 0x12, 0x23, 0x87, 0x34,
+            0x12
+        ]
     );
 
     compile_and_compare_ins!(
@@ -127,6 +196,20 @@ mod and_ins_compilation_tests{
         and dh, [0x12 + si]
         and al, [0x1234 + bx]
         ",
-        vec![0x22, 0xCB, 0x22, 0x17, 0x22, 0x3E, 0x34, 0x12, 0x22, 0x74, 0x12, 0x22, 0x87, 0x34, 0x12]
+        vec![
+            0x22, 0xCB, 0x22, 0x17, 0x22, 0x3E, 0x34, 0x12, 0x22, 0x74, 0x12, 0x22, 0x87, 0x34,
+            0x12
+        ]
+    );
+
+    compile_and_compare_ins!(
+        test_reg_16bit_and_number,
+        "
+    and ax, 0x10
+    and bx, 0x10
+    and ax, 0x1234
+    and si, 0x245
+    ",
+        vec![0x25, 0x10, 0x00, 0x83, 0xE3, 0x10, 0x25, 0x34, 0x12, 0x81, 0xE6, 0x45, 0x02]
     );
 }
