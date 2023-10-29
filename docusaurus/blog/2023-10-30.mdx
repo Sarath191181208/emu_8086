@@ -10,15 +10,16 @@ authors:
 
 The `AND` instruction is now compiled and working. The `AND` instruction is a bitwise AND operation. The `AND` instruction is used to perform a bitwise AND operation between the first source operand (register or memory location) and the second source operand (register or memory location) and store the result in the destination operand (register or memory location). The `AND` instruction affects the CF and OF flags when the second operand is an immediate value. The SF, ZF, and PF flags are always set according to the result. The state of the AF flag is undefined.
 The compilation table of the `AND` instruction is as follows:
-| Operand | Opcode | Size(bytes) | Description | Example instruction |
-| :-----------------------: | :-------------------------: | :---------: | :--------------------------------------------------------------------------: | ---------------------- |
-| reg16, reg16 | 0x21 | 2 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AX, BX |
-| reg8, reg8 | 0x20 | 2 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AL, BL |
-| reg16, mem16 | 0x23 | 2 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AX, [BX] |
-| reg8, mem8 | 0x22 | 2 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AL, [BX] |
-| mem16, reg16 | 0x23 | 2 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], AX |
-| mem8, reg8 | 0x22 | 2 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], AL |
-| reg16, imm16 | 0x81 0x20 | 3 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AX, 0x0001 |
-| reg8, imm8 | 0x80 0x20 | 3 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AL, 0x01 |
-| mem16, imm16 | 0x81 0x20 | 3 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], 0x0001 |
-| mem8, imm8 | 0x80 0x20 | 3 | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], 0x01 |
+
+|   Operand    |  Opcode   | Size(bytes) |                                            Description                                             | Example instruction |
+| :----------: | :-------: | :---------: | :------------------------------------------------------------------------------------------------: | ------------------- |
+| reg16, reg16 |   0x21    |      2      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AX, BX          |
+|  reg8, reg8  |   0x20    |      2      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AL, BL          |
+| reg16, mem16 |   0x23    |      2      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AX, [BX]        |
+|  reg8, mem8  |   0x22    |      2      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AL, [BX]        |
+| mem16, reg16 |   0x23    |      2      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], AX        |
+|  mem8, reg8  |   0x22    |      2      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], AL        |
+| reg16, imm16 | 0x81 0x20 |      3      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AX, 0x0001      |
+|  reg8, imm8  | 0x80 0x20 |      3      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND AL, 0x01        |
+| mem16, imm16 | 0x81 0x20 |      3      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], 0x0001    |
+|  mem8, imm8  | 0x80 0x20 |      3      | Performs bitwise AND operation between the two operands and stores the result in the first operand | AND [BX], 0x01      |
