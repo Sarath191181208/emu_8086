@@ -149,6 +149,37 @@ pub(in crate::compiler) fn parse_and(
             );
             Ok(tokenized_line.len())
         }
+
+        AddressingMode::Register8bitNumber {
+            high_token,
+            low_token,
+            num,
+        } => {
+            let high_reg = get_8bit_register(&high_token);
+            let is_al = high_reg.get_as_idx() == 0;
+            if is_al {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        token => vec![0x24],
+                        &low_token => vec![num]
+                    )
+                );
+            } else {
+                convert_and_push_instructions!(
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    (
+                        token => vec![0x80],
+                        &high_token => vec![0xE0 | high_reg.get_as_idx()],
+                        &low_token => vec![num]
+                    )
+                );
+            }
+            Ok(tokenized_line.len())
+        }
+
         AddressingMode::AddressAnd16bitNumber {
             high_token,
             low_token,
@@ -166,11 +197,6 @@ pub(in crate::compiler) fn parse_and(
             );
             Ok(tokenized_line.len())
         }
-        AddressingMode::Register8bitNumber {
-            high_token,
-            low_token,
-            num,
-        } => todo!(),
         AddressingMode::AddressAnd8bitRegister {
             high_token,
             low_token,
@@ -228,14 +254,17 @@ mod and_ins_compilation_tests {
     );
 
     compile_and_compare_ins!(
-        test_reg_16bit_and_number,
+        test_reg_and_number,
         "
     and ax, 0x10
     and bx, 0x10
     and ax, 0x1234
     and si, 0x245
+
+    and al, 0x12
+    and ch, 0x24
     ",
-        vec![0x25, 0x10, 0x00, 0x83, 0xE3, 0x10, 0x25, 0x34, 0x12, 0x81, 0xE6, 0x45, 0x02]
+        vec![0x25, 0x10, 0x00, 0x83, 0xE3, 0x10, 0x25, 0x34, 0x12, 0x81, 0xE6, 0x45, 0x02, 0x24, 0x12, 0x80, 0xE5, 0x24]
     );
 
     compile_and_compare_ins!(
