@@ -155,8 +155,17 @@ pub(in crate::compiler) fn parse_and(
             address_bytes,
             num,
         } => {
-            todo!()
-        },
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0x81, 0x26],
+                   &high_token=> address_bytes.to_vec(),
+                    &low_token => num.to_le_bytes().to_vec()
+                )
+            );
+            Ok(tokenized_line.len())
+        }
         AddressingMode::Register8bitNumber {
             high_token,
             low_token,
@@ -236,5 +245,14 @@ mod and_ins_compilation_tests {
     and [0x1234], bx
     ",
         vec![0x21, 0x06, 0x34, 0x12, 0x21, 0x1E, 0x34, 0x12]
+    );
+
+    compile_and_compare_ins!(
+        test_addr_and_num,
+        "
+        and [0x234], 0x123
+        and [0x234], 0x100
+        ",
+        vec![0x81, 0x26, 0x34, 0x02, 0x23, 0x01, 0x81, 0x26, 0x34, 0x02, 0x00, 0x01]
     );
 }
