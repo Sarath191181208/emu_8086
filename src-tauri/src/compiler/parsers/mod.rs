@@ -1,4 +1,5 @@
 pub mod add;
+pub mod and;
 pub mod call;
 pub mod dec;
 pub mod directives;
