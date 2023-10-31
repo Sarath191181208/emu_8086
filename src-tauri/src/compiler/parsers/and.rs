@@ -12,9 +12,13 @@ use super::{
         compile_first_ins_reg_pattern::{
             parse_16bitreg_first_addr_mode, parse_8bitreg_first_addr_mode,
         },
+        compile_two_arguments_patterns::parse_indexed_addr_and_reg,
         AddressingMode,
     },
-    utils::{get_8bit_register, get_idx_from_token, push_instruction, unimplemented_instruction_addressing_mode},
+    utils::{
+        get_8bit_register, get_idx_from_token, push_instruction,
+        unimplemented_instruction_addressing_mode,
+    },
 };
 
 pub(in crate::compiler) fn parse_and(
@@ -248,9 +252,25 @@ pub(in crate::compiler) fn parse_and(
             );
             Ok(tokenized_line.len())
         }
-            AddressingMode::IndexedAddressingAndRegister { high_token: _, low_token: _, register_type: _, addr_type: _ } => {
-            Err(unimplemented_instruction_addressing_mode(token, tokenized_line.len()))
-        },
+
+        AddressingMode::IndexedAddressingAndRegister {
+            high_token,
+            low_token,
+            register_type,
+            addr_type,
+        } => {
+            parse_indexed_addr_and_reg(
+                0x21,
+                token,
+                &high_token,
+                &low_token,
+                register_type,
+                addr_type,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -332,6 +352,23 @@ mod and_ins_compilation_tests {
         vec![
             0x81, 0x26, 0x34, 0x02, 0x23, 0x01, 0x81, 0x26, 0x34, 0x02, 0x00, 0x01, 0x83, 0x26,
             0x34, 0x12, 0x12, 0x80, 0x26, 0x34, 0x12, 0x12
+        ]
+    );
+
+    compile_and_compare_ins!(
+        test_mem_indexed_addr_and_reg,
+        "
+        AND [bx+si+0xd9], ax
+        AND [bx+0x80], sp
+        AND [bp], di
+        AND [si+0x1d], cx
+        AND [bp+0x6c9a], cx
+        ", vec![
+            0x21, 0x80, 0xD9, 0x00,
+            0x21, 0xA7, 0x80, 0x00,
+            0x21, 0x7E, 0x00, 
+            0x21, 0x4C, 0x1D ,
+            0x21, 0x8E, 0x9A, 0x6C
         ]
     );
 }
