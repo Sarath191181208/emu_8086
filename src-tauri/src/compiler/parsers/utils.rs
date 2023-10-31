@@ -224,17 +224,17 @@ pub(super) fn get_index_addr_as_idx(token: &Token) -> Result<u8, CompilationErro
     }
 }
 
-pub(in crate::compiler::parsers) fn unimplemented_instruction_addressing_mode(
-    token: &Token,
-    len: usize,
-) -> CompilationError {
-    CompilationError::new_without_suggestions(
-        token.line_number,
-        token.column_number,
-        len as u32,
-        "This addressing mode is not implemented yet",
-    )
-}
+// pub(in crate::compiler::parsers) fn unimplemented_instruction_addressing_mode(
+//     token: &Token,
+//     len: usize,
+// ) -> CompilationError {
+//     CompilationError::new_without_suggestions(
+//         token.line_number,
+//         token.column_number,
+//         len as u32,
+//         "This addressing mode is not implemented yet",
+//     )
+// }
 
 impl IndexedAddressingTypes {
     pub(super) fn get_index_addr_as_idx(&self, token: &Token) -> Result<u8, CompilationError> {
