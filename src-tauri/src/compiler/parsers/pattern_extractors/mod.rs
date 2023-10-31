@@ -116,6 +116,13 @@ pub(crate) enum AddressingMode {
         address_bytes: [u8; 2],
         num: u8,
     },
+
+    IndexedAddressingAndRegister{
+        high_token: Token,
+        low_token: Token,
+        register_type: Registers16bit,
+        addr_type: IndexedAddressingTypes
+    },
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -376,6 +383,47 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     ),
                 )),
             }
+        }
+
+        Assembly8086Tokens::IndexedAddressing(indexed_addressing_type) => {
+            check_comma(tokenized_line, high_token, compact_high_until)?;
+            let low_token = match compact_low_token {
+                Some(low_token) => low_token,
+                None => tokenized_line
+                    .get(
+                        compact_high_until + 1,
+                        format!(
+                            "Expected 16bit value after {:?} got nothing",
+                            high_token.token_type
+                        )
+                        .to_string(),
+                        Some(vec![
+                            get_all_16bit_registers_suggestions(),
+                            get_all_16bit_variables_suggestions(Some(variable_abs_address_map)),
+                            get_8bit_number_suggestion(),
+                            get_16bit_number_suggestion(),
+                        ]),
+                    )?
+                    .clone(),
+            };
+            match &low_token.token_type {
+                Assembly8086Tokens::Register16bit(reg) => {
+                    Ok(AddressingMode::IndexedAddressingAndRegister {
+                        high_token: compact_high_token,
+                        low_token: low_token.clone(),
+                        register_type: reg.clone(),
+                        addr_type: indexed_addressing_type.clone()
+                    })
+                }
+
+                _ => Err(CompilationError::error_with_token(
+                    &low_token,
+                    &format!(
+                        "Expected a 16bit value after {} got {:?} insted",
+                        ins, &low_token.token_type
+                    ),
+                )),
+            } 
         }
 
         Assembly8086Tokens::ByteIndexedAddressing(IndexedAddressingTypes::Offset(offset)) => {

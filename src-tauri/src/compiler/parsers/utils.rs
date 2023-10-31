@@ -4,7 +4,7 @@ use crate::{
         tokenized_line::TokenizedLine,
         tokens::{
             registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
-            SignedU16, Token,
+            SignedU16, Token, indexed_addressing_types::IndexedAddressingTypes,
         },
         types_structs::{
             ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType,
@@ -221,6 +221,42 @@ pub(super) fn get_index_addr_as_idx(token: &Token) -> Result<u8, CompilationErro
             )),
         },
         _ => unreachable!(),
+    }
+}
+
+pub(in crate::compiler::parsers) fn unimplemented_instruction_addressing_mode(
+    token: &Token,
+    len: usize,
+) -> CompilationError {
+    CompilationError::new_without_suggestions(
+        token.line_number,
+        token.column_number,
+        len as u32,
+        "This addressing mode is not implemented yet",
+    )
+}
+
+impl IndexedAddressingTypes{
+    pub(super) fn get_index_addr_as_idx(&self, token: &Token) -> Result<u8, CompilationError>{
+        match self.get_as_idx(){
+            Ok(idx) => Ok(idx),
+            Err(err) => Err(CompilationError::error_with_token(
+                token,
+                err,
+            )),
+        }
+    }
+}
+
+impl Registers16bit{
+    pub(super) fn get_index_or_err(&self, token: &Token) -> Result<u8, CompilationError>{
+        match self.get_as_idx(){
+            Ok(idx) => Ok(idx),
+            Err(err) => Err(CompilationError::error_with_token(
+                token,
+                err,
+            )),
+        }
     }
 }
 

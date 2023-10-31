@@ -12,7 +12,7 @@ use crate::{
 use super::{
     pattern_extractors::{
         compile_two_arguments_patterns::{
-            parse_register_16bit_and_indexed_registers_with_offset,
+            parse_indexed_addr_and_reg, parse_register_16bit_and_indexed_registers_with_offset,
             parse_register_16bit_and_indexed_registers_without_offset,
             parse_register_8bit_and_indexed_registers_with_offset,
             parse_register_8bit_and_indexed_registers_without_offset,
@@ -359,6 +359,24 @@ pub(in crate::compiler) fn parse_mov(
             )?;
             Ok(tokenized_line.len())
         }
+        AddressingMode::IndexedAddressingAndRegister {
+            high_token,
+            low_token,
+            register_type,
+            addr_type,
+        } => {
+            parse_indexed_addr_and_reg(
+                0x89,
+                token,
+                &high_token,
+                &low_token,
+                register_type,
+                addr_type,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -641,7 +659,8 @@ mod tests {
 
 #[cfg(test)]
 mod tests8bit {
-    use crate::{compiler::compile_str, test_compile};
+    use crate::{compiler::compile_str, test_compile, compile_and_compare_ins};
+    use pretty_assertions::assert_eq;
 
     test_compile!(
         test_compile_str_mov_al_cl,
@@ -793,5 +812,44 @@ mod tests8bit {
         |instructions: &Vec<u8>| {
             assert_eq!(instructions, &[0xB4, 0x00]);
         }
+    );
+
+    compile_and_compare_ins!(
+        mov_indexed_addressing_and_register,
+        "
+        mov [di], bx
+        mov [bp+di+207], ax
+        mov [bp+60544], sp
+        mov [bp+si+218], bx
+        mov [si+48103], ax
+        mov [bp+si+67], sp
+        mov [bp+si+23090], sp
+        mov [bp], si
+        mov [bp+si+148], dx
+        mov [di], bp
+        mov [bx+si], bp
+        mov [bx+60536], di
+        mov [di+151], cx
+        mov [di+31473], dx
+        mov [bx+si+4582], sp
+        mov [bx+di+213], sp
+        ", vec![
+            0x89, 0x1D, 
+            0x89, 0x83, 0xCF, 0x00,
+            0x89, 0xA6, 0x80, 0xEC, 
+            0x89, 0x9A, 0xDA, 0x00,
+            0x89, 0x84, 0xE7, 0xBB,
+            0x89, 0x62, 0x43,
+            0x89, 0xA2, 0x32, 0x5A,
+            0x89, 0x76, 0x00,
+            0x89, 0x92, 0x94, 0x00,
+            0x89, 0x2D,
+            0x89, 0x28,
+            0x89, 0xBF, 0x78, 0xEC,
+            0x89, 0x8D, 0x97, 0x00,
+            0x89, 0x95, 0xF1, 0x7A,
+            0x89, 0xA0, 0xE6, 0x11,
+            0x89, 0xA1, 0xD5, 0x00,
+        ]
     );
 }

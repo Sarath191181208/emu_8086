@@ -17,7 +17,7 @@ use super::{
         },
         AddressingMode,
     },
-    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction, unimplemented_instruction_addressing_mode},
 };
 
 pub(in crate::compiler) fn parse_add(
@@ -317,6 +317,9 @@ pub(in crate::compiler) fn parse_add(
             )?;
             Ok(tokenized_line.len())
         }
+        AddressingMode::IndexedAddressingAndRegister { high_token: _, low_token: _, register_type: _, addr_type: _ } => {
+            Err(unimplemented_instruction_addressing_mode(token, tokenized_line.len()))
+        },
     }
 }
 

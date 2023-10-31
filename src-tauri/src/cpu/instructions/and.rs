@@ -155,9 +155,9 @@ mod and_ins_exec_tests {
         assert_eq!(cpu.ax, 0x0F0F);
         assert_eq!(cpu.cx, 0x0F0F);
         assert_eq!(cpu.dx, 0x0801);
-        assert_eq!(cpu.zero_flag, false);
-        assert_eq!(cpu.negative_flag, false);
-        assert_eq!(cpu.pairity_flag, false);
+        assert!(!cpu.zero_flag);
+        assert!(!cpu.negative_flag);
+        assert!(!cpu.pairity_flag);
     }
 
     #[test]
@@ -204,7 +204,7 @@ mod and_ins_exec_tests {
         ";
         let (cpu, _) = run_code(code, 2);
         assert_eq!(cpu.get_ax_low(), 0x0F);
-        assert_eq!(cpu.pairity_flag, true);
+        assert!(cpu.pairity_flag);
     }
 
     #[test]
@@ -216,7 +216,7 @@ mod and_ins_exec_tests {
 
         let (cpu, _) = run_code(code, 2);
         assert_eq!(cpu.ax, 0x0F0F);
-        assert_eq!(cpu.pairity_flag, true);
+        assert!(cpu.pairity_flag);
     }
 
     #[test]
