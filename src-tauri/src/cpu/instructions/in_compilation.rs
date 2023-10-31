@@ -28,62 +28,44 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
+
 
     #[test]
     fn no_offset_indexed_add() {
-        compile_and_test_str(
-            "
+        let code = "
             MOV AL, 0x10
-            IN AL, 0x80",
-            2,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0);
-            },
-        );
+            IN AL, 0x80";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0);
     }
 
     #[test]
     fn execute_in_ax_8bit() {
-        compile_and_test_str(
-            "
+        let code = "
             MOV AX, 0x1010
-            IN AX, 0x80",
-            2,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0);
-            },
-        );
+            IN AX, 0x80";
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0);
     }
 
     #[test]
     fn execute_in_al_dx() {
-        compile_and_test_str(
-            "
+        let code = "
             MOV DX, 0x80
             MOV AL, 0x10
-            IN AL, DX",
-            3,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0);
-            },
-        );
+            IN AL, DX";
+        let (cpu, _) = run_code(code, 3);
+        assert_eq!(cpu.ax, 0);
     }
 
     #[test]
     fn execute_in_ax_dx() {
-        compile_and_test_str(
-            "
+        let code = "
             MOV DX, 0x80
             MOV AX, 0x1010
-            IN AX, DX",
-            3,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0);
-            },
-        );
+            IN AX, DX";
+        let (cpu, _) = run_code(code, 3);
+        assert_eq!(cpu.ax, 0);
     }
 }
