@@ -10,16 +10,14 @@ use crate::{
 use super::{
     pattern_extractors::{
         compile_two_arguments_patterns::{
-            parse_register_16bit_and_indexed_registers_with_offset,
+            parse_indexed_addr_and_reg, parse_register_16bit_and_indexed_registers_with_offset,
             parse_register_16bit_and_indexed_registers_without_offset,
             parse_register_8bit_and_indexed_registers_with_offset,
-            parse_register_8bit_and_indexed_registers_without_offset, parse_indexed_addr_and_reg,
+            parse_register_8bit_and_indexed_registers_without_offset,
         },
         AddressingMode,
     },
-    utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction,
-    },
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
 pub(in crate::compiler) fn parse_sub(
@@ -350,7 +348,7 @@ pub(in crate::compiler) fn parse_sub(
 
 #[cfg(test)]
 mod tests16bit {
-    use crate::{compiler::compile_str, test_compile, compile_and_compare_ins};
+    use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
 
     test_compile!(add_ax_sp, "SUB AX, SP", |instructions: &Vec<u8>| {
         assert_eq!(instructions, &[0x2b, 0xC4]);
@@ -472,11 +470,8 @@ mod tests16bit {
         SUB bx+di, bp
         SUB [bx+0x53d], bx
         SUB [di+0xb396], bx
-        ", vec![
-            0x29, 0x29, 
-            0x29, 0x9F, 0x3D, 0x05, 
-            0x29, 0x9D, 0x96, 0xB3
-        ]
+        ",
+        vec![0x29, 0x29, 0x29, 0x9F, 0x3D, 0x05, 0x29, 0x9D, 0x96, 0xB3]
     );
 }
 
