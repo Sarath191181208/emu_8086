@@ -13,7 +13,7 @@ use super::{
             parse_register_16bit_and_indexed_registers_with_offset,
             parse_register_16bit_and_indexed_registers_without_offset,
             parse_register_8bit_and_indexed_registers_with_offset,
-            parse_register_8bit_and_indexed_registers_without_offset,
+            parse_register_8bit_and_indexed_registers_without_offset, parse_indexed_addr_and_reg,
         },
         AddressingMode,
     },
@@ -329,20 +329,29 @@ pub(in crate::compiler) fn parse_sub(
             Ok(tokenized_line.len())
         }
         AddressingMode::IndexedAddressingAndRegister {
-            high_token: _,
-            low_token: _,
-            register_type: _,
-            addr_type: _,
-        } => Err(unimplemented_instruction_addressing_mode(
-            token,
-            tokenized_line.len(),
-        )),
+            high_token,
+            low_token,
+            register_type,
+            addr_type,
+        } => {
+            parse_indexed_addr_and_reg(
+                0x29,
+                token,
+                &high_token,
+                &low_token,
+                register_type,
+                addr_type,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
 #[cfg(test)]
 mod tests16bit {
-    use crate::{compiler::compile_str, test_compile};
+    use crate::{compiler::compile_str, test_compile, compile_and_compare_ins};
 
     test_compile!(add_ax_sp, "SUB AX, SP", |instructions: &Vec<u8>| {
         assert_eq!(instructions, &[0x2b, 0xC4]);
@@ -456,6 +465,19 @@ mod tests16bit {
         |instructions: &Vec<u8>| {
             assert_eq!(instructions, &[0x83, 0xEB, 0x20]);
         }
+    );
+
+    compile_and_compare_ins!(
+        sub_mem_reg,
+        "
+        SUB bx+di, bp
+        SUB [bx+0x53d], bx
+        SUB [di+0xb396], bx
+        ", vec![
+            0x29, 0x29, 
+            0x29, 0x9F, 0x3D, 0x05, 
+            0x29, 0x9D, 0x96, 0xB3
+        ]
     );
 }
 
