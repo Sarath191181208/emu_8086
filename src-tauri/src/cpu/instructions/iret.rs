@@ -14,29 +14,20 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
     fn no_offset_indexed_add() {
-        compile_and_test_str(
-            "
+        let code = "
             mov ax, 0xff
-
             int 0x21
-
             inc ax
-",
-            5,
-            |cpu: &CPU, _: &Memory| {
-                // cpu.print_stack(mem);
-                assert_eq!(cpu.get_code_segment(), 0x100);
-                assert_eq!(cpu.get_instruciton_pointer(), 0x06);
-                assert_eq!(cpu.stack_pointer, 0xFFFE);
-                assert_eq!(cpu.ax, 0x100);
-            },
-        );
+";
+        let (cpu, _) = run_code(code, 5);
+        // cpu.print_stack(mem);
+        assert_eq!(cpu.get_code_segment(), 0x100);
+        assert_eq!(cpu.get_instruciton_pointer(), 0x06);
+        assert_eq!(cpu.stack_pointer, 0xFFFE);
+        assert_eq!(cpu.ax, 0x100);
     }
 }
