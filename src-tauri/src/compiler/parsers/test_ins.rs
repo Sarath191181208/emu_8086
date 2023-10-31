@@ -11,7 +11,7 @@ use super::{
         compile_first_ins_reg_pattern::{
             parse_16bitreg_first_addr_mode, parse_8bitreg_first_addr_mode,
         },
-        AddressingMode,
+        AddressingMode, compile_two_arguments_patterns::parse_indexed_addr_and_reg,
     },
     utils::{
         get_8bit_register, get_idx_from_token, push_instruction,
@@ -243,14 +243,23 @@ pub(in crate::compiler) fn parse_test(
             compiled_bytes_ref,
         ),
         AddressingMode::IndexedAddressingAndRegister {
-            high_token: _,
-            low_token: _,
-            register_type: _,
-            addr_type: _,
-        } => Err(unimplemented_instruction_addressing_mode(
-            token,
-            tokenized_line.len(),
-        )),
+            high_token,
+            low_token,
+            register_type,
+            addr_type,
+        } => {
+            parse_indexed_addr_and_reg(
+                0x85,
+                token,
+                &high_token,
+                &low_token,
+                register_type,
+                addr_type,
+                compiled_bytes,
+                compiled_bytes_ref,
+            )?;
+            Ok(tokenized_line.len())
+        }
     }
 }
 
@@ -331,5 +340,18 @@ mod test_ins_tests {
         test ah, [bp]
         ",
         vec![0x85, 0x07, 0x85, 0x0F, 0x85, 0x58, 0x10, 0x84, 0x07, 0x84, 0x0F, 0x84, 0x66, 0x00]
+    );
+
+    compile_and_compare_ins!(
+        test_test_mem_reg,
+        "
+        test [bx+di+0xbe25], sp
+        test bp+di, di
+        test [bx+si+0xc6f4], sp
+        ", vec![
+            0x85, 0xA1, 0x25, 0xBE, 
+            0x85, 0x3B, 
+            0x85, 0xA0, 0xF4, 0xC6
+        ]
     );
 }
