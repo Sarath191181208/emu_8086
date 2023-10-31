@@ -102,7 +102,7 @@ impl CPU {
         offset + memory_offset
     }
 
-    pub(super) fn consume_byte_and_parse_8bit_reg_as_first_arg_double_ins(
+    pub(super) fn consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(
         &mut self,
         mem: &mut Memory,
         exec_fn: &dyn Fn(&mut CPU, u8, u8) -> Option<u8>,
@@ -155,7 +155,7 @@ impl CPU {
         }
     }
 
-    pub(super) fn consume_byte_and_parse_16bit_reg_as_first_arg_double_ins(
+    pub(super) fn consume_bytes_and_parse_16bit_reg_as_first_arg_double_ins(
         &mut self,
         mem: &mut Memory,
         exec_fn: &dyn Fn(&mut CPU, u16, u16) -> Option<u16>,

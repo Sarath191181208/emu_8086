@@ -2,7 +2,7 @@ use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
     pub(in crate::cpu) fn execute_test_16bit_reg(&mut self, mem: &mut Memory) {
-        self.consume_byte_and_parse_16bit_reg_as_first_arg_double_ins(
+        self.consume_bytes_and_parse_16bit_reg_as_first_arg_double_ins(
             mem,
             &|cpu: &mut CPU, val1: u16, val2: u16| -> Option<u16> {
                 let res = val1 & val2;
@@ -13,14 +13,12 @@ impl CPU {
     }
 
     pub(in crate::cpu) fn execute_test_8bit_reg(&mut self, mem: &mut Memory) {
-        self.consume_byte_and_parse_8bit_reg_as_first_arg_double_ins(mem, &|cpu: &mut CPU,
-                                                                            val1: u8,
-                                                                            val2: u8|
-         -> Option<u8> {
+        let exec_fn = &|cpu: &mut CPU, val1: u8, val2: u8| -> Option<u8> {
             let res = val1 & val2;
             cpu.set_test_ins_flags_from_8bit_res(res);
             None
-        })
+        };
+        self.consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(mem, exec_fn);
     }
 
     pub(in crate::cpu) fn execute_test_ax_and_number(&mut self, mem: &mut Memory) {
