@@ -5,12 +5,29 @@ use crate::{
 };
 
 impl CPU {
+
+    pub (in super) fn set_negative_flag_from_16bit_res(&mut self, res: u16) {
+        self.negative_flag = res & 0x8000 != 0;
+    }
+
+    pub (in super) fn set_negative_flag_from_8bit_res(&mut self, res: u8) {
+        self.negative_flag = res & 0x80 != 0;
+    }
+
+    pub (in super) fn set_pairity_flag_from_16bit_res(&mut self, res: u16) {
+        self.pairity_flag = ((res & 0xFF) as u8).count_ones() % 2 == 0;
+    }
+
+    pub (in super) fn set_pairity_flag_from_8bit_res(&mut self, res: u8) {
+        self.pairity_flag = res.count_ones() % 2 == 0;
+    }
+
     fn set_16bit_flags(&mut self, a: u16, b: u16, result: u16, overflow: bool) {
         self.overflow_flag = a & 0x8000 == b & 0x8000 && result & 0x8000 != a & 0x8000;
         self.carry_flag = overflow;
+        self.auxiliary_carry_flag = (a & 0xFF) + (b & 0xFF) > 0xFF;
         self.zero_flag = result == 0;
         self.negative_flag = result & 0x8000 != 0;
-        self.auxiliary_carry_flag = (a & 0xFF) + (b & 0xFF) > 0xFF;
         self.pairity_flag = ((result & 0xFF) as u8).count_ones() % 2 == 0;
     }
 
