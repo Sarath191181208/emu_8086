@@ -15,8 +15,7 @@ authors:
   The code base was having this type of conditional checks for checking if the variable type is defined as Word (or) as byte
   The fowlling is the example of what I am talking about:
 
-```rust
-// ./src-tauri/src/compiler/parsers/mov.rs
+```rust title="./src-tauri/src/compiler/parsers/mov.rs" showLineNumbers
 let mov_ins = if is_variable_defined_as_16bit(
     &variable_abs_offset_map,
     get_token_as_label(&high_token),
@@ -29,8 +28,7 @@ let mov_ins = if is_variable_defined_as_16bit(
 
 This is a repetative logic and we can mess up quite easily therefore we have refactored this into the evaluate_ins function the following is the example of the same:
 
-```rust
-// ./src-tauri/src/compiler/parsers/pattern_extractors/utils.rs 181:5
+```rust title="./src-tauri/src/compiler/parsers/pattern_extractors/utils.rs 181:5" showLineNumbers
 let var_type = variable_abs_address_map
     .get(label)
     .unwrap_or(&(VariableType::Word, 0))
@@ -43,7 +41,7 @@ variable_type = Some(var_type);
 The `parse_two_arguments_line` was incharge of handing the substitution of variables and labels into their respective addresses and values. This intrun created a lot of duplicated logic and was getting hard to maintain. Thus, this logic has now been moved into the `evaluate_ins` function which is now incharge of handlig the substitution of variables and labels into their respective addresses and values.
 
 This is what the `parse_two_arguments_line` was doing before: 
-```rust 
+```rust  showLineNumbers
 match high_token{
     match low_token{ 
         Assembly8086Tokens::Character(label) => {
@@ -65,7 +63,7 @@ This logic has now been converted into the `evaluate_ins` fn where it is already
 I have recently known that there exists ByteIndexedAddressing in the 8086 processor, it is a mode where you can change/access byte of the memory like when defining the variable as byte. You can also do this in a differnent way therefore to merge all of the uses into a sinlge entity to represent and match easily I have added ByteIndexedAddressing in Assembly8086Tokens. The following is the example of the same:
 
 My discovery: 
-```asm6502
+```asm6502 showLineNumbers
 MOV b.[BX], 0x0A ; moves 0x0A into the byte of the memory pointed by BX
 MOV w.[BX], 0x0A ; moves 0x00_0A into the word of the memory pointed by BX
 ```
@@ -76,7 +74,7 @@ As this is the case to represent both `b.[BX]` and `var db` I have added ByteInd
 
 From [Docusaurus](https://docusaurus.io/docs/deployment#deploying-to-github-pages) docs: 
 We have setup a github actions script that looks like this 
-```yaml 
+```yaml  showLineNumbers
 name: Build Docs
 
 defaults:

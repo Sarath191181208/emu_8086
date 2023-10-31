@@ -18,7 +18,7 @@
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
+[data-theme="dark"] {
   --ifm-color-primary: #25c2a0;
   --ifm-color-primary-dark: #21af90;
   --ifm-color-primary-darker: #1fa588;
@@ -29,30 +29,38 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
-.code-block-added-line{
+.code-block-added-line {
   background-color: #00ff0020;
   display: block;
+  position: relative;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
   border-left: 3px solid #00ff0080;
 }
 
-.code-block-added-line::before{
-  content: '+';
+.code-block-added-line::after {
+  content: "+";
   color: #00ff00;
   margin-right: 0.5rem;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
-.code-block-removed-line{
+.code-block-removed-line {
   background-color: #ff000020;
   display: block;
+  position: relative;
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
   border-left: 3px solid #ff000080;
 }
 
-.code-block-removed-line::before{
-  content: '-';
+.code-block-removed-line::after {
+  content: "-";
   color: #ff0000;
-  margin-right: 0.5rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+
 }

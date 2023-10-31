@@ -17,7 +17,7 @@ Issues faced:
 1. The docusaurus build was working, but the blog dates were wrong this is due to the fact that we are using DD-MM-YYYY format in the blog posts and the docusaurus is parsing these dates as UTC+5:30(my local timezone) and converting it into UTC+00:00 This resulted in blogs having 1-day offset errors. This can be fixed by using the YYYY-MM-DD format which the docusaurus treats it as UTC+00:00 format thus not messing up the dates.
 2. The github workflow file was having the publish_dir as `./build` it was actually `./docusaurus/build`, we are using working-directory in the yml but it isn't picked up by the action of actions-gh-pages. This was fixed by changing the publish_dir to `./docusaurus/build`
 
-```yaml
+```yaml showLineNumbers
 defaults:
   run:
     working-directory: ./docusaurus
@@ -40,7 +40,7 @@ defaults:
 
 The syntax like using `w.[]` and `b.[]` are now working. We can use of the fowlling syntax to make the fowlling work.
 
-```asm6502
+```asm6502 showLineNumbers
 
 ORG 100h
 .DATA
@@ -93,7 +93,7 @@ The `TEST` instruction is now compiled and working. The `TEST` instruction is us
 Made the `TEST` instruction execute and set the flags accordingly. The result isn't stored anywhere, only the flags are chaged.
 Algorithm
 
-```rust
+```rust showLineNumbers
 
 // For 16-bit operands
 let res = op1 & op2;
@@ -121,7 +121,7 @@ The functions which are deprecated are:
 - `compile_and_test_str` function
 
 In favour of these convoluted function a new api is created for testing. It is both easy and simple to use. The new api is as follows:
-```rust
+```rust showLineNumbers
 let code = "MOV AX, BX"
 let num_cycles = 1;
 run_code(code, num_cycles)
