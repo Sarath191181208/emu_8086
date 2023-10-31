@@ -195,7 +195,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
                             .unwrap_or(&(VariableType::Word, 0))
                             .0;
                         // variable_type = Some(var_type);
-                        if var_type == VariableType::Byte {
+                        if var_type == VariableType::Byte && variable_type.is_none() {
                             variable_type = Some(VariableType::Byte);
                         }
                     }
