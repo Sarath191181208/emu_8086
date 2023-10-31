@@ -288,6 +288,9 @@ impl CPU {
             // AND 16bit Register, 16bit Register/Memory
             0x23 => self.execute_and_16bit_reg(mem),
 
+            // AND AL, 0x12 i.e immediate addressing
+            0x24 => self.and_al_in_immediate_addressing(mem),
+
             // SUB [0x1234], AL
             0x28 => self.execute_sub_direct_addr_8bit_register(mem),
 

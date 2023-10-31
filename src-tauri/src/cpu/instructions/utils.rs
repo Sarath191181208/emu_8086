@@ -166,7 +166,7 @@ impl CPU {
             }
             0xC0..=0xFF => {
                 let (low_reg, reg_idx) = self.get_index_from_c0_ff_pattern(ins);
-                let high_val = self.get_8bit_register_by_index(reg_idx % 8 );
+                let high_val = self.get_8bit_register_by_index(reg_idx % 8);
                 let low_val = self.get_8bit_register_by_index(low_reg % 8);
                 let res = exec_fn(self, high_val, low_val);
                 (res, reg_idx)
