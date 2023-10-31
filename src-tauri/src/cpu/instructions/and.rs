@@ -74,6 +74,16 @@ impl CPU {
         self.write_word_from_pointer(mem, addr, res);
     }
 
+    pub(in crate::cpu) fn execute_and_byte_addr_and_number(&mut self, mem: &mut Memory){
+        self.consume_instruction(mem); // 0x26
+        let addr = self.consume_word(mem);
+        let addr_val = self.read_byte_from_pointer(mem, addr);
+        let num = self.consume_byte(mem);
+        let res = addr_val & num;
+        self.set_and_ins_flags_from_8bit_res(res);
+        self.write_byte_from_pointer(mem, addr, res);
+    }
+
     fn set_and_ins_flags_from_16bit_res(&mut self, res: u16) {
         self.carry_flag = false;
         self.overflow_flag = false;
@@ -231,6 +241,21 @@ mod and_ins_exec_tests {
         ";
         let (cpu, mem) = run_code(code, 3);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x01);
+        assert_eq!(cpu.get_flags_as_binary(), 0b00);
+    }
+
+
+    #[test]
+    fn and_byte_addr_and_number() {
+        let code = "
+        org 100h 
+        .data 
+        var db 0x91
+        code: 
+            and [var], 0x0F
+        ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x101), 0x01);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
 }
