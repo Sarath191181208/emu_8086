@@ -10,17 +10,14 @@ use crate::{
 use super::{
     pattern_extractors::{
         compile_two_arguments_patterns::{
-            parse_register_16bit_and_indexed_registers_with_offset,
+            parse_indexed_addr_and_reg, parse_register_16bit_and_indexed_registers_with_offset,
             parse_register_16bit_and_indexed_registers_without_offset,
             parse_register_8bit_and_indexed_registers_with_offset,
-            parse_register_8bit_and_indexed_registers_without_offset, parse_indexed_addr_and_reg,
+            parse_register_8bit_and_indexed_registers_without_offset,
         },
         AddressingMode,
     },
-    utils::{
-        get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction,
-        unimplemented_instruction_addressing_mode,
-    },
+    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
 };
 
 pub(in crate::compiler) fn parse_add(
@@ -320,6 +317,7 @@ pub(in crate::compiler) fn parse_add(
             )?;
             Ok(tokenized_line.len())
         }
+
         AddressingMode::IndexedAddressingAndRegister {
             high_token,
             low_token,
@@ -343,7 +341,7 @@ pub(in crate::compiler) fn parse_add(
 
 #[cfg(test)]
 mod tests16bit {
-    use crate::{compiler::compile_str, test_compile, compile_and_compare_ins};
+    use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
     use pretty_assertions::assert_eq;
 
     test_compile!(
@@ -508,21 +506,12 @@ mod tests16bit {
         ADD bp, cx
         ADD [bx+0x5b], ax
         ADD bp+si, bp
-        ", vec![
-            0x01, 0xB8, 0x3D, 0x39, 
-            0x01, 0x4B, 0x60,
-            0x01, 0x7C, 0x62, 
-            0x01, 0x87, 0x07, 0x8F, 
-            0x01, 0x5F, 0x28, 0x03, 0xEB ,
-            0x01, 0x00, 
-            0x01, 0x10,
-            0x01, 0x92, 0xE5, 0x00 , 
-            0x01, 0x21, 
-            0x01, 0x89, 0x46, 0x17, 
-            0x01, 0xA7, 0x00, 0x0C, 
-            0x01, 0x50, 0x5B, 0x03, 0xE9, 
-            0x01, 0x47, 0x5B,
-            0x01, 0x2A
+        ",
+        vec![
+            0x01, 0xB8, 0x3D, 0x39, 0x01, 0x4B, 0x60, 0x01, 0x7C, 0x62, 0x01, 0x87, 0x07, 0x8F,
+            0x01, 0x5F, 0x28, 0x03, 0xEB, 0x01, 0x00, 0x01, 0x10, 0x01, 0x92, 0xE5, 0x00, 0x01,
+            0x21, 0x01, 0x89, 0x46, 0x17, 0x01, 0xA7, 0x00, 0x0C, 0x01, 0x50, 0x5B, 0x03, 0xE9,
+            0x01, 0x47, 0x5B, 0x01, 0x2A
         ]
     );
 }
