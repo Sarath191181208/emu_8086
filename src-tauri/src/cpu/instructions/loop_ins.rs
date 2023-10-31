@@ -24,24 +24,17 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
     fn no_offset_indexed_add() {
-        compile_and_test_str(
-            "
+        let code = "
             mov cx, 0x10
             label: 
             inc ax 
             loop label
-            ",
-            0x30,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x11);
-            },
-        );
+            ";
+        let (cpu, _) = run_code(code, 0x30);
+        assert_eq!(cpu.ax, 0x11);
     }
 }
