@@ -41,4 +41,36 @@ impl CPU {
             }
         }
     }
+
+    pub(in crate::cpu) fn execute_mov_indexed_addr_16bit_register(&mut self, mem: &mut Memory) {
+        let exec_fn = |_: &mut CPU, _: u16, val: u16| -> Option<u16> {
+            // cpu.mov_indexed_addr_16bit_register(mem, instruction);
+            Some(val)
+        };
+        self.consume_bytes_and_parse_mem_as_first_arg_double_ins(mem, &exec_fn);
+    }
+}
+
+#[cfg(test)]
+mod mov_indexed_addr_tests {
+    use crate::cpu::instructions::test_macro::run_code;
+
+    #[test]
+    fn test_mov_idx_addr_reg() {
+        let code = "
+        mov ax, 0x100
+        mov bx, 0x200
+        mov cx, 0x300
+
+        mov [0x1234], ax
+        mov [0x1236], bx  
+
+        mov bx, 0x1230 
+        mov [bx + 0x08], cx
+        ";
+        let (cpu, mem) = run_code(code, 8);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x1234), 0x100);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x1236), 0x200);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x1238), 0x300);
+    }
 }
