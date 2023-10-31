@@ -44,7 +44,6 @@ impl CPU {
 
     pub(in crate::cpu) fn execute_mov_indexed_addr_16bit_register(&mut self, mem: &mut Memory) {
         let exec_fn = |_: &mut CPU, _: u16, val: u16| -> Option<u16> {
-            // cpu.mov_indexed_addr_16bit_register(mem, instruction);
             Some(val)
         };
         self.consume_bytes_and_parse_mem_as_first_arg_double_ins(mem, &exec_fn);
