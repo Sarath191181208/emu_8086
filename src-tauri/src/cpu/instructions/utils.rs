@@ -107,6 +107,12 @@ impl CPU {
         mem: &mut Memory,
         exec_fn: &dyn Fn(&mut CPU, u8, u8) -> Option<u8>,
     ) {
+        // This is a function where the first argument is a 16bit register and the second argument is a 16bit reg or a memory address
+        // The function consumes bytes from the memory and extracts the values of the fowllling addressing
+        // For example: MOV AX, [0x1234] | MOV AX, [BX+SI] | MOV AX, [BX] | MOV AX, [0x1234] it calculates the address and gets the value from the memory
+        // and executes the exec_fn with the values of the register and the memory value
+        // If the function returns a value it sets the register to that value
+
         let ins = self.consume_instruction(mem);
         let (res, reg_idx) = match ins {
             0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
@@ -160,6 +166,11 @@ impl CPU {
         mem: &mut Memory,
         exec_fn: &dyn Fn(&mut CPU, u16, u16) -> Option<u16>,
     ) {
+        // This is a function where the first argument is a 16bit register and the second argument is a 16bit reg or a memory address
+        // The function consumes bytes from the memory and extracts the values of the fowllling addressing
+        // For example: MOV AX, [0x1234] | MOV AX, [BX+SI] | MOV AX, [BX] | MOV AX, [0x1234] it calculates the address and gets the value from the memory
+        // and executes the exec_fn with the values of the register and the memory value
+        // If the function returns a value it sets the register to that value
         let ins = self.consume_instruction(mem);
         let (res, reg_idx): (Option<u16>, u8) = match ins {
             0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {

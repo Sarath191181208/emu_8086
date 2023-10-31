@@ -1,0 +1,37 @@
+
+---
+authors:
+  name: Vangipuram Srinivasa Sarath Chandra
+  title: Tech enthusiast
+  url: https://github.com/Sarath191181208
+  image_url: https://avatars.githubusercontent.com/u/74459981?v=4
+---
+
+# 🛠️ Refactor of common parsing while exec of reg as first ins
+The logic of register as first instruction is always similar for example 
+`TEST AX, BX` -> bytes [ 0x85, 0xD8 ], `ADD AX, BX` -> bytes [ 0x01, 0xD8 ] and so on.
+while exec 0xD8 is always the register for instructions. Therefore, the logic of parsing the register is common for all the instructions. So, I have refactored the code to make it more readable and maintainable.
+The new functions are 
+- `consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins`
+- `consume_bytes_and_parse_16bit_reg_as_first_arg_double_ins`
+
+The functions are used in the fowlling ways 
+```rust
+// For 16bit registers
+self.consume_bytes_and_parse_16bit_reg_as_first_arg_double_ins(
+    mem,
+    &|cpu: &mut CPU, val1: u16, val2: u16| -> Option<u16> {
+        let res = val1 & val2;
+        cpu.set_test_ins_flags_from_16bit_res(res);
+        None
+    },
+)
+
+// For 8bit registers
+let exec_fn = &|cpu: &mut CPU, val1: u8, val2: u8| -> Option<u8> {
+    let res = val1 & val2;
+    cpu.set_test_ins_flags_from_8bit_res(res);
+    None
+};
+self.consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(mem, exec_fn);
+```
