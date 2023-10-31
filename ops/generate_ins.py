@@ -41,9 +41,9 @@ import random
 reg_16 = ["ax", "cx", "dx", "bx", "sp", "bp", "si", "di"]
 indexed_reg_16 = ["bx+si", "bx+di", "bp+si", "bp+di", "si", "di", "bp", "bx"]
 
-ins_name = "ADD"
+ins_name = "test"
 ins: list[str] = []
-for _ in range(0x10):
+for _ in range(0x3):
     reg_choice = random.choice(reg_16)
     indexed_reg_choice = random.choice(indexed_reg_16)
     offset = random.choice((None, random.randint(0x00, 0xFF), random.randint(0x100, 0xFFFF)))
