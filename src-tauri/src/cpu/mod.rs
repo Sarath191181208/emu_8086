@@ -369,6 +369,9 @@ impl CPU {
             // TEST AX..DI, reg/mem
             0x85 => self.execute_test_16bit_reg(mem),
 
+            // MOV indexed addressing, 16bit register
+            0x89 => self.execute_mov_indexed_addr_16bit_register(mem),
+
             // MOV 16bit register, 16bit register
             0x8A => self.execute_mov_register_byte(mem),
             0x8B => self.execute_mov_register_word(mem),
