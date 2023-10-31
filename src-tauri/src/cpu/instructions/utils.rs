@@ -27,16 +27,16 @@ impl CPU {
         self.carry_flag = overflow;
         self.auxiliary_carry_flag = (a & 0xFF) + (b & 0xFF) > 0xFF;
         self.zero_flag = result == 0;
-        self.negative_flag = result & 0x8000 != 0;
-        self.pairity_flag = ((result & 0xFF) as u8).count_ones() % 2 == 0;
+        self.set_negative_flag_from_16bit_res(result);
+        self.set_pairity_flag_from_16bit_res(result);
     }
 
     fn set_8bit_flags(&mut self, a: u8, b: u8, result: u8, overflow: bool) {
         self.carry_flag = overflow;
         self.zero_flag = result == 0;
-        self.negative_flag = result & 0x80 != 0;
         self.auxiliary_carry_flag = (a as u16 + b as u16) > 0xFF;
-        self.pairity_flag = result.count_ones() % 2 == 0;
+        self.set_negative_flag_from_8bit_res(result);
+        self.set_pairity_flag_from_8bit_res(result);
     }
 
     pub fn add_16bit_with_overflow_and_set_flags(&mut self, a: Word, b: Word) -> (Word, bool) {
