@@ -2,6 +2,7 @@ use crate::{
     consts::{Word, U20},
     cpu::CPU,
     memory::Memory,
+    utils::Either,
 };
 
 impl CPU {
@@ -272,22 +273,58 @@ impl CPU {
         // and executes the exec_fn with the values of the register and the memory value
         // If the function returns a value it sets the register to that value
         let ins = self.consume_instruction(mem);
-        let (res, mem_addr): (Option<u16>, u16) = match ins {
+        let (res, mem_addr): (Option<u16>, Either<u16, U20>) = match ins {
             0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
                 let reg_idx = ins >> 3;
                 let addr = self.consume_word(mem);
                 let val = self.read_word_from_pointer(mem, addr);
                 let reg_val = self.get_16bit_register_by_index(reg_idx);
                 let res = exec_fn(self, val, reg_val);
-                (res, addr)
+                (res, Either::Left(addr))
             }
-            0x00..=0x3F => (None, 0),
-            0x40..=0x7F => (None, 0),
-            0x80..=0xBF => (None, 0),
-            0xC0..=0xFF => (None, 0),
+            0x00..=0x3F => {
+                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x00_0x3f_pattern(ins);
+                let mem_addr = self.get_offset_from_index_of_indexed_registers(indexed_addr_idx);
+                let mem_addr_clone = mem_addr.clone();
+                let mem_val = self.read_word_from_u20(mem, mem_addr);
+                let reg_val = self.get_16bit_register_by_index(reg_idx);
+                let res = exec_fn(self, mem_val, reg_val);
+                (res, Either::Right(mem_addr_clone))
+            }
+            0x40..=0x7F => {
+                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x40_0x7f_pattern(ins);
+                let mem_addr = self.consume_byte_and_get_cummulative_offset(mem, indexed_addr_idx);
+                let mem_addr_clone = mem_addr.clone();
+                let mem_val = self.read_word_from_u20(mem, mem_addr);
+                let reg_val = self.get_16bit_register_by_index(reg_idx);
+                let res = exec_fn(self, mem_val, reg_val);
+                (res, Either::Right(mem_addr_clone))
+            }
+            0x80..=0xBF => {
+                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x80_0xbf_pattern(ins);
+                let mem_addr = self.consume_word_and_get_cummulative_offset(mem, indexed_addr_idx);
+                let mem_addr_clone = mem_addr.clone();
+                let mem_val = self.read_word_from_u20(mem, mem_addr);
+                let reg_val = self.get_16bit_register_by_index(reg_idx);
+                let res = exec_fn(self, mem_val, reg_val);
+                (res, Either::Right(mem_addr_clone))
+            }
+            0xC0..=0xFF => {
+                let (low_reg, reg_idx) = self.get_index_from_c0_ff_pattern(ins);
+                let reg_val = self.get_16bit_register_by_index(reg_idx % 8);
+                let low_reg_val = self.get_16bit_register_by_index(low_reg % 8);
+                let res = exec_fn(self, reg_val, low_reg_val);
+                if let Some(res) = res {
+                    self.set_16bit_register_by_index(reg_idx, res);
+                }
+                (None, Either::Left(0))
+            }
         };
         if let Some(res) = res {
-            self.write_word_from_pointer(mem, mem_addr, res);
+            match mem_addr {
+                Either::Left(addr) => self.write_word_from_pointer(mem, addr, res),
+                Either::Right(addr) => self.write_word_to_u20(mem, addr, res),
+            }
         }
     }
 }
