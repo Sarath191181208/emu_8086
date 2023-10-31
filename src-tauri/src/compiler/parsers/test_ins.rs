@@ -15,7 +15,6 @@ use super::{
     },
     utils::{
         get_8bit_register, get_idx_from_token, push_instruction,
-        unimplemented_instruction_addressing_mode,
     },
 };
 
