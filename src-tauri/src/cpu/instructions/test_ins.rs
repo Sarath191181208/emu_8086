@@ -77,16 +77,16 @@ impl CPU {
         self.carry_flag = false;
         self.overflow_flag = false;
         self.zero_flag = res == 0;
-        self.negative_flag = res & 0x8000 != 0;
-        self.pairity_flag = res.count_ones() % 2 == 0;
+        self.set_negative_flag_from_16bit_res(res);
+        self.set_pairity_flag_from_16bit_res(res);
     }
 
     fn set_test_ins_flags_from_8bit_res(&mut self, res: u8) {
         self.carry_flag = false;
         self.overflow_flag = false;
         self.zero_flag = res == 0;
-        self.negative_flag = res & 0x80 != 0;
-        self.pairity_flag = res.count_ones() % 2 == 0;
+        self.set_negative_flag_from_8bit_res(res);
+        self.set_pairity_flag_from_8bit_res(res);
     }
 }
 
