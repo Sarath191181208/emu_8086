@@ -1,0 +1,57 @@
+---
+title: AND
+description: Performs a bitwise AND operation on the two operands and stores the result in first operand.
+---
+
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import {
+  RegisterAddressingMode,
+  ImmediateAddressingMode,
+  MemoryAddressingMode,
+  RegisterIndirectAddressingMode,
+  BasePlusIndexedAddressingMode,
+  BasePlusIndexPlusDisplacementAddressingMode,
+} from "@site/src/components/AddressingModes";
+
+
+## Syntax
+
+```asm6502
+AND operand1, operand2
+```
+
+## Attributes
+
+| Attribute    | Description                                                                                                                                                |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Size**     | Byte, Word, Doubleword, 3 Bytes, 5 Bytes (or) 6 Bytes                                                                                                      |
+| **Operands** | The first operand is a general-purpose register or memory location. The second operand is a general-purpose register, memory location, or immediate value. |
+| **Action**   | Performs a bitwise AND operation on the two operands. The result is saved in first operand.                                                                             |
+| **Flags**    | <FlagsChangedTable carryFlag={false} overflowFlag={false} zeroFlag="changed" signFlag="changed" parityFlag="changed" />                                    |
+
+## Supported Modes
+
+### Register Addressing
+
+<RegisterAddressingMode instructionName="AND" />
+
+### Immediate Addressing Mode
+
+<ImmediateAddressingMode instructionName="AND" />
+
+### MemoryAddressingMode
+
+<MemoryAddressingMode instructionName="AND" />
+
+### RegisterIndirectAddressingMode
+
+  <RegisterIndirectAddressingMode instructionName="AND" />
+
+
+### BasePlusIndexedAddressingMode
+
+<BasePlusIndexedAddressingMode instructionName="AND"/>
+
+### BasePlusIndexPlusDisplacementAddressingMode
+
+<BasePlusIndexPlusDisplacementAddressingMode instructionName="AND" />
