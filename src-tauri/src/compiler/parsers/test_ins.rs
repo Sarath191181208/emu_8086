@@ -11,11 +11,10 @@ use super::{
         compile_first_ins_reg_pattern::{
             parse_16bitreg_first_addr_mode, parse_8bitreg_first_addr_mode,
         },
-        AddressingMode, compile_two_arguments_patterns::parse_indexed_addr_and_reg,
+        compile_two_arguments_patterns::parse_indexed_addr_and_reg,
+        AddressingMode,
     },
-    utils::{
-        get_8bit_register, get_idx_from_token, push_instruction,
-    },
+    utils::{get_8bit_register, get_idx_from_token, push_instruction},
 };
 
 pub(in crate::compiler) fn parse_test(
@@ -347,10 +346,7 @@ mod test_ins_tests {
         test [bx+di+0xbe25], sp
         test bp+di, di
         test [bx+si+0xc6f4], sp
-        ", vec![
-            0x85, 0xA1, 0x25, 0xBE, 
-            0x85, 0x3B, 
-            0x85, 0xA0, 0xF4, 0xC6
-        ]
+        ",
+        vec![0x85, 0xA1, 0x25, 0xBE, 0x85, 0x3B, 0x85, 0xA0, 0xF4, 0xC6]
     );
 }
