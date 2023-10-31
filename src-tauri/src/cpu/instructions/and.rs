@@ -12,12 +12,31 @@ impl CPU {
         )
     }
 
+        pub(in crate::cpu) fn execute_and_8bit_reg(&mut self, mem: &mut Memory) {
+        self.consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(
+            mem,
+            &|cpu: &mut CPU, val1: u8, val2: u8| -> Option<u8> {
+                let res = val1 & val2;
+                cpu.set_and_ins_flags_from_8bit_res(res);
+                Some(res)
+            },
+        )
+    }
+
     fn set_and_ins_flags_from_16bit_res(&mut self, res: u16) {
         self.carry_flag = false;
         self.overflow_flag = false;
         self.zero_flag = res == 0;
         self.set_pairity_flag_from_16bit_res(res);
         self.set_negative_flag_from_16bit_res(res);
+    }
+
+    fn set_and_ins_flags_from_8bit_res(&mut self, res: u8) {
+        self.carry_flag = false;
+        self.overflow_flag = false;
+        self.zero_flag = res == 0;
+        self.set_negative_flag_from_8bit_res(res);
+        self.set_pairity_flag_from_8bit_res(res);
     }
 }
 
@@ -26,7 +45,7 @@ mod and_ins_exec_tests {
     use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
-    fn and_ax_and_number() {
+    fn and_reg_and_reg_or_mem_tests() {
         let code = "
             org 100h
             .data 
@@ -59,5 +78,42 @@ mod and_ins_exec_tests {
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.negative_flag, false);
         assert_eq!(cpu.pairity_flag, false);
+    }
+
+    #[test]
+    fn and_8bit_reg_and_8bitreg_or_mem_tests(){
+        let code = "
+        org 100h 
+        .data 
+        var dw 0x91 
+        var2 db 0x91
+        code: 
+            mov al,  0x0F
+            mov cl,  0x0F
+            and al,  cl 
+            and cl,  al 
+
+            mov dl, 0x0F
+            mov bx, 0x100 
+            and dl, [bx+02]
+            
+            mov dl, 0x0F
+            mov bx, 0x02
+            and dl, [bx + 0x100]
+
+            mov dl, 0x0F
+            and dl, b.[var]
+
+            mov dl, 0x0F
+            and dl, var2
+        ";
+
+        let (cpu, _ ) = run_code(code, 16);
+        assert_eq!(cpu.get_ax_low(), 0x0F);
+        assert_eq!(cpu.get_bx_low(), 0x02);
+        assert_eq!(cpu.get_cx_low(), 0x0F);
+        assert_eq!(cpu.get_dx_low(), 0x01);
+        assert_eq!(cpu.get_flags_as_binary(), 0x00);
+
     }
 }
