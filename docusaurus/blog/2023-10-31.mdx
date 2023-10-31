@@ -5,8 +5,9 @@ authors:
   url: https://github.com/Sarath191181208
   image_url: https://avatars.githubusercontent.com/u/74459981?v=4
 ---
+# 🛠️ Refactor and Exec of `AND`
 
-# 🛠️ Refactor of common parsing while exec of reg as first ins
+## 🛠️ Refactor of common parsing while exec of reg as first ins
 The logic of register as first instruction is always similar for example 
 `TEST AX, BX` -> bytes [ 0x85, 0xD8 ], `ADD AX, BX` -> bytes [ 0x01, 0xD8 ] and so on.
 while exec 0xD8 is always the register for instructions. Therefore, the logic of parsing the register is common for all the instructions. So, I have refactored the code to make it more readable and maintainable.
@@ -33,4 +34,24 @@ let exec_fn = &|cpu: &mut CPU, val1: u8, val2: u8| -> Option<u8> {
     None
 };
 self.consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(mem, exec_fn);
+```
+
+## Execution of `AND` instruction
+The `AND` instruction is executed in the following way
+```rust showLineNumbers
+// For 16bit registers
+let res = op1 & op2;
+carry_flag = false;
+overflow_flag = false;
+zero_flag = res == 0;
+negative_flag = res & 0x8000 != 0;
+pairity_flag = (res & 0xFF).count_ones() % 2 == 0;
+
+// For 8bit registers
+let res = op1 & op2;
+carry_flag = false;
+overflow_flag = false;
+zero_flag = res == 0;
+negative_flag = res & 0x80 != 0;
+pairity_flag = res.count_ones() % 2 == 0;
 ```
