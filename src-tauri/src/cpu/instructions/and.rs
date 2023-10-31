@@ -28,6 +28,13 @@ impl CPU {
         self.set_ax_low(res);
     }
 
+    pub(in crate::cpu) fn and_ax_in_immediate_addressing(&mut self, mem: &mut Memory) {
+        let val = self.consume_word(mem);
+        let res = self.ax & val;
+        self.set_and_ins_flags_from_16bit_res(res);
+        self.set_ax(res);
+    }
+
     fn set_and_ins_flags_from_16bit_res(&mut self, res: u16) {
         self.carry_flag = false;
         self.overflow_flag = false;
@@ -129,6 +136,18 @@ mod and_ins_exec_tests {
         ";
         let (cpu, _) = run_code(code, 2);
         assert_eq!(cpu.get_ax_low(), 0x0F);
+        assert_eq!(cpu.pairity_flag, true);
+    }
+
+    #[test]
+    fn and_ax_and_immediate() {
+        let code = "
+        mov ax , 0x0F0F
+        and ax, 0x0F0F 
+        ";
+
+        let (cpu, _) = run_code(code, 2);
+        assert_eq!(cpu.ax, 0x0F0F);
         assert_eq!(cpu.pairity_flag, true);
     }
 }
