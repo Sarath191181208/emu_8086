@@ -171,7 +171,7 @@ pub(in crate::compiler) fn parse_mov(
                         &low_token => address_bytes.to_vec()
                     )
                 );
-                Ok(i + 3)
+                Ok(tokenized_line.len())
             }
         },
         // MOV AX..DI, var
