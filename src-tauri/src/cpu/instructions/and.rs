@@ -21,6 +21,26 @@ impl CPU {
         self.consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(mem, exec_fn);
     }
 
+    pub(in crate::cpu) fn execute_and_word_addr_as_first_operand(&mut self, mem: &mut Memory) {
+        let exec_fn = |cpu: &mut CPU, val1: u16, val2: u16| {
+            let res = val1 & val2;
+            cpu.set_and_ins_flags_from_16bit_res(res);
+            Some(res)
+        };
+        self.consume_bytes_and_parse_mem_as_first_arg_double_ins(mem, &exec_fn);
+    }
+
+    pub(in crate::cpu) fn execute_and_byte_addr_as_first_operand(&mut self, mem: &mut Memory) {
+        self.consume_bytes_and_parse_byte_mem_as_first_arg_double_ins(
+            mem,
+            &|cpu: &mut CPU, val1: u8, val2: u8| -> Option<u8> {
+                let res = val1 & val2;
+                cpu.set_and_ins_flags_from_8bit_res(res);
+                Some(res)
+            },
+        );
+    }
+
     pub(in crate::cpu) fn and_al_in_immediate_addressing(&mut self, mem: &mut Memory) {
         let val = self.consume_byte(mem);
         let res = self.get_ax_low() & val;
@@ -58,7 +78,6 @@ impl CPU {
         self.set_8bit_register_by_index(reg_idx, res);
     }
 
-
     pub(in crate::cpu) fn execute_and_word_addr_and_number(&mut self, mem: &mut Memory, ins: u8) {
         let is_num_u8 = ins == 0x83;
         self.consume_instruction(mem); // 0x26
@@ -74,7 +93,7 @@ impl CPU {
         self.write_word_from_pointer(mem, addr, res);
     }
 
-    pub(in crate::cpu) fn execute_and_byte_addr_and_number(&mut self, mem: &mut Memory){
+    pub(in crate::cpu) fn execute_and_byte_addr_and_number(&mut self, mem: &mut Memory) {
         self.consume_instruction(mem); // 0x26
         let addr = self.consume_word(mem);
         let addr_val = self.read_byte_from_pointer(mem, addr);
@@ -220,7 +239,7 @@ mod and_ins_exec_tests {
     }
 
     #[test]
-    fn and_8bit_reg_and_number(){
+    fn and_8bit_reg_and_number() {
         let code = "
         mov bl, 0xF0
         and bl, 0x0F
@@ -244,7 +263,6 @@ mod and_ins_exec_tests {
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
 
-
     #[test]
     fn and_byte_addr_and_number() {
         let code = "
@@ -256,6 +274,37 @@ mod and_ins_exec_tests {
         ";
         let (cpu, mem) = run_code(code, 3);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x101), 0x01);
+        assert_eq!(cpu.get_flags_as_binary(), 0b00);
+    }
+
+    #[test]
+    fn and_address_8bit_register() {
+        let code = "
+        org 100h 
+        .data 
+        var db 0x91
+        code: 
+            mov bl , 0x0F
+            and var, bl
+        ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x101), 0x01);
+        assert_eq!(cpu.get_flags_as_binary(), 0b00);
+    }
+
+    #[test]
+    fn and_address_16bit_reg() {
+        let code = "
+        org 100h
+        .data 
+        var dw 0x91
+        code: 
+            mov bx, 0x0F0F
+            and var, bx
+        ";
+
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x01);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
 }

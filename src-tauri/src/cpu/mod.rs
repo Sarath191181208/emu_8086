@@ -282,6 +282,12 @@ impl CPU {
             // POP DS
             0x1F => self.execute_pop_ds(mem),
 
+            // AND Address, reg/mem
+            0x20 => self.execute_and_byte_addr_as_first_operand(mem),
+
+            // AND Address, reg/mem
+            0x21 => self.execute_and_word_addr_as_first_operand(mem),
+
             // AND 8bit Register, 8bit Register/Memory
             0x22 => self.execute_and_8bit_reg(mem),
 
