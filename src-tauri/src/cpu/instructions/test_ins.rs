@@ -2,45 +2,25 @@ use crate::{cpu::CPU, memory::Memory};
 
 impl CPU {
     pub(in crate::cpu) fn execute_test_16bit_reg(&mut self, mem: &mut Memory) {
-        let ins = self.consume_instruction(mem);
-        match ins {
-            0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
-                self.execute_test_16bit_reg_and_indexed_addr_variable(mem, ins / 0x06);
-            }
-            0x00..=0x3F => {
-                self.execute_test_16bit_reg_and_indexed_addr_no_offset(mem, ins);
-            }
-            0x40..=0x7F => {
-                self.execute_test_16bit_reg_and_indexed_addr_with_8bitoffset(mem, ins);
-            }
-            0x80..=0xBF => {
-                self.execute_test_16bit_reg_and_indexed_addr_with_16bitoffset(mem, ins);
-            }
-            0xC0..=0xFF => {
-                self.execute_test_16bit_reg_and_16bit_reg(ins);
-            }
-        }
+        self.consume_byte_and_parse_16bit_reg_as_first_arg_double_ins(
+            mem,
+            &|cpu: &mut CPU, val1: u16, val2: u16| -> Option<u16> {
+                let res = val1 & val2;
+                cpu.set_test_ins_flags_from_16bit_res(res);
+                None
+            },
+        )
     }
 
     pub(in crate::cpu) fn execute_test_8bit_reg(&mut self, mem: &mut Memory) {
-        let ins = self.consume_instruction(mem);
-        match ins {
-            0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
-                self.execute_test_8bit_reg_and_indexed_addr_variable(mem, ins / 0x06);
-            }
-            0x00..=0x3F => {
-                self.execute_test_8bit_reg_and_indexed_addr_no_offset(mem, ins);
-            }
-            0x40..=0x7F => {
-                self.execute_test_8bit_reg_and_indexed_addr_with_8bitoffset(mem, ins);
-            }
-            0x80..=0xBF => {
-                self.execute_test_8bit_reg_and_indexed_addr_with_16bitoffset(mem, ins);
-            }
-            0xC0..=0xFF => {
-                self.execute_test_8bit_reg_and_8bit_reg(ins);
-            }
-        }
+        self.consume_byte_and_parse_8bit_reg_as_first_arg_double_ins(mem, &|cpu: &mut CPU,
+                                                                            val1: u8,
+                                                                            val2: u8|
+         -> Option<u8> {
+            let res = val1 & val2;
+            cpu.set_test_ins_flags_from_8bit_res(res);
+            None
+        })
     }
 
     pub(in crate::cpu) fn execute_test_ax_and_number(&mut self, mem: &mut Memory) {
@@ -92,122 +72,6 @@ impl CPU {
         let addr_val = self.read_byte_from_pointer(mem, addr);
         let num = self.consume_byte(mem);
         let res = addr_val & num;
-        self.set_test_ins_flags_from_8bit_res(res);
-    }
-
-    fn execute_test_16bit_reg_and_16bit_reg(&mut self, ins: u8) {
-        let (low_reg, high_reg) = self.get_index_from_c0_ff_pattern(ins);
-
-        let high_val = self.get_16bit_register_by_index(high_reg);
-        let low_val = self.get_16bit_register_by_index(low_reg);
-
-        let res = high_val & low_val;
-        self.set_test_ins_flags_from_16bit_res(res);
-    }
-
-    fn execute_test_8bit_reg_and_8bit_reg(&mut self, ins: u8) {
-        let (low_reg, high_reg) = self.get_index_from_c0_ff_pattern(ins);
-
-        let high_val = self.get_8bit_register_by_index(high_reg);
-        let low_val = self.get_8bit_register_by_index(low_reg);
-
-        let res = high_val & low_val;
-        self.set_test_ins_flags_from_8bit_res(res);
-    }
-
-    fn execute_test_16bit_reg_and_indexed_addr_variable(&mut self, mem: &mut Memory, reg_idx: u8) {
-        let addr = self.consume_word(mem);
-        let val = self.read_word_from_pointer(mem, addr);
-        let reg_val = self.get_16bit_register_by_index(reg_idx);
-        let res = val & reg_val;
-        self.set_test_ins_flags_from_16bit_res(res);
-    }
-
-    fn execute_test_8bit_reg_and_indexed_addr_variable(&mut self, mem: &mut Memory, reg_idx: u8) {
-        let addr = self.consume_word(mem);
-        let val = self.read_byte_from_pointer(mem, addr);
-        let reg_val = self.get_8bit_register_by_index(reg_idx);
-        let res = val & reg_val;
-        self.set_test_ins_flags_from_8bit_res(res);
-    }
-
-    fn execute_test_16bit_reg_and_indexed_addr_no_offset(&mut self, mem: &mut Memory, ins: u8) {
-        let (low_reg, high_reg) = self.get_index_from_0x00_0x3f_pattern(ins);
-
-        let mem_addr = self.get_offset_from_index_of_indexed_registers(low_reg);
-        let mem_val = self.read_word_from_u20(mem, mem_addr);
-        let reg_val = self.get_16bit_register_by_index(high_reg);
-        let res = mem_val & reg_val;
-        self.set_test_ins_flags_from_16bit_res(res);
-    }
-
-    fn execute_test_8bit_reg_and_indexed_addr_no_offset(&mut self, mem: &mut Memory, ins: u8) {
-        let (low_reg, high_reg) = self.get_index_from_0x00_0x3f_pattern(ins);
-
-        let mem_addr = self.get_offset_from_index_of_indexed_registers(low_reg);
-        let mem_val = self.read_byte_from_u20(mem, mem_addr);
-        let reg_val = self.get_8bit_register_by_index(high_reg);
-        let res = mem_val & reg_val;
-        self.set_test_ins_flags_from_8bit_res(res);
-    }
-
-    fn execute_test_16bit_reg_and_indexed_addr_with_8bitoffset(
-        &mut self,
-        mem: &mut Memory,
-        ins: u8,
-    ) {
-        let (low_reg, high_reg) = self.get_index_from_0x40_0x7f_pattern(ins);
-
-        let mem_addr = self.consume_byte_and_get_cummulative_offset(mem, low_reg);
-        let mem_val = self.read_word_from_u20(mem, mem_addr);
-
-        let reg_val = self.get_16bit_register_by_index(high_reg);
-        let res = mem_val & reg_val;
-        self.set_test_ins_flags_from_16bit_res(res);
-    }
-
-    fn execute_test_8bit_reg_and_indexed_addr_with_8bitoffset(
-        &mut self,
-        mem: &mut Memory,
-        ins: u8,
-    ) {
-        let (low_reg, high_reg) = self.get_index_from_0x40_0x7f_pattern(ins);
-
-        let mem_addr = self.consume_byte_and_get_cummulative_offset(mem, low_reg);
-        let mem_val = self.read_byte_from_u20(mem, mem_addr);
-
-        let reg_val = self.get_8bit_register_by_index(high_reg);
-        let res = mem_val & reg_val;
-        self.set_test_ins_flags_from_8bit_res(res);
-    }
-
-    fn execute_test_16bit_reg_and_indexed_addr_with_16bitoffset(
-        &mut self,
-        mem: &mut Memory,
-        ins: u8,
-    ) {
-        let (low_reg, high_reg) = self.get_index_from_0x80_0xbf_pattern(ins);
-
-        let mem_addr = self.consume_word_and_get_cummulative_offset(mem, low_reg);
-        let mem_val = self.read_word_from_u20(mem, mem_addr);
-
-        let reg_val = self.get_16bit_register_by_index(high_reg);
-        let res = mem_val & reg_val;
-        self.set_test_ins_flags_from_16bit_res(res);
-    }
-
-    fn execute_test_8bit_reg_and_indexed_addr_with_16bitoffset(
-        &mut self,
-        mem: &mut Memory,
-        ins: u8,
-    ) {
-        let (low_reg, high_reg) = self.get_index_from_0x80_0xbf_pattern(ins);
-
-        let mem_addr = self.consume_word_and_get_cummulative_offset(mem, low_reg);
-        let mem_val = self.read_byte_from_u20(mem, mem_addr);
-
-        let reg_val = self.get_8bit_register_by_index(high_reg);
-        let res = mem_val & reg_val;
         self.set_test_ins_flags_from_8bit_res(res);
     }
 
