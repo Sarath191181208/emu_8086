@@ -348,11 +348,9 @@ impl CPU {
                     0x06 => self.add_direct_address_16bit_val_immediate_value(mem, opcode),
                     0x2E => self.sub_direct_address_16bit_val_immediate_value(mem, opcode),
                     0xC0..=0xC7 => self.execute_add_reg_immediate_word(mem, opcode),
+                    0xE0..=0xE7 => self.execute_and_16bit_reg_and_number(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
-                    _ => unimplemented!(
-                        "Unimplemented opcode: {:X} for operation 0x81 | 0x83",
-                        opcode
-                    ),
+                    _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
 

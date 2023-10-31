@@ -35,6 +35,20 @@ impl CPU {
         self.set_ax(res);
     }
 
+    pub(in crate::cpu) fn execute_and_16bit_reg_and_number(&mut self, mem: &mut Memory, ins: u8) {
+        let is_num_u8 = ins == 0x83;
+        let ins = self.consume_instruction(mem);
+        let reg_idx = ins - 0xE0;
+        let num = if is_num_u8 {
+            self.consume_byte(mem) as u16
+        } else {
+            self.consume_word(mem)
+        };
+        let res = self.get_16bit_register_by_index(reg_idx) & num;
+        self.set_and_ins_flags_from_16bit_res(res);
+        self.set_16bit_register_by_index(reg_idx, res);
+    }
+
     fn set_and_ins_flags_from_16bit_res(&mut self, res: u16) {
         self.carry_flag = false;
         self.overflow_flag = false;
@@ -149,5 +163,24 @@ mod and_ins_exec_tests {
         let (cpu, _) = run_code(code, 2);
         assert_eq!(cpu.ax, 0x0F0F);
         assert_eq!(cpu.pairity_flag, true);
+    }
+
+    #[test]
+    fn and_reg_and_number(){
+        let code = "
+        mov bx, 0xF0F
+        and bx, 0x0F0F
+
+        mov cx, 0xF0F
+        and cx, 0x0F
+
+        mov dx, 0x91
+        and dx, 0x0F0F
+        "; 
+        let (cpu, _) = run_code(code, 6);
+        assert_eq!(cpu.bx, 0xF0F);
+        assert_eq!(cpu.cx, 0x0F);
+        assert_eq!(cpu.dx, 0x0001);
+        assert_eq!(cpu.get_flags_as_binary(), 0b00)
     }
 }
