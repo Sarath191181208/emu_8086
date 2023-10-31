@@ -3,8 +3,8 @@ use crate::{
         compilation_error::CompilationError,
         tokenized_line::TokenizedLine,
         tokens::{
-            registers16bit::Registers16bit, registers8bit::Registers8bit, Assembly8086Tokens,
-            SignedU16, Token, indexed_addressing_types::IndexedAddressingTypes,
+            indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
+            registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
         types_structs::{
             ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType,
@@ -236,26 +236,20 @@ pub(in crate::compiler::parsers) fn unimplemented_instruction_addressing_mode(
     )
 }
 
-impl IndexedAddressingTypes{
-    pub(super) fn get_index_addr_as_idx(&self, token: &Token) -> Result<u8, CompilationError>{
-        match self.get_as_idx(){
+impl IndexedAddressingTypes {
+    pub(super) fn get_index_addr_as_idx(&self, token: &Token) -> Result<u8, CompilationError> {
+        match self.get_as_idx() {
             Ok(idx) => Ok(idx),
-            Err(err) => Err(CompilationError::error_with_token(
-                token,
-                err,
-            )),
+            Err(err) => Err(CompilationError::error_with_token(token, err)),
         }
     }
 }
 
-impl Registers16bit{
-    pub(super) fn get_index_or_err(&self, token: &Token) -> Result<u8, CompilationError>{
-        match self.get_as_idx(){
+impl Registers16bit {
+    pub(super) fn get_index_or_err(&self, token: &Token) -> Result<u8, CompilationError> {
+        match self.get_as_idx() {
             Ok(idx) => Ok(idx),
-            Err(err) => Err(CompilationError::error_with_token(
-                token,
-                err,
-            )),
+            Err(err) => Err(CompilationError::error_with_token(token, err)),
         }
     }
 }

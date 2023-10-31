@@ -117,11 +117,11 @@ pub(crate) enum AddressingMode {
         num: u8,
     },
 
-    IndexedAddressingAndRegister{
+    IndexedAddressingAndRegister {
         high_token: Token,
         low_token: Token,
         register_type: Registers16bit,
-        addr_type: IndexedAddressingTypes
+        addr_type: IndexedAddressingTypes,
     },
 }
 
@@ -412,7 +412,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                         high_token: compact_high_token,
                         low_token: low_token.clone(),
                         register_type: reg.clone(),
-                        addr_type: indexed_addressing_type.clone()
+                        addr_type: indexed_addressing_type.clone(),
                     })
                 }
 
@@ -423,7 +423,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                         ins, &low_token.token_type
                     ),
                 )),
-            } 
+            }
         }
 
         Assembly8086Tokens::ByteIndexedAddressing(IndexedAddressingTypes::Offset(offset)) => {

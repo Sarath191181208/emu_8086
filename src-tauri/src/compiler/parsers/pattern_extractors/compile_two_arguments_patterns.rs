@@ -1,5 +1,3 @@
-
-
 use crate::{
     compiler::{
         compilation_error::CompilationError,
@@ -8,16 +6,14 @@ use crate::{
             get_idx_from_token, get_index_addr_as_idx, push_instruction,
         },
         tokens::{
-            indexed_addressing_types::IndexedAddressingTypes, registers8bit::Registers8bit,
-            Assembly8086Tokens, SignedU16, Token, registers16bit::Registers16bit,
+            indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
+            registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
         },
         types_structs::CompiledBytesReference,
     },
     convert_and_push_instructions,
     utils::Either,
 };
-
-
 
 fn parse_reg_and_indexed_reg_without_offset(
     high_reg_idx: u8,
