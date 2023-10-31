@@ -15,9 +15,9 @@ pub mod out_ins;
 pub mod pop;
 pub mod push;
 
+pub mod and;
 pub mod ret;
 pub mod test_ins;
-pub mod and;
 pub mod test_macro;
 
 pub(in crate::cpu::instructions) mod utils;

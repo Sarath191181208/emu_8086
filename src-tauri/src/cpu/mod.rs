@@ -282,6 +282,9 @@ impl CPU {
             // POP DS
             0x1F => self.execute_pop_ds(mem),
 
+            // AND 16bit Register, 16bit Register/Memory
+            0x23 => self.execute_and_16bit_reg(mem),
+
             // SUB [0x1234], AL
             0x28 => self.execute_sub_direct_addr_8bit_register(mem),
 

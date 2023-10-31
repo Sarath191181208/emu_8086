@@ -5,20 +5,19 @@ use crate::{
 };
 
 impl CPU {
-
-    pub (in super) fn set_negative_flag_from_16bit_res(&mut self, res: u16) {
+    pub(super) fn set_negative_flag_from_16bit_res(&mut self, res: u16) {
         self.negative_flag = res & 0x8000 != 0;
     }
 
-    pub (in super) fn set_negative_flag_from_8bit_res(&mut self, res: u8) {
+    pub(super) fn set_negative_flag_from_8bit_res(&mut self, res: u8) {
         self.negative_flag = res & 0x80 != 0;
     }
 
-    pub (in super) fn set_pairity_flag_from_16bit_res(&mut self, res: u16) {
+    pub(super) fn set_pairity_flag_from_16bit_res(&mut self, res: u16) {
         self.pairity_flag = ((res & 0xFF) as u8).count_ones() % 2 == 0;
     }
 
-    pub (in super) fn set_pairity_flag_from_8bit_res(&mut self, res: u8) {
+    pub(super) fn set_pairity_flag_from_8bit_res(&mut self, res: u8) {
         self.pairity_flag = res.count_ones() % 2 == 0;
     }
 
@@ -129,7 +128,7 @@ impl CPU {
         // For example: MOV AX, [0x1234] | MOV AX, [BX+SI] | MOV AX, [BX] | MOV AX, [0x1234] it calculates the address and gets the value from the memory
         // and executes the exec_fn with the values of the register and the memory value
         // If the function returns a value it sets the register to that value
- 
+
         let ins = self.consume_instruction(mem);
         let (res, reg_idx) = match ins {
             0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
@@ -191,7 +190,7 @@ impl CPU {
         let ins = self.consume_instruction(mem);
         let (res, reg_idx): (Option<u16>, u8) = match ins {
             0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
-                let reg_idx = ins / 0x06 -1 ;
+                let reg_idx = ins / 0x06 - 1;
                 let addr = self.consume_word(mem);
                 let val = self.read_word_from_pointer(mem, addr);
                 let reg_val = self.get_16bit_register_by_index(reg_idx);
@@ -225,7 +224,7 @@ impl CPU {
             0xC0..=0xFF => {
                 let (low_reg, reg_idx) = self.get_index_from_c0_ff_pattern(ins);
                 let reg_val = self.get_16bit_register_by_index(reg_idx % 8);
-                let low_reg_val = self.get_16bit_register_by_index(low_reg  % 8);
+                let low_reg_val = self.get_16bit_register_by_index(low_reg % 8);
                 let res = exec_fn(self, reg_val, low_reg_val);
                 (res, reg_idx)
             }
