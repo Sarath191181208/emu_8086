@@ -336,6 +336,7 @@ impl CPU {
                     0x06 => self.add_direct_address_8bit_val_immediate_value(mem),
                     0x2E => self.sub_direct_address_8bit_val_immediate_value(mem),
                     0xC0..=0xC7 => self.execute_add_immediate_byte(mem),
+                    0xE0..=0xE7 => self.execute_and_8bit_reg_and_number(mem),
                     0xE8..=0xEF => self.execute_sub_immediate_byte(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x80", opcode),
                 }
