@@ -1,5 +1,6 @@
 import React from "react";
 import CodeBlock from "@theme/CodeBlock";
+import Admonition from "@theme/Admonition";
 
 interface AddressingModeProps {
   instructionName: string;
@@ -193,7 +194,7 @@ export function IndirectMemoryAndImmediateAddressing(
 ) {
   // not supported yet
   return (
-    <>
+    <Admonition type="danger" title="Warning">
       <p>
         This is a mode in which the operand is specified as a memory location
         while the other operand is specified as a constant. The first operand is
@@ -208,7 +209,7 @@ ${props.instructionName} [BX+SI+10h], 0FFh
 ${props.instructionName} [BX+SI+100h], 0FFh
 `}
       </CodeBlock>
-    </>
+      </Admonition>
   );
 }
 
