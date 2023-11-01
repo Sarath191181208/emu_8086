@@ -21,11 +21,7 @@ impl CPU {
 
 #[cfg(test)]
 mod sub_16bit_register_addressing {
-    use crate::{
-        cpu::{instructions::test_macro::run_code, CPU},
-        generate_test,
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     // sub ax, cx
     #[test]
@@ -41,7 +37,7 @@ mod sub_16bit_register_addressing {
     }
 
     #[test]
-    fn test_sub_bx_dx_overflow(){
+    fn test_sub_bx_dx_overflow() {
         let code = "
         MOV BX, 0x00
         mov DX, 0x13 
@@ -53,7 +49,7 @@ mod sub_16bit_register_addressing {
     }
 
     #[test]
-    fn test_sub_sp_bp(){
+    fn test_sub_sp_bp() {
         let code = "
         MOV SP, 0xF000
         mov BP, 0x0013
@@ -67,11 +63,10 @@ mod sub_16bit_register_addressing {
 
 #[cfg(test)]
 mod sub_8bit_register_addressing {
-    use crate::{cpu::{CPU, instructions::test_macro::run_code}, generate_test, memory::Memory};
-
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
-    fn test_sub_al_cl(){
+    fn test_sub_al_cl() {
         let code = "
         MOV AL, 0x0F
         MOV CL, 0x13
@@ -83,7 +78,7 @@ mod sub_8bit_register_addressing {
     }
 
     #[test]
-    fn test_sub_bl_dl_overflow(){
+    fn test_sub_bl_dl_overflow() {
         let code = "
         MOV BL, 0xF0
         MOV DL, 0x13
