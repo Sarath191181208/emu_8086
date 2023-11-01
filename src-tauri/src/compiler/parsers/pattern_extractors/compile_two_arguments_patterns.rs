@@ -221,7 +221,7 @@ fn parse_index_addr_and_reg_idx(
         return Ok(());
     }
 
-    let addr_type_idx = idx_addr_type.get_index_addr_as_idx(high_token)?;
+    let addr_type_idx = idx_addr_type.get_index_or_err(high_token)?;
 
     match offset {
         Some(offset) => {

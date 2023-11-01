@@ -237,7 +237,7 @@ pub(super) fn get_index_addr_as_idx(token: &Token) -> Result<u8, CompilationErro
 // }
 
 impl IndexedAddressingTypes {
-    pub(super) fn get_index_addr_as_idx(&self, token: &Token) -> Result<u8, CompilationError> {
+    pub(super) fn get_index_or_err(&self, token: &Token) -> Result<u8, CompilationError> {
         match self.get_as_idx() {
             Ok(idx) => Ok(idx),
             Err(err) => Err(CompilationError::error_with_token(token, err)),
