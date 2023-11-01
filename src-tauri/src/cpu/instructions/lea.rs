@@ -1,4 +1,4 @@
-use crate::{cpu::CPU, memory::Memory, consts::U20};
+use crate::{consts::U20, cpu::CPU, memory::Memory};
 
 impl CPU {
     pub(in crate::cpu) fn exec_lea_reg_mem(&mut self, mem: &mut Memory) {
@@ -11,20 +11,23 @@ impl CPU {
             }
             0x00..=0x3F => {
                 let (indexed_addr_idx, reg_idx) = self.get_index_from_0x00_0x3f_pattern(ins);
-                let mem_addr = self.get_absolute_offset_from_index_of_indexed_registers(indexed_addr_idx);
+                let mem_addr =
+                    self.get_absolute_offset_from_index_of_indexed_registers(indexed_addr_idx);
                 let (_, mem_addr) = mem_addr.as_segment_offset();
                 self.set_16bit_register_by_index(reg_idx, mem_addr);
             }
             0x40..=0x7F => {
                 let (indexed_addr_idx, reg_idx) = self.get_index_from_0x40_0x7f_pattern(ins);
-                let mem_addr = self.get_absolute_offset_from_index_of_indexed_registers(indexed_addr_idx);
+                let mem_addr =
+                    self.get_absolute_offset_from_index_of_indexed_registers(indexed_addr_idx);
                 let offset_8bit = self.consume_byte(mem);
                 let (_, mem_addr) = (mem_addr + U20::from(offset_8bit)).as_segment_offset();
                 self.set_16bit_register_by_index(reg_idx, mem_addr);
             }
             0x80..=0xBF => {
                 let (indexed_addr_idx, reg_idx) = self.get_index_from_0x80_0xbf_pattern(ins);
-                let mem_addr = self.get_absolute_offset_from_index_of_indexed_registers(indexed_addr_idx);
+                let mem_addr =
+                    self.get_absolute_offset_from_index_of_indexed_registers(indexed_addr_idx);
                 let offset_16bit = self.consume_word(mem);
                 let (_, mem_addr) = (mem_addr + U20::from(offset_16bit)).as_segment_offset();
                 self.set_16bit_register_by_index(reg_idx, mem_addr);
@@ -39,11 +42,11 @@ impl CPU {
 }
 
 #[cfg(test)]
-mod lea_exec_tests{
+mod lea_exec_tests {
     use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
-    fn test_reg_mem_tests(){
+    fn test_reg_mem_tests() {
         let code = "
         mov bx, 0x100
         mov si, 0x02 
@@ -54,7 +57,7 @@ mod lea_exec_tests{
     }
 
     #[test]
-    fn test_reg_mem_tests_2(){
+    fn test_reg_mem_tests_2() {
         let code = "
         mov bx, 0x100
         mov si, 0x02 
@@ -65,7 +68,7 @@ mod lea_exec_tests{
     }
 
     #[test]
-    fn test_reg_mem_tests_3(){
+    fn test_reg_mem_tests_3() {
         let code = "
         mov bx, 0xffff
         mov si, 0xffff

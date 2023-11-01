@@ -70,8 +70,11 @@ impl CPU {
         }
     }
 
-    pub(in crate::cpu) fn get_absolute_offset_from_index_of_indexed_registers(&self, index: u8) -> U20{
-        match index{
+    pub(in crate::cpu) fn get_absolute_offset_from_index_of_indexed_registers(
+        &self,
+        index: u8,
+    ) -> U20 {
+        match index {
             0x00 => U20::from(sum!(self.bx, self.source_index)),
             0x01 => U20::from(sum!(self.bx, self.destination_index)),
             0x02 => U20::from(sum!(self.base_pointer, self.source_index)),
