@@ -268,6 +268,24 @@ impl CPU {
             // POP ES
             0x07 => self.execute_pop_es(mem),
 
+            // OR b.mem, reg/mem
+            0x08 => self.execute_or_byte_addr_as_first_operand(mem),
+
+            // OR w.mem, reg/mem
+            0x09 => self.execute_or_word_addr_as_first_operand(mem),
+
+            // OR 8bit register, reg/mem
+            0x0A => self.execute_or_8bit_reg(mem),
+
+            // OR 16bit register, reg/mem
+            0x0B => self.execute_or_16bit_reg(mem),
+
+            // OR AL, 0x12 i.e immediate addressing
+            0x0C => self.or_al_in_immediate_addressing(mem),
+
+            // OR AX, 0x1234 i.e immediate addressing
+            0x0D => self.or_ax_in_immediate_addressing(mem),
+
             // PUSH CS
             0x0E => self.execute_push_cs(mem),
             0x0F => self.execute_unknown_ins(mem, opcode),
@@ -340,9 +358,11 @@ impl CPU {
                 let opcode = self.peek_instruction(mem);
                 match opcode {
                     0x06 => self.add_direct_address_8bit_val_immediate_value(mem),
+                    0x0E => self.execute_or_byte_addr_and_number(mem),
                     0x26 => self.execute_and_byte_addr_and_number(mem),
                     0x2E => self.sub_direct_address_8bit_val_immediate_value(mem),
                     0xC0..=0xC7 => self.execute_add_immediate_byte(mem),
+                    0xC8..=0xCF => self.execute_or_8bit_reg_and_number(mem),
                     0xE0..=0xE7 => self.execute_and_8bit_reg_and_number(mem),
                     0xE8..=0xEF => self.execute_sub_immediate_byte(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x80", opcode),
@@ -354,9 +374,11 @@ impl CPU {
                 let _opcode = self.peek_instruction(mem);
                 match _opcode {
                     0x06 => self.add_direct_address_16bit_val_immediate_value(mem, opcode),
+                    0x0E => self.execute_or_word_addr_and_number(mem, opcode),
                     0x26 => self.execute_and_word_addr_and_number(mem, opcode),
                     0x2E => self.sub_direct_address_16bit_val_immediate_value(mem, opcode),
                     0xC0..=0xC7 => self.execute_add_reg_immediate_word(mem, opcode),
+                    0xC8..=0xCF => self.execute_or_16bit_reg_and_number(mem, opcode),
                     0xE0..=0xE7 => self.execute_and_16bit_reg_and_number(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
                     _ => self.execute_unknown_ins(mem, opcode),
