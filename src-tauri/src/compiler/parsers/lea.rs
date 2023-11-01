@@ -77,30 +77,30 @@ pub(crate) fn parse_lea(
         Assembly8086Tokens::Register16bit(reg) => {
             let reg_idx = reg.get_index_or_err(high_token)?;
             match &low_token.token_type {
+                Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::Offset(offset)) => {
+                    let mem_addr = offset.as_u16().to_le_bytes().to_vec();
+                    convert_and_push_instructions!(
+                        compiled_bytes,
+                        compiled_bytes_ref,
+                        (
+                            token => vec![0xB8 + reg_idx],
+                            high_token => mem_addr
+                        )
+                    );
+                    Ok(tokenized_line.len())
+                }
                 Assembly8086Tokens::IndexedAddressing(idx_addr) => {
                     // Optimizing for the case where the offset is a constant
-                    if let IndexedAddressingTypes::Offset(off) = idx_addr {
-                        let mem_addr = off.as_u16().to_le_bytes().to_vec();
-                        convert_and_push_instructions!(
-                            compiled_bytes,
-                            compiled_bytes_ref,
-                            (
-                                token => vec![0xB8 + reg_idx],
-                                high_token => mem_addr
-                            )
-                        );
-                    } else {
-                        parse_indexed_addr_and_reg(
-                            0x8D,
-                            token,
-                            high_token,
-                            low_token,
-                            reg.clone(),
-                            idx_addr.clone(),
-                            compiled_bytes,
-                            compiled_bytes_ref,
-                        )?;
-                    }
+                    parse_indexed_addr_and_reg(
+                        0x8D,
+                        token,
+                        high_token,
+                        low_token,
+                        reg.clone(),
+                        idx_addr.clone(),
+                        compiled_bytes,
+                        compiled_bytes_ref,
+                    )?;
 
                     Ok(tokenized_line.len())
                 }
@@ -129,10 +129,18 @@ mod lea_compilation_tests {
     compile_and_compare_ins!(
         lea_1,
         "
+        org 100h 
+        .data 
+        var dw 0x101
+        code: 
         lea ax, [bx+si+0x1234]
         lea cx, [si+0x10]
         lea si, [0x100]
+        lea di, var
         ",
-        vec![0x8D, 0x80, 0x34, 0x12, 0x8D, 0x4C, 0x10, 0xBE, 0x00, 0x01]
+        vec![
+            0xEB, 0x02, 0x01, 0x01, 0x8D, 0x80, 0x34, 0x12, 0x8D, 0x4C, 0x10, 0xBE, 0x00, 0x01,
+            0xBF, 0x02, 0x01
+        ]
     );
 }
