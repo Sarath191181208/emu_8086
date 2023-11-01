@@ -9,7 +9,7 @@
 /* Tooltip text */
 .tooltiptext, .bottomTooltiptext {
   visibility: hidden;
-  width: 120px;
+  width: 150px;
   background-color: #555;
   color: #fff;
   text-align: center;
@@ -20,7 +20,7 @@
   position: absolute;
   z-index: 1;
   left: 50%;
-  margin-left: -60px;
+  margin-left: -75px;
 
   /* Fade in tooltip */
   opacity: 0;
@@ -34,7 +34,7 @@ bottom: 125%;
 }
 
 /* Tooltip arrow */
-.tooltiptext::after, .bottomTooltiptext::after {
+.tooltiptext::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -43,6 +43,18 @@ bottom: 125%;
   border-width: 5px;
   border-style: solid;
   border-color: #555 transparent transparent transparent;
+}
+
+.bottomTooltiptext::after{
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #555 transparent;
+
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */

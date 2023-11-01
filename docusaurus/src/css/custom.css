@@ -64,3 +64,8 @@
   left: 0;
 
 }
+
+.flags_table{
+  overflow-y: hidden;
+  display: inline;
+}
