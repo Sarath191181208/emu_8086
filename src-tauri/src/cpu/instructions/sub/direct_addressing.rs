@@ -78,137 +78,118 @@ impl CPU {
 #[cfg(test)]
 mod test_add_direct_address {
     use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
+        cpu::{
+            instructions::test_macro::{compile_and_test_str, run_code},
+            CPU,
+        },
         memory::Memory,
     };
 
     #[test]
     fn test_ax_var() {
-        compile_and_test_str(
-            "
-            org 0x100
-            .data 
-            var dw 0x1234
-            code: 
-            SUB AX, var
-            ",
-            2,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0xEDCC);
-                assert_eq!(cpu.get_flags_as_binary(), 0b0011_0101)
-            },
-        );
+        let code = "
+        org 0x100
+        .data 
+        var dw 0x1234
+        code: 
+        SUB AX, var
+    ";
+        let (cpu, _) = run_code(code, 2);
+
+        assert_eq!(cpu.ax, 0xEDCC);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0011_0101);
     }
 
     #[test]
-
     fn test_var_sp() {
-        compile_and_test_str(
-            "
-            org 0x100
-            .data 
-            var dw 0x1234
-            code: 
-            mov sp, 0x01
-            SUB VAR, SP
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x1233);
-                assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000)
-            },
-        );
+        let code = "
+        org 0x100
+        .data 
+        var dw 0x1234
+        code: 
+        mov sp, 0x01
+        SUB VAR, SP
+    ";
+        let (cpu, mem) = run_code(code, 3);
+
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x1233);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }
 
     #[test]
     fn test_var_0x1000() {
-        compile_and_test_str(
-            "
+        let code = "
         org 0x100
         .data 
         var dw 0x1234
         code: 
         SUB var, 0x1000
-        ",
-            2,
-            |cpu: &CPU, mem: &Memory| {
-                assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x0234);
-                assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000)
-            },
-        );
+    ";
+        let (cpu, mem) = run_code(code, 2);
+
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x0234);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
     }
 
     #[test]
     fn test_var_0x10() {
-        compile_and_test_str(
-            "
+        let code = "
         org 0x100
         .data 
         var dw 0x1234
         code: 
         SUB var, 0x10
-        ",
-            2,
-            |cpu: &CPU, mem: &Memory| {
-                assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x1224);
-                assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000)
-            },
-        );
+    ";
+        let (cpu, mem) = run_code(code, 2);
+
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x1224);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }
 
     #[test]
     fn test_cl_var() {
-        compile_and_test_str(
-            "
-            org 0x100
-            .data 
-            var db 0x12
-            code: 
-            MOV CL, 0x10
-            SUB CL, var
-            ",
-            3,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.cx, 0x00FE);
-                assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101)
-            },
-        );
+        let code = "
+        org 0x100
+        .data 
+        var db 0x12
+        code: 
+        MOV CL, 0x10
+        SUB CL, var
+    ";
+        let (cpu, _) = run_code(code, 3);
+
+        assert_eq!(cpu.cx, 0x00FE);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
     }
 
     #[test]
     fn test_var_dl() {
-        compile_and_test_str(
-            "
-            org 0x100
-            .data 
-            var db 0x12
-            code: 
-            MOV DL, 0x10
-            SUB var, DL
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0x02);
-                assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000)
-            },
-        );
+        let code = "
+        org 0x100
+        .data 
+        var db 0x12
+        code: 
+        MOV DL, 0x10
+        SUB var, DL
+    ";
+        let (cpu, mem) = run_code(code, 3);
+
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x02);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
     }
 
     #[test]
     fn test_var_0x20() {
-        compile_and_test_str(
-            "
-            org 0x100
-            .data 
-            var db 0x12
-            code: 
-            SUB var, 0x20
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                assert_eq!(cpu.read_byte_from_pointer(mem, 0x102), 0xF2);
-                assert_eq!(cpu.get_flags_as_binary(), 0b0000_0101)
-            },
-        );
+        let code = "
+        org 0x100
+        .data 
+        var db 0x12
+        code: 
+        SUB var, 0x20
+    ";
+        let (cpu, mem) = run_code(code, 3);
+
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0xF2);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0000_0101);
     }
 }
