@@ -70,6 +70,20 @@ impl CPU {
         }
     }
 
+    pub(in crate::cpu) fn get_absolute_offset_from_index_of_indexed_registers(&self, index: u8) -> U20{
+        match index{
+            0x00 => U20::from(sum!(self.bx, self.source_index)),
+            0x01 => U20::from(sum!(self.bx, self.destination_index)),
+            0x02 => U20::from(sum!(self.base_pointer, self.source_index)),
+            0x03 => U20::from(sum!(self.base_pointer, self.destination_index)),
+            0x04 => U20::from(self.source_index),
+            0x05 => U20::from(self.destination_index),
+            0x06 => U20::from(self.base_pointer),
+            0x07 => U20::from(self.bx),
+            _ => panic!("Invalid register index! This can't happen!"),
+        }
+    }
+
     pub(in crate::cpu) fn get_offset_from_index_of_indexed_registers(&self, index: u8) -> U20 {
         let ds = (self.data_segment * 0x10) as u32;
         match index {
