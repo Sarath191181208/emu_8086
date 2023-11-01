@@ -425,7 +425,7 @@ impl CPU {
             // RET
             0xC3 => self.execute_ret(mem),
 
-            // LES 16bit register, mem 
+            // LES 16bit register, mem
             0xC4 => self.exec_les_16_bit_reg_mem(mem),
 
             // MOV [0x102], 0x12

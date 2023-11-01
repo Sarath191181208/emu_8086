@@ -1,16 +1,12 @@
 use std::collections::HashMap;
 
-use crate::{
-    compiler::{
-        compilation_error::CompilationError,
-        parsers::utils::push_instruction,
-        suggestions_utils::get_all_registers_and_variable_suggestions,
-        tokenized_line::TokenizedLine,
-        tokens::{indexed_addressing_types::IndexedAddressingTypes, Assembly8086Tokens, Token},
-        types_structs::{CompiledBytesReference, VariableAddressMap, VariableReferenceMap},
-        CompiledLineLabelRef,
-    },
-    convert_and_push_instructions,
+use crate::compiler::{
+    compilation_error::CompilationError,
+    suggestions_utils::get_all_registers_and_variable_suggestions,
+    tokenized_line::TokenizedLine,
+    tokens::{Assembly8086Tokens, Token},
+    types_structs::{CompiledBytesReference, VariableAddressMap, VariableReferenceMap},
+    CompiledLineLabelRef,
 };
 
 use super::{
@@ -126,11 +122,8 @@ mod les_compilation_tests {
         les di, var
         ",
         vec![
-            0xEB, 0x02, 0x01, 0x01, 
-            0xC4, 0x80, 0x34, 0x12,
-            0xC4, 0x4c, 0x10, 
-            0xC4, 0x36, 0x00, 0x01, 
-            0xc4, 0x3E, 0x02, 0x01
+            0xEB, 0x02, 0x01, 0x01, 0xC4, 0x80, 0x34, 0x12, 0xC4, 0x4c, 0x10, 0xC4, 0x36, 0x00,
+            0x01, 0xc4, 0x3E, 0x02, 0x01
         ]
     );
 }
