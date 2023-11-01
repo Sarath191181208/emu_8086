@@ -7,6 +7,7 @@ pub mod in_ins;
 pub mod inc;
 pub mod jmp;
 pub mod lea;
+pub mod les;
 pub mod loop_ins;
 pub mod mov;
 pub mod mul;
