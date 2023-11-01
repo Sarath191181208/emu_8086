@@ -86,96 +86,87 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
     fn test_pop_16bit_reg_and_segments() {
-        compile_and_test_str(
-            "
-            org 100h
-            code:
+        let code = "
+        org 100h
+        code:
 
-            push 0x109
-            push 0x108
-            push 0x107
+        push 0x109
+        push 0x108
+        push 0x107
 
-            push 0x106
-            push 0x105
-            push 0x104
-            push 0x103 
-            push 0x102
-            push 0x101
-            push 0x100
+        push 0x106
+        push 0x105
+        push 0x104
+        push 0x103 
+        push 0x102
+        push 0x101
+        push 0x100
 
-            pop ax
-            pop bx
-            pop cx
-            pop dx
-            pop bp
-            pop si 
-            pop di 
+        pop ax
+        pop bx
+        pop cx
+        pop dx
+        pop bp
+        pop si 
+        pop di 
 
-            pop es
-            pop ss
-            pop ds
-            ",
-            22,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x100);
-                assert_eq!(cpu.bx, 0x101);
-                assert_eq!(cpu.cx, 0x102);
-                assert_eq!(cpu.dx, 0x103);
-                assert_eq!(cpu.base_pointer, 0x104);
-                assert_eq!(cpu.source_index, 0x105);
-                assert_eq!(cpu.destination_index, 0x106);
+        pop es
+        pop ss
+        pop ds
+    ";
+        let (cpu, _) = run_code(code, 22);
 
-                assert_eq!(cpu.extra_segment, 0x107);
-                assert_eq!(cpu.stack_segment, 0x108);
-                assert_eq!(cpu.data_segment, 0x109);
-            },
-        );
+        assert_eq!(cpu.ax, 0x100);
+        assert_eq!(cpu.bx, 0x101);
+        assert_eq!(cpu.cx, 0x102);
+        assert_eq!(cpu.dx, 0x103);
+        assert_eq!(cpu.base_pointer, 0x104);
+        assert_eq!(cpu.source_index, 0x105);
+        assert_eq!(cpu.destination_index, 0x106);
+
+        assert_eq!(cpu.extra_segment, 0x107);
+        assert_eq!(cpu.stack_segment, 0x108);
+        assert_eq!(cpu.data_segment, 0x109);
     }
 
     #[test]
     fn pop_indexed_addressing() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data
-            var  dw 0x1234
-            var2 dw 0x2345
-            var3 dw 0x3456
-            var4 dw 0x4567
+        let code = "
+        org 100h
+        .data
+        var  dw 0x1234
+        var2 dw 0x2345
+        var3 dw 0x3456
+        var4 dw 0x4567
 
-            code:
-            push var
-            push var2
-            push var3
-            push var4
+        code:
+        push var
+        push var2
+        push var3
+        push var4
 
-            mov bx, 0x100
-            mov si, 0x02
-            pop [bx+si] ; var1 = var4
+        mov bx, 0x100
+        mov si, 0x02
+        pop [bx+si] ; var1 = var4
 
-            mov bx, 0x100
-            pop [bx + 0x04] ; var2 = var3
+        mov bx, 0x100
+        pop [bx + 0x04] ; var2 = var3
 
-            mov bx, 0x100
-            pop var3 ; var3 = var2
+        mov bx, 0x100
+        pop var3 ; var3 = var2
 
-            mov bx, 0x08
-            pop [bx + 0x100] ; var4 = var1
-            ",
-            22,
-            |cpu: &CPU, mem: &Memory| {
-                assert_eq!(cpu.read_word_from_pointer(mem, 0x102), 0x4567);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0x104), 0x3456);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0x106), 0x2345);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0x108), 0x1234);
-            },
-        );
+        mov bx, 0x08
+        pop [bx + 0x100] ; var4 = var1
+    ";
+        let (cpu, mem) = run_code(code, 22);
+
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x4567);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x104), 0x3456);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x106), 0x2345);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x108), 0x1234);
     }
 }
