@@ -2,7 +2,7 @@
 - [ ] For same parameter names in macro definitions.
 - [ ] Unused macros.
 ## To support: 
-- [ ] Support execution of `and` ins.
+- [ ] Look into aux flag for `or` ins.
 - [ ] 🐞FIX: jmp to number 
 - [ ] 🐞FIX: not optimizing reg and num in add ins
 - [ ] 🐞FIX:  Running of macros.
@@ -12,6 +12,7 @@
 - [ ] creating a formatter.
 - [ ] Change interrupt flag name to `INTERRUPT_FLAG`.
 - [ ] 🛠️ Refactor:  Make the react ui composable .
+- [x] Support execution of `and` ins.
 - [x] `push` and `pop` for `regs`.    
 - [x] Support offset.
 - [x] Support _ in nums.
