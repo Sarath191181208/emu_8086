@@ -1,0 +1,27 @@
+---
+title: LES
+description: Loads the value in the effective address into the destination register & Loads ES with the next word.
+---
+
+import { RegisterAndMemoryAddressing } from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502
+LES operand1, operand2
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                         |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands**  | The destination operand is a general-purpose register. The source operand is a memory location.                                     |
+| **Operation** | `DEST ← SRC; ES ← SRC+2`                                                                                                            |
+| **Size**      | 2 (to) 6 bytes                                                                                                                      |
+| **Action**    | Performs Memory Indirect Read and puts the value in the memory location into the destination register. Loads ES with the next word. |
+| **Flags**     | None                                                                                                                                |
+
+## Supported Modes 
+
+### Register And Memory 
+<RegisterAndMemoryAddressing  instructionName="LES"  />
