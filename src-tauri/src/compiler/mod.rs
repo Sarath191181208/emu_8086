@@ -37,10 +37,10 @@ use self::{
     },
     parsers::{
         add::parse_add, and::parse_and, call::parse_call, dec::parse_dec, in_ins::parse_in,
-        inc::parse_inc, jmp::parse_jmp, loop_ins::parse_loop, mov::parse_mov, mul::parse_mul,
-        out_ins::parse_out, pattern_extractors::parse_two_arguments_line, pop::parse_pop,
-        push::parse_push, sub::parse_sub, test_ins::parse_test, utils::iterate_with_seperator,
-        var::parse_var_declaration,
+        inc::parse_inc, jmp::parse_jmp, lea::parse_lea, loop_ins::parse_loop, mov::parse_mov,
+        mul::parse_mul, out_ins::parse_out, pattern_extractors::parse_two_arguments_line,
+        pop::parse_pop, push::parse_push, sub::parse_sub, test_ins::parse_test,
+        utils::iterate_with_seperator, var::parse_var_declaration,
     },
     tokenized_line::TokenizedLine,
     tokens::{
@@ -332,6 +332,23 @@ fn compile(
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LOOP", 1)?;
+                Ok(compiled_line)
+            }
+
+            Instructions::Lea => {
+                let i = parse_lea(
+                    i,
+                    &tokenized_line,
+                    is_org_defined,
+                    &mut compiled_line.label_idx_map,
+                    variable_ref_map,
+                    variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                    compiled_line_offset_maps,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                )?;
+
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LEA", 2)?;
                 Ok(compiled_line)
             }
 
