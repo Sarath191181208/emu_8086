@@ -205,6 +205,14 @@ export function GenerateCompilationTable(props: AddressingModeTableProps) {
           <td>2</td>
           <td>{`${props.instructionName} AX, [BX]`}</td>
         </tr>
+        <tr>
+          <td>reg16, direct mem</td>
+          <td>
+            {props.reg_16bit_and_anything_ins} {"0x06 | reg_idx << 3"}
+          </td>
+          <td>4</td>
+          <td>{`${props.instructionName} DX, [0x100]`}</td>
+        </tr>
       </tbody>
     </table>
   );
