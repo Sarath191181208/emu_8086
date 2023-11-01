@@ -25,21 +25,6 @@ impl CPU {
         self.set_8bit_register_by_index(reg_index, result);
     }
 
-    pub(in crate::cpu) fn execute_add_address_and_16bit_register(&mut self, mem: &mut Memory) {
-        // get the register index i.e ax, bx, cx, dx -> 0, 1, 2, 3
-        let ins = self.consume_instruction(mem);
-        let reg_idx = self.get_index_from_06_e6_pattern(ins);
-        let reg = self.get_16bit_register_by_index(reg_idx);
-        // get the address of the data `
-        let data_addr = self.consume_word(mem);
-        // get the data from the memory
-        let data = self.read_word_from_pointer(mem, data_addr);
-        // add the values with the overflows and set the flags
-        let (result, _) = self.add_16bit_with_overflow_and_set_flags(reg, data);
-        // write the data to the memory
-        self.write_word_from_pointer(mem, data_addr, result);
-    }
-
     pub(in crate::cpu) fn execute_add_address_and_8bit_register(&mut self, mem: &mut Memory) {
         // get the register index i.e ax, bx, cx, dx -> 0, 1, 2, 3
         let ins = self.consume_instruction(mem);

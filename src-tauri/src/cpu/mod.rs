@@ -248,7 +248,7 @@ impl CPU {
             0x00 => self.execute_add_address_and_8bit_register(mem),
 
             // ADD [0x1234], AX
-            0x01 => self.execute_add_address_and_16bit_register(mem),
+            0x01 => self.execute_add_indexed_addr_16bit_register(mem),
 
             // ADD 8bit register, 8bit register
             0x02 => self.execute_add_register(mem),
