@@ -14,6 +14,7 @@ pub(crate) enum Instructions {
     Test,
     Loop,
     Lea,
+    Les,
     Hlt,
     Ret,
 
