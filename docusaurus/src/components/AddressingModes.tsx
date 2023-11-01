@@ -140,7 +140,7 @@ export function RegisterAndMemoryAddressing(props: AddressingModeProps) {
         The second operand might also have an displacement.
       </p>
       <p>Example: </p>
-      <CodeBlock language="asm6502" showLineNumbers={true}>
+      <CodeBlock language="asm6502" showLineNumbers>
         org 100h <br />
         data <br />
         {`    VAR DB 0FFh`} <br />
@@ -160,6 +160,96 @@ export function RegisterAndMemoryAddressing(props: AddressingModeProps) {
         <br />
         {`    ${props.instructionName} DI, [BX+SI+100h] `}
         <br />
+      </CodeBlock>
+    </>
+  );
+}
+
+export function MemoryAndRegisterAddressing(props: AddressingModeProps) {
+  return (
+    <>
+      <p>
+        This is a mode in which the operand is specified as a memory location
+        while the other operand is specified as a register. The first operand is
+        a memory location whose address is contained in a register (or) an
+        offset. The first operand might also have an displacement.
+      </p>
+      <p>Example: </p>
+      <CodeBlock language="asm6502" showLineNumbers>
+        org 100h <br />
+        data <br />
+        {`    VAR DB 0FFh`} <br />
+        {`    VAR2 DW 0Bh`} <br />
+        code: <br />
+        {`    ${props.instructionName} Var, BX `}
+        <br />
+        {`    ${props.instructionName} w.[Var], BX `}
+        <br />
+        {`    ${props.instructionName} w.[Var2], BX `}
+        <br /> <br />
+        {`    ${props.instructionName} [BX], AX `}
+        <br />
+        {`    ${props.instructionName} [BX+SI], DX `}
+        <br />
+        {`    ${props.instructionName} [BX+SI+10h], SP `}
+        <br />
+        {`    ${props.instructionName} [BX+SI+100h], DI `}
+        <br />
+      </CodeBlock>
+    </>
+  );
+}
+
+export function IndirectMemoryAndImmediateAddressing(
+  props: AddressingModeProps
+) {
+  // not supported yet
+  return (
+    <>
+      <p>
+        This is a mode in which the operand is specified as a memory location
+        while the other operand is specified as a constant. The first operand is
+        a memory location whose address is contained in a register (or) an
+        offset. The first operand might also have an displacement.
+      </p>
+      <p>Example: </p>
+      <CodeBlock language="asm6502" showLineNumbers>
+        {`    ${props.instructionName} [BX], 0FFh `}
+        <br />
+        {`    ${props.instructionName} [BX+SI], 0FFh `}
+        <br />
+        {`    ${props.instructionName} [BX+SI+10h], 0FFh `}
+        <br />
+        {`    ${props.instructionName} [BX+SI+100h], 0FFh `}
+        <br />
+      </CodeBlock>
+    </>
+  );
+}
+
+export function DirectMemoryAndImmediateAddressing(props: AddressingModeProps) {
+  return (
+    <>
+      <p>
+        This is a mode in which the operand is specified as a memory location
+        while the other operand is specified as a constant. The first operand is
+        a memory location whose address is specified directly in the
+        instruction.
+      </p>
+      <p>Example: </p>
+      <CodeBlock language="asm6502" showLineNumbers>
+        org 100h <br />
+        data <br />
+        {`    VAR DB 0FFh`} <br />
+        {`    VAR2 DW 0Bh`} <br />
+        code: <br />
+        {`    ${props.instructionName} [Var], 0xFF `}
+        <br />
+        {`    ${props.instructionName} [Var2], 0x100 `}
+        <br />
+        {`    ${props.instructionName} [0x100], 0x100+20 `}
+        <br />
+        {`    ${props.instructionName} [0x100+10h], 0FFh `}
       </CodeBlock>
     </>
   );
