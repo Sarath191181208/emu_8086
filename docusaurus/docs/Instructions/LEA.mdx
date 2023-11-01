@@ -20,6 +20,11 @@ LEA operand1, operand2 ; comment
 | **Action**   | Performs a memory indirect addressing operation. The effective address of the source operand is loaded into the destination register. |
 | **Flags**    | None                                                                                                                                  |
 
+:::info INFO
+For instructions such as `LEA AX, [0x100]` (or) `LEA SP, Var` the assembler will convert the instruction to `MOV AX, 0x100` (or) `MOV SP, Var` respectively.
+This is because the `MOV` instruction is much more efficient than the `LEA` instruction.
+:::
+
 ## Supported Modes 
 
 ### Register And Memory 
