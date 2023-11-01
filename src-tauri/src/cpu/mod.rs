@@ -376,6 +376,9 @@ impl CPU {
             0x8A => self.execute_mov_register_byte(mem),
             0x8B => self.execute_mov_register_word(mem),
 
+            // LEA 16bit reg, mem 
+            0x8D => self.exec_lea_reg_mem(mem),
+
             // POP ...
             0x8F => {
                 let opcode = self.peek_instruction(mem);
