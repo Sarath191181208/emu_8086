@@ -24,6 +24,7 @@ use self::utils::evaluate_ins;
 use super::utils::check_comma;
 
 pub(in crate::compiler) mod compile_first_ins_reg_pattern;
+pub(in crate::compiler) mod compile_tow_args_whole_ins;
 pub(in super::super) mod compile_two_arguments_patterns;
 pub(in super::super) mod offset_label_pattern;
 pub(in crate::compiler) mod utils;
