@@ -13,6 +13,7 @@ pub(crate) enum Instructions {
     Jmp,
     Test,
     Loop,
+    Lea,
     Hlt,
     Ret,
 
