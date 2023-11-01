@@ -307,4 +307,18 @@ mod and_ins_exec_tests {
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x01);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
+
+    #[test]
+    fn and_indexed_addr_mem_reg(){
+        let code = "
+        mov ax, 0x0F0F
+        mov w.[0x102], 0x92
+        mov bx, 0x02
+        and [bx+0x100], ax
+        ";
+
+        let (cpu, mem) = run_code(code, 4);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x02);
+        assert_eq!(cpu.get_flags_as_binary(), 0b00);
+    }
 }
