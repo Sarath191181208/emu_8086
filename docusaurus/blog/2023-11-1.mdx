@@ -7,23 +7,28 @@ authors:
 ---
 
 # Support for memory, reg addressing for 2 operand instructions
-Changes this day : 
+
+Changes this day :
+
 1. Added support for memory addressing for 2 operand instructions
-3. 🐞FIX: `MOV` mem, ax no compiling 
-4. 🐞FIX: `ADD` ax, mem not compiling
-5. ✨ NEW: +compilation of `LEA` ins
-6. ✨ NEW: +execution of `LEA` ins
+2. 🐞FIX: `MOV` mem, ax no compiling
+3. 🐞FIX: `ADD` ax, mem not compiling
+4. ✨ NEW: +compilation of `LEA` ins
+5. ✨ NEW: +execution of `LEA` ins
 
 ## Support for memory, reg addressing for 2 operand instructions
-This is an example instruction 
+
+This is an example instruction
+
 ```asm6502 showLineNumbers
     MOV [0x100], Bx ; This was supported
-    MOV [BX+SI], AX ; Previously This wasn't supported 
+    MOV [BX+SI], AX ; Previously This wasn't supported
 ```
 
-## 🐞FIX: `MOV` mem, ax no compiling 
+## 🐞FIX: `MOV` mem, ax no compiling
 
 The `MOV AX, 0x10 + 0x20` kind of instructions weren't being compiled due to the lexer checking the wrong index for the instruction. This has been fixed in the fowlling way.
+
 ```rust showLineNumbers
                         &low_token => address_bytes.to_vec()
                     )
@@ -37,8 +42,10 @@ The `MOV AX, 0x10 + 0x20` kind of instructions weren't being compiled due to the
         // MOV AX..DI, var
 ```
 
-## 🐞FIX: `ADD` ax, mem not compiling 
+## 🐞FIX: `ADD` ax, mem not compiling
+
 The `ADD AX, [0x100]` kind of instructions weren't being compiled due to the lexer checking the wrong index for the instruction. This has been fixed in the fowlling way.
+
 ```rust showLineNumbers
                         &low_token => address_bytes.to_vec()
                     )
@@ -53,7 +60,9 @@ The `ADD AX, [0x100]` kind of instructions weren't being compiled due to the lex
 ```
 
 ## ✨ NEW: +compilation of `LEA` ins
+
 The `LEA` instruction is used to load the effective address of the source operand into the destination operand. This instruction is used to put the offset address of the source operand in the destination operand. The destination operand is always a register, and the source operand is always a memory operand. The source operand specifies the address of the data. The LEA instruction is useful for accessing table data and executing table lookup operations.
+
 ```asm6502 showLineNumbers
     LEA AX, [0x100] ; AX = 0x100
     LEA AX, [BX+SI] ; AX = BX + SI
@@ -64,8 +73,31 @@ The `LEA` instruction is used to load the effective address of the source operan
 ## ✨ NEW: +execution of `LEA` ins
 
 The algorithm for the execution of the `LEA` instruction is as follows:
+
 1. Fetch the instruction.
 2. Decode the instruction to determine the addressing mode of the source operand.
 3. Calculate the effective address of the source operand.
 4. Load the effective address into the destination register.
 5. Store the result in the destination register.
+
+## ✨ NEW: +compilation of `LES` ins
+
+The `LES` instruction is used to load double word register pair with a far pointer. The `LES` instruction is used to load the segment register and the offset into the destination register pair. The destination operand is always a register, and the source operand is always a memory operand. The source operand specifies the address of the data. The `LES` instruction is useful for accessing table data and executing table lookup operations.
+
+```asm6502 showLineNumbers
+    LES AX, [0x100] ; AX = [0x100], ES = [0x102]
+    LES AX, [BX+SI] ; AX = [BX + SI], ES = [BX + SI + 0x2]
+    LES AX, [BX+SI+0x100] ; AX = [BX + SI + 0x100 ] , ES = [BX + SI + 0x102]
+    LES AX, [BX+SI+0x100+0x200] ; AX = [BX + SI + 0x100 + 0x200], ES = [BX + SI + 0x302]
+```
+
+## ✨ NEW: +execution of `LES` ins
+
+The algorithm for the execution of the `LES` instruction is as follows:
+
+1. Fetch the instruction.
+2. Decode the instruction to determine the addressing mode of the source operand.
+3. Calculate the effective address of the source operand.
+4. Load the effective address into the destination register.
+5. Store the result in the destination register.
+6. Load the effective address + 2 into the extra segment register.
