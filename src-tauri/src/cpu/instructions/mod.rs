@@ -21,4 +21,5 @@ pub mod test_ins;
 pub mod test_macro;
 
 pub mod lea;
+pub mod les;
 pub(in crate::cpu::instructions) mod utils;
