@@ -21,6 +21,20 @@ LES operand1, operand2
 | **Action**    | Performs Memory Indirect Read and puts the value in the memory location into the destination register. Loads ES with the next word. |
 | **Flags**     | None                                                                                                                                |
 
+## Explanation 
+
+```asm6502 showLineNumbers
+MOV [BX]     , 0x1234
+MOV [BX+0x02], 0x5678
+LES AX, [BX] ; AX = 0x1234, ES = 0x5678
+``` 
+Here the value at the memory location `0x1234` is loaded into the `AX` register and the value at the memory location `0x1236` is loaded into the `ES` register.
+i.e the values of the registers are as follows : 
+```
+AX = 0x1234
+ES = 0x5678
+```
+
 ## Supported Modes 
 
 ### Register And Memory 
