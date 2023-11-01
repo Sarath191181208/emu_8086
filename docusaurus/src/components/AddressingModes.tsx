@@ -130,3 +130,29 @@ export function BasePlusIndexPlusDisplacementAddressingMode(
     </>
   );
 }
+
+export function RegisterAndMemoryAddressing(props: AddressingModeProps) {
+  return (
+    <>
+      <p>
+        This is a mode in which the operand is specified as a register while the other operand is specified as a memory location.
+        The second operand is a memory location whose address is contained in a register (or) an offset. The second operand might also have an displacement.
+    </p>
+    <p>Example: </p>
+      <CodeBlock language="asm6502">
+        org 100h <br/>
+        data <br />
+        {`    VAR DB 0FFh`} <br />
+        {`    VAR2 DW 0Bh`} <br />
+        code: <br />
+        {`    ${props.instructionName} AX, [BX] `}<br />
+        {`    ${props.instructionName} DX, [BX+SI] `}<br />
+        {`    ${props.instructionName} SP, [BX+SI+10h] `}<br />
+        {`    ${props.instructionName} DI, [BX+SI+100h] `}<br />
+        {`    ${props.instructionName} BX, Var `}<br />
+        {`    ${props.instructionName} BX, w.[Var] `}<br />
+        {`    ${props.instructionName} BX, w.[Var2] `}<br />
+        </CodeBlock>
+    </>
+  )
+}
