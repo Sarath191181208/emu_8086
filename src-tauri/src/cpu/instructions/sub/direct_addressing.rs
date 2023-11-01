@@ -77,13 +77,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test_add_direct_address {
-    use crate::{
-        cpu::{
-            instructions::test_macro::{compile_and_test_str, run_code},
-            CPU,
-        },
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
     fn test_ax_var() {
