@@ -54,12 +54,11 @@ impl CPU {
 }
 
 #[cfg(test)]
-mod add_test_mem_reg{
+mod add_test_mem_reg {
     use crate::cpu::instructions::test_macro::run_code;
 
-
     #[test]
-    fn test_add_mem_reg(){
+    fn test_add_mem_reg() {
         let code = "
             mov ax, 0x1234
             mov cx, 0x1236
