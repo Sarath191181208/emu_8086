@@ -28,13 +28,8 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::{
-            instructions::test_macro::{compile_and_test_str, run_code},
-            CPU,
-        },
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
+
 
     #[test]
     fn out_al_10() {
