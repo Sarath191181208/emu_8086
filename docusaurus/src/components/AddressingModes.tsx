@@ -198,7 +198,14 @@ export function GenerateCompilationTable(props: AddressingModeTableProps) {
           <th>Example instruction</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody>
+        <tr>
+          <td>reg16, indirect mem</td>
+          <td>{props.reg_16bit_and_anything_ins} 0x00..=0x3F</td>
+          <td>2</td>
+          <td>{`${props.instructionName} AX, [BX]`}</td>
+        </tr>
+      </tbody>
     </table>
   );
 }
