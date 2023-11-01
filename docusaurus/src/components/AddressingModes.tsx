@@ -2,9 +2,8 @@ import React from "react";
 import CodeBlock from "@theme/CodeBlock";
 
 interface AddressingModeProps {
-    instructionName: string;
+  instructionName: string;
 }
-    
 
 export function RegisterAddressingMode(props: AddressingModeProps) {
   return (
@@ -19,7 +18,7 @@ export function RegisterAddressingMode(props: AddressingModeProps) {
         {props.instructionName} AX, BX <br></br>
         {props.instructionName} BL, CH
       </CodeBlock>
-    <hr />
+      <hr />
     </>
   );
 }
@@ -110,7 +109,7 @@ export function BasePlusIndexedAddressingMode(props: AddressingModeProps) {
 }
 
 export function BasePlusIndexPlusDisplacementAddressingMode(
-    props: AddressingModeProps
+  props: AddressingModeProps
 ) {
   return (
     <>
@@ -125,8 +124,8 @@ export function BasePlusIndexPlusDisplacementAddressingMode(
         {props.instructionName} AX, [BX+SI+100h] <br />
         {props.instructionName} AL, b.[BX+SI+10h] <br />
         {props.instructionName} AL, b.[BX+SI+100h] <br />
-          </CodeBlock>
-          <hr />
+      </CodeBlock>
+      <hr />
     </>
   );
 }
@@ -135,24 +134,61 @@ export function RegisterAndMemoryAddressing(props: AddressingModeProps) {
   return (
     <>
       <p>
-        This is a mode in which the operand is specified as a register while the other operand is specified as a memory location.
-        The second operand is a memory location whose address is contained in a register (or) an offset. The second operand might also have an displacement.
-    </p>
-    <p>Example: </p>
+        This is a mode in which the operand is specified as a register while the
+        other operand is specified as a memory location. The second operand is a
+        memory location whose address is contained in a register (or) an offset.
+        The second operand might also have an displacement.
+      </p>
+      <p>Example: </p>
       <CodeBlock language="asm6502" showLineNumbers={true}>
-        org 100h <br/>
+        org 100h <br />
         data <br />
         {`    VAR DB 0FFh`} <br />
         {`    VAR2 DW 0Bh`} <br />
         code: <br />
-        {`    ${props.instructionName} BX, Var `}<br />
-        {`    ${props.instructionName} BX, w.[Var] `}<br />
-        {`    ${props.instructionName} BX, w.[Var2] `}<br /> <br />
-        {`    ${props.instructionName} AX, [BX] `}<br />
-        {`    ${props.instructionName} DX, [BX+SI] `}<br />
-        {`    ${props.instructionName} SP, [BX+SI+10h] `}<br />
-        {`    ${props.instructionName} DI, [BX+SI+100h] `}<br />
-        </CodeBlock>
+        {`    ${props.instructionName} BX, Var `}
+        <br />
+        {`    ${props.instructionName} BX, w.[Var] `}
+        <br />
+        {`    ${props.instructionName} BX, w.[Var2] `}
+        <br /> <br />
+        {`    ${props.instructionName} AX, [BX] `}
+        <br />
+        {`    ${props.instructionName} DX, [BX+SI] `}
+        <br />
+        {`    ${props.instructionName} SP, [BX+SI+10h] `}
+        <br />
+        {`    ${props.instructionName} DI, [BX+SI+100h] `}
+        <br />
+      </CodeBlock>
     </>
-  )
+  );
+}
+
+interface AddressingModeTableProps {
+  instructionName: string;
+
+  reg_16bit_and_anything_ins: number;
+  reg_8bit_and_anything_ins: number;
+  indexed_addressing_and_anyting_ins: number;
+  addr_and_8bit_reg: number;
+
+  al_and_num_ins: number | null;
+  ax_and_num_ins: number | null;
+
+  reg16bit_and_16bit_num: number;
+  reg16bit_and_8bit_num: number;
+  reg8bit_and_num: number;
+  reg_num_sub_ins: number;
+
+  addr16bit_and_16bit_num: number;
+  addr16bit_and_8bit_num: number;
+  addr8bit_and_num: number;
+  addr_num_sub_ins: number;
+}
+
+export function GenerateCompilationTable(props: AddressingModeTableProps) {
+  return (
+    <></>
+  );
 }
