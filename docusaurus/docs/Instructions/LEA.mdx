@@ -1,0 +1,26 @@
+---
+title: LEA
+description: Loads the Effective address of the source operand into the destination register.
+---
+
+import {RegisterAndMemoryAddressing}  from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502
+LEA operand1, operand2 ; comment
+```
+
+## Attributes
+
+| Attribute    | Description                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands** | The first operand is the destination register. The second operand is the source operand. operand1: Register, operand2: Memory         |
+| **Size**     | Word                                                                                                                                  |
+| **Action**   | Performs a memory indirect addressing operation. The effective address of the source operand is loaded into the destination register. |
+| **Flags**    | None                                                                                                                                  |
+
+## Supported Modes 
+
+### Register And Memory 
+<RegisterAndMemoryAddressing  instructionName="AND"  />
