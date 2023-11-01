@@ -20,6 +20,7 @@ use super::{
     utils::check_comma,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn parse_lea(
     i: usize,
     tokenized_line: &TokenizedLine,
@@ -103,24 +104,20 @@ pub(crate) fn parse_lea(
 
                     Ok(tokenized_line.len())
                 }
-                _ => {
-                    return Err(CompilationError::error_with_token(
-                        low_token,
-                        &format!(
-                            "Expected a 16 bit memory Address got {}",
-                            low_token.token_type
-                        ),
-                    ))
-                }
+                _ => Err(CompilationError::error_with_token(
+                    low_token,
+                    &format!(
+                        "Expected a 16 bit memory Address got {}",
+                        low_token.token_type
+                    ),
+                )),
             }
         }
 
-        _ => {
-            return Err(CompilationError::error_with_token(
-                high_token,
-                &format!("Expected a 16 bit register got {}", high_token.token_type),
-            ))
-        }
+        _ => Err(CompilationError::error_with_token(
+            high_token,
+            &format!("Expected a 16 bit register got {}", high_token.token_type),
+        )),
     }
 }
 
