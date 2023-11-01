@@ -189,6 +189,16 @@ interface AddressingModeTableProps {
 
 export function GenerateCompilationTable(props: AddressingModeTableProps) {
   return (
-    <></>
+    <table>
+      <thead>
+        <tr>
+          <th>Operand</th>
+          <th>Opcode</th>
+          <th>Size(bytes)</th>
+          <th>Example instruction</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   );
 }
