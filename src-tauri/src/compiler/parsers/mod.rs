@@ -11,6 +11,7 @@ pub mod les;
 pub mod loop_ins;
 pub mod mov;
 pub mod mul;
+pub mod or;
 pub mod out_ins;
 pub mod pop;
 pub mod push;
