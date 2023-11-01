@@ -41,15 +41,14 @@ import random
 reg_16 = ["ax", "cx", "dx", "bx", "sp", "bp", "si", "di"]
 indexed_reg_16 = ["bx+si", "bx+di", "bp+si", "bp+di", "si", "di", "bp", "bx"]
 
-ins_name = "test"
+ins_name = "lea"
 ins: list[str] = []
-for _ in range(0x3):
+for _ in range(10):
     reg_choice = random.choice(reg_16)
     indexed_reg_choice = random.choice(indexed_reg_16)
     offset = random.choice((None, random.randint(0x00, 0xFF), random.randint(0x100, 0xFFFF)))
-    if offset is None:
-        ins.append(f"{ins_name} {indexed_reg_choice}, {reg_choice}")
-    else:
-        ins.append(f"{ins_name} [{indexed_reg_choice}+{hex(offset)}], {reg_choice}")
+    indexed_reg = f"[{indexed_reg_choice}+{hex(offset)}]" if offset is not None else f"[{indexed_reg_choice}]"
+    
+    ins.append(f"{ins_name} {reg_choice}, {indexed_reg}")
 
 pyperclip.copy("\n".join(ins))
