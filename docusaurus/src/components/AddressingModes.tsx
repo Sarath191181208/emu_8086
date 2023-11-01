@@ -14,9 +14,9 @@ export function RegisterAddressingMode(props: AddressingModeProps) {
         register.
       </p>
       <p>Example:</p>
-      <CodeBlock language="asm6502">
-        {props.instructionName} AX, BX <br></br>
-        {props.instructionName} BL, CH
+      <CodeBlock language="asm6502" showLineNumbers>
+        {`${props.instructionName} AX, BX 
+${props.instructionName} BL, CH`}
       </CodeBlock>
       <hr />
     </>
@@ -31,10 +31,10 @@ export function ImmediateAddressingMode(props: AddressingModeProps) {
         itself. The operand is a constant.
       </p>
       <p>Example:</p>
-      <CodeBlock language="asm6502">
-        {props.instructionName} AX, 0FFh <br></br>
-        {props.instructionName} BX, 0Bh <br></br>
-        {props.instructionName} CL, 0h
+      <CodeBlock language="asm6502" showLineNumbers>
+        {`${props.instructionName} AX, 0FFh 
+${props.instructionName} BX, 0Bh  
+${props.instructionName} CL, 0h`}
       </CodeBlock>
       <hr />
     </>
@@ -56,16 +56,16 @@ export function MemoryAddressingMode(props: AddressingModeProps) {
       (or) Alternatively you can specify the memory location using the `variable
       assignment`
       <p>Example</p>
-      <CodeBlock language="asm6502">
-        ORG 100h <br></br>
-        .DATA <br></br>
-        {`    VAR1 DB 0FFh`} <br></br>
-        {`    VAR2 DW 0Bh`} <br></br> <br></br>
-        CODE: <br></br>
-        {`    ${props.instructionName} AL, Var1`} <br />
-        {`    ${props.instructionName} BX, Var2`} <br />
-        {`    ${props.instructionName} CL, b.[Var2]`} <br />
-        {`    ${props.instructionName} DX, w.[Var1]`} <br />
+      <CodeBlock language="asm6502" showLineNumbers>
+        {`ORG 100h 
+.DATA
+  VAR1 DB 0FFh
+  VAR2 DW 0Bh
+CODE:
+  ${props.instructionName} AL, Var1 
+  ${props.instructionName} BX, Var2 
+  ${props.instructionName} CL, b.[Var2] 
+  ${props.instructionName} DX, w.[Var1]`}
       </CodeBlock>
       <hr />
     </>
@@ -141,25 +141,19 @@ export function RegisterAndMemoryAddressing(props: AddressingModeProps) {
       </p>
       <p>Example: </p>
       <CodeBlock language="asm6502" showLineNumbers>
-        org 100h <br />
-        data <br />
-        {`    VAR DB 0FFh`} <br />
-        {`    VAR2 DW 0Bh`} <br />
-        code: <br />
-        {`    ${props.instructionName} BX, Var `}
-        <br />
-        {`    ${props.instructionName} BX, w.[Var] `}
-        <br />
-        {`    ${props.instructionName} BX, w.[Var2] `}
-        <br /> <br />
-        {`    ${props.instructionName} AX, [BX] `}
-        <br />
-        {`    ${props.instructionName} DX, [BX+SI] `}
-        <br />
-        {`    ${props.instructionName} SP, [BX+SI+10h] `}
-        <br />
-        {`    ${props.instructionName} DI, [BX+SI+100h] `}
-        <br />
+        {`org 100h
+data
+    VAR DB 0FFh
+    VAR2 DW 0Bh
+code:
+    ${props.instructionName} BX, Var
+    ${props.instructionName} BX, w.[Var]
+    ${props.instructionName} BX, w.[Var2]
+    ${props.instructionName} AX, [BX]
+    ${props.instructionName} DX, [BX+SI]
+    ${props.instructionName} SP, [BX+SI+10h]
+    ${props.instructionName} DI, [BX+SI+100h]
+`}
       </CodeBlock>
     </>
   );
@@ -176,25 +170,19 @@ export function MemoryAndRegisterAddressing(props: AddressingModeProps) {
       </p>
       <p>Example: </p>
       <CodeBlock language="asm6502" showLineNumbers>
-        org 100h <br />
-        data <br />
-        {`    VAR DB 0FFh`} <br />
-        {`    VAR2 DW 0Bh`} <br />
-        code: <br />
-        {`    ${props.instructionName} Var, BX `}
-        <br />
-        {`    ${props.instructionName} w.[Var], BX `}
-        <br />
-        {`    ${props.instructionName} w.[Var2], BX `}
-        <br /> <br />
-        {`    ${props.instructionName} [BX], AX `}
-        <br />
-        {`    ${props.instructionName} [BX+SI], DX `}
-        <br />
-        {`    ${props.instructionName} [BX+SI+10h], SP `}
-        <br />
-        {`    ${props.instructionName} [BX+SI+100h], DI `}
-        <br />
+        {`org 100h
+data
+    VAR DB 0FFh
+    VAR2 DW 0Bh
+code:
+    ${props.instructionName} Var, BX
+    ${props.instructionName} w.[Var], BX
+    ${props.instructionName} w.[Var2], BX
+    ${props.instructionName} [BX], AX
+    ${props.instructionName} [BX+SI], DX
+    ${props.instructionName} [BX+SI+10h], SP
+    ${props.instructionName} [BX+SI+100h], DI
+`}
       </CodeBlock>
     </>
   );
@@ -214,14 +202,11 @@ export function IndirectMemoryAndImmediateAddressing(
       </p>
       <p>Example: </p>
       <CodeBlock language="asm6502" showLineNumbers>
-        {`    ${props.instructionName} [BX], 0FFh `}
-        <br />
-        {`    ${props.instructionName} [BX+SI], 0FFh `}
-        <br />
-        {`    ${props.instructionName} [BX+SI+10h], 0FFh `}
-        <br />
-        {`    ${props.instructionName} [BX+SI+100h], 0FFh `}
-        <br />
+        {`${props.instructionName} [BX], 0FFh
+${props.instructionName} [BX+SI], 0FFh
+${props.instructionName} [BX+SI+10h], 0FFh
+${props.instructionName} [BX+SI+100h], 0FFh
+`}
       </CodeBlock>
     </>
   );
@@ -238,18 +223,11 @@ export function DirectMemoryAndImmediateAddressing(props: AddressingModeProps) {
       </p>
       <p>Example: </p>
       <CodeBlock language="asm6502" showLineNumbers>
-        org 100h <br />
-        data <br />
-        {`    VAR DB 0FFh`} <br />
-        {`    VAR2 DW 0Bh`} <br />
-        code: <br />
-        {`    ${props.instructionName} [Var], 0xFF `}
-        <br />
-        {`    ${props.instructionName} [Var2], 0x100 `}
-        <br />
-        {`    ${props.instructionName} [0x100], 0x100+20 `}
-        <br />
-        {`    ${props.instructionName} [0x100+10h], 0FFh `}
+        {`${props.instructionName} [BX], 0FFh
+${props.instructionName} [BX+SI], 0FFh
+${props.instructionName} [BX+SI+10h], 0FFh
+${props.instructionName} [BX+SI+100h], 0FFh
+`}
       </CodeBlock>
     </>
   );
