@@ -42,4 +42,46 @@ impl CPU {
             }
         }
     }
+
+    pub(in crate::cpu) fn execute_sub_indexed_addr_16bit_register(&mut self, mem: &mut Memory) {
+        let exec_fn = |cpu: &mut CPU, val1: u16, val2: u16| -> Option<u16> {
+            let (result, _) = cpu.sub_16bit_with_overflow_and_set_flags(val1, val2);
+            Some(result)
+        };
+        self.consume_bytes_and_parse_mem_as_first_arg_double_ins(mem, &exec_fn);
+    }
+}
+
+#[cfg(test)]
+mod sub_mem_reg_tests{
+    use crate::cpu::instructions::test_macro::run_code;
+
+
+    #[test]
+    fn test_sub_mem_reg(){
+        let code = "
+        mov ax, 0x1234
+        mov bx, 0x100
+        mov cx, 0xF0F
+
+        mov [bx + 0x02], cx
+        sub [bx + 0x02], ax
+        ";
+        let (cpu, mem) = run_code(code, 5);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0xFCDB);
+    }
+
+    #[test]
+    fn test_sub_mem_reg_8bit(){
+        let code = "
+        mov ax, 0x1234
+        mov si, 0x02
+        mov cx, 0xF0F
+
+        mov [si + 0x100], cx
+        sub [si + 0x100], ax
+        ";
+        let (cpu, mem) = run_code(code, 5);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0xFCDB);
+    }
 }

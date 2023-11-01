@@ -25,22 +25,6 @@ impl CPU {
         self.set_8bit_register_by_index(reg_index, result);
     }
 
-    pub(in crate::cpu) fn execute_sub_direct_addr_16bit_register(&mut self, mem: &mut Memory) {
-        // gettting the ins to find the register to perform the ops
-        let ins = self.consume_instruction(mem);
-        // gettting the reg index from the ins
-        let reg_ins = self.get_index_from_06_e6_pattern(ins);
-        // extracting data address from the memory
-        let data_addr = self.consume_word(mem);
-        // reading data from the mem at the data_addr
-        let data = self.read_word_from_pointer(mem, data_addr);
-        // reading the val in the register
-        let reg_val = self.get_16bit_register_by_index(reg_ins);
-        // performing the sub opp
-        let (result, _) = self.sub_16bit_with_overflow_and_set_flags(data, reg_val);
-        self.write_word_from_pointer(mem, data_addr, result);
-    }
-
     pub(in crate::cpu) fn execute_sub_direct_addr_8bit_register(&mut self, mem: &mut Memory) {
         // get the register index i.e ax, bx, cx, dx -> 0, 1, 2, 3
         let ins = self.consume_instruction(mem);

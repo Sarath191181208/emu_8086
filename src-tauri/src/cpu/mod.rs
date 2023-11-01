@@ -304,7 +304,7 @@ impl CPU {
             0x28 => self.execute_sub_direct_addr_8bit_register(mem),
 
             // SUB [0x1234], AX
-            0x29 => self.execute_sub_direct_addr_16bit_register(mem),
+            0x29 => self.execute_sub_indexed_addr_16bit_register(mem),
 
             // SUB, AL, 8bit register
             0x2A => self.execute_sub_register_byte(mem),
