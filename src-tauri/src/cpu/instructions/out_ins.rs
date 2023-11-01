@@ -30,7 +30,6 @@ impl CPU {
 mod tests {
     use crate::cpu::instructions::test_macro::run_code;
 
-
     #[test]
     fn out_al_10() {
         let code = "

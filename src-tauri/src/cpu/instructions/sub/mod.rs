@@ -53,12 +53,11 @@ impl CPU {
 }
 
 #[cfg(test)]
-mod sub_mem_reg_tests{
+mod sub_mem_reg_tests {
     use crate::cpu::instructions::test_macro::run_code;
 
-
     #[test]
-    fn test_sub_mem_reg(){
+    fn test_sub_mem_reg() {
         let code = "
         mov ax, 0x1234
         mov bx, 0x100
@@ -72,7 +71,7 @@ mod sub_mem_reg_tests{
     }
 
     #[test]
-    fn test_sub_mem_reg_8bit(){
+    fn test_sub_mem_reg_8bit() {
         let code = "
         mov ax, 0x1234
         mov si, 0x02

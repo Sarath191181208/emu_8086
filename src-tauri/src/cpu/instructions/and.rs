@@ -309,7 +309,7 @@ mod and_ins_exec_tests {
     }
 
     #[test]
-    fn and_indexed_addr_mem_reg(){
+    fn and_indexed_addr_mem_reg() {
         let code = "
         mov ax, 0x0F0F
         mov w.[0x102], 0x92
