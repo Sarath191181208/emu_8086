@@ -1,24 +1,10 @@
-use crate::{
-    compiler::{
-        compilation_error::CompilationError, parsers::utils::get_idx_from_reg,
-        tokenized_line::TokenizedLine, CompiledBytesReference,
-    },
-    convert_and_push_instructions,
-    utils::Either,
+use crate::compiler::{
+    compilation_error::CompilationError, tokenized_line::TokenizedLine, CompiledBytesReference,
 };
 
-use super::{
-    pattern_extractors::{
-        compile_tow_args_whole_ins::{CompilingBytesForInstruction, compile_two_args_whole_ins},
-        compile_two_arguments_patterns::{
-            parse_indexed_addr_and_reg, parse_register_16bit_and_indexed_registers_with_offset,
-            parse_register_16bit_and_indexed_registers_without_offset,
-            parse_register_8bit_and_indexed_registers_with_offset,
-            parse_register_8bit_and_indexed_registers_without_offset,
-        },
-        AddressingMode,
-    },
-    utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
+use super::pattern_extractors::{
+    compile_tow_args_whole_ins::{compile_two_args_whole_ins, CompilingBytesForInstruction},
+    AddressingMode,
 };
 
 pub(in crate::compiler) fn parse_add(
@@ -28,12 +14,6 @@ pub(in crate::compiler) fn parse_add(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
-    let token = tokenized_line.get(
-        i,
-        "This shouldn't happen, Please report this".to_string(),
-        None,
-    )?;
-
     let ins = CompilingBytesForInstruction {
         reg_16bit_and_anything_ins: 0x03,
         reg_8bit_and_anything_ins: 0x02,
