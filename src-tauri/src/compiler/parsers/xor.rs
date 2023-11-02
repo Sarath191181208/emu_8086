@@ -23,12 +23,12 @@ pub(in crate::compiler) fn parse_xor(
         al_and_num_ins: Some(0x34),
         ax_and_num_ins: Some(0x35),
         reg16bit_and_16bit_num: 0x81,
-        reg16bit_and_8bit_num: 0x83,
+        reg16bit_and_8bit_num: Some(0x83),
         reg8bit_and_num: 0x80,
         reg_num_sub_ins: 0xF0,
 
         addr16bit_and_16bit_num: 0x81,
-        addr16bit_and_8bit_num: 0x83,
+        addr16bit_and_8bit_num: Some(0x83),
         addr8bit_and_num: 0x80,
         addr_num_sub_ins: 0x36,
     };

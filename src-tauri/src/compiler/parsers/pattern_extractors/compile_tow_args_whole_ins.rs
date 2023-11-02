@@ -27,13 +27,14 @@ pub(in crate::compiler) struct CompilingBytesForInstruction {
 
     pub al_and_num_ins: Option<u8>,
     pub ax_and_num_ins: Option<u8>,
+
     pub reg16bit_and_16bit_num: u8,
-    pub reg16bit_and_8bit_num: u8,
+    pub reg16bit_and_8bit_num: Option<u8>,
     pub reg8bit_and_num: u8,
     pub reg_num_sub_ins: u8,
 
     pub addr16bit_and_16bit_num: u8,
-    pub addr16bit_and_8bit_num: u8,
+    pub addr16bit_and_8bit_num: Option<u8>,
     pub addr8bit_and_num: u8,
     pub addr_num_sub_ins: u8,
 }
@@ -88,13 +89,29 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
                     )
                 );
             } else {
-                let and_ins = match num {
-                    Either::Left(_) => vec![reg16bit_and_8bit_num], // for 8 bit numbers
-                    Either::Right(_) => vec![reg16bit_and_16bit_num], // for 16 bit numbers
+                // let and_ins = match num {
+                //     Either::Left(_) => vec![reg16bit_and_8bit_num], // for 8 bit numbers
+                //     Either::Right(_) => vec![reg16bit_and_16bit_num], // for 16 bit numbers
+                // };
+                let and_ins = {
+                    if reg16bit_and_8bit_num.is_none() {
+                        vec![reg16bit_and_16bit_num]
+                    } else {
+                        match num{
+                            Either::Left(_) => vec![reg16bit_and_8bit_num.unwrap()],
+                            Either::Right(_) => vec![reg16bit_and_16bit_num],
+                        }
+                    }
                 };
-                let num_vec = match num {
-                    Either::Left(val) => vec![val],
-                    Either::Right(val) => val.to_le_bytes().to_vec(),
+                let num_vec = {
+                    if reg16bit_and_8bit_num.is_none() {
+                        num.get_as_u16().to_le_bytes().to_vec()
+                    } else {
+                        match num{
+                            Either::Left(num) => num.to_le_bytes().to_vec(),
+                            Either::Right(num) => num.to_le_bytes().to_vec(),
+                        }
+                    }
                 };
                 convert_and_push_instructions!(
                     compiled_bytes,
@@ -201,13 +218,21 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
             address_bytes,
             num,
         } => {
+            let ins = match addr16bit_and_8bit_num{
+                Some(ins) => ins,
+                None => addr16bit_and_16bit_num,
+            };
+            let num = match addr16bit_and_8bit_num{
+                Some(_) => num.to_le_bytes().to_vec(),
+                None => (num as u16).to_le_bytes().to_vec(),
+            };
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => vec![addr16bit_and_8bit_num, addr_num_sub_ins],
+                    token => vec![ins, addr_num_sub_ins],
                    &high_token=> address_bytes.to_vec(),
-                   &low_token=> num.to_le_bytes().to_vec()
+                   &low_token=> num
                 )
             );
             Ok(tokenized_line.len())
