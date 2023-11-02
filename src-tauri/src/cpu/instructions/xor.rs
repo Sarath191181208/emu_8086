@@ -68,4 +68,16 @@ mod xor_tests {
         let (cpu, mem) = run_code(code, 3);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x100), 0b11111111);
     }
+
+    #[test]
+    fn test_16bit_mem_and_reg(){
+        let code = "
+        MOV SP, 0x100
+        MOV [0x100], 0x1010
+        XOR [0x100], SP
+        ";
+
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0x100), 0x1110);
+    }
 }
