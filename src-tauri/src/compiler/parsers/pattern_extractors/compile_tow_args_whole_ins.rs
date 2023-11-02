@@ -251,22 +251,11 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
             high_token: _,
             low_token: _,
         }
-        | AddressingMode::Register8bitAndIndexedAddress {
+        | AddressingMode::Register8bitAndIndexedAddressing {
             high_token: _,
             low_token: _,
             register_type: _,
-        }
-        | AddressingMode::Register8bitAndIndexedAddressWithOffset {
-            high_token: _,
-            low_token: _,
-            register_type: _,
-            offset: _,
-        }
-        | AddressingMode::Register8bitAndAddress {
-            high_token: _,
-            low_token: _,
-            address_bytes: _,
-            register_type: _,
+            addr_type: _,
         } => parse_8bitreg_first_addr_mode(
             i,
             addressing_mode,

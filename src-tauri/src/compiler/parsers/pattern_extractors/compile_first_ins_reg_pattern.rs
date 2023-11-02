@@ -13,7 +13,8 @@ use crate::{
 
 use super::{
     compile_two_arguments_patterns::{
-        parse_indexed_addr_and_reg, parse_register_8bit_and_indexed_registers_with_offset,
+        parse_byte_indexed_addr_and_8bit_reg, parse_indexed_addr_and_reg,
+        parse_register_8bit_and_indexed_registers_with_offset,
         parse_register_8bit_and_indexed_registers_without_offset,
     },
     AddressingMode,
@@ -29,63 +30,26 @@ pub(in crate::compiler) fn parse_8bitreg_first_addr_mode(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
 ) -> Result<usize, CompilationError> {
     match addressing_mode {
-        AddressingMode::Register8bitAndAddress {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => {
-            // 0x84 0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E
-            let reg_idx = register_type.get_as_idx();
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![root_ins],
-                    &high_token => vec![0x06 | reg_idx << 3],
-                    &low_token => address_bytes.to_vec()
-                )
-            );
-            Ok(tokenized_line.len())
-        }
-
-        AddressingMode::Register8bitAndIndexedAddress {
+        AddressingMode::Register8bitAndIndexedAddressing {
             high_token,
             low_token,
             register_type,
+            addr_type,
+            
         } => {
-            // 0x84 0x00..0x3F
-            parse_register_8bit_and_indexed_registers_without_offset(
+            parse_byte_indexed_addr_and_8bit_reg(
                 root_ins,
-                register_type,
                 token,
                 &high_token,
                 &low_token,
-                compiled_bytes,
-                compiled_bytes_ref,
-            )?;
-
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register8bitAndIndexedAddressWithOffset {
-            high_token,
-            low_token,
-            offset,
-            register_type,
-        } => {
-            // 0x84 0x40..0x7F/0x80..0xBF
-            parse_register_8bit_and_indexed_registers_with_offset(
-                root_ins,
                 register_type,
-                token,
-                &high_token,
-                &low_token,
-                &offset,
+                addr_type,
                 compiled_bytes,
                 compiled_bytes_ref,
             )?;
             Ok(tokenized_line.len())
         }
+
         AddressingMode::Registers8bit {
             high_token,
             low_token,

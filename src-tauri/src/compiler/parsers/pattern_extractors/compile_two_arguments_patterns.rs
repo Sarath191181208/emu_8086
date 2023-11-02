@@ -154,6 +154,30 @@ pub(in crate::compiler) fn parse_indexed_addr_and_reg(
 }
 
 #[allow(clippy::too_many_arguments)]
+pub(in crate::compiler) fn parse_byte_indexed_addr_and_8bit_reg(
+    base_instruction: u8,
+    token: &Token,
+    high_token: &Token,
+    low_token: &Token,
+    reg_type: Registers8bit,
+    idx_addr_type: IndexedAddressingTypes,
+    compiled_bytes: &mut Vec<u8>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+) -> Result<(), CompilationError> {
+    let reg_idx = reg_type.get_as_idx();
+    parse_index_addr_and_reg_idx(
+        base_instruction,
+        reg_idx,
+        token,
+        high_token,
+        low_token,
+        idx_addr_type,
+        compiled_bytes,
+        compiled_bytes_ref,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
 fn parse_index_addr_and_reg_idx(
     base_instruction: u8,
     reg_idx: u8,

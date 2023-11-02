@@ -14,7 +14,9 @@ use crate::{
 
 use super::{
     pattern_extractors::{
-        compile_first_ins_reg_pattern::parse_16bitreg_first_addr_mode,
+        compile_first_ins_reg_pattern::{
+            parse_16bitreg_first_addr_mode, parse_8bitreg_first_addr_mode,
+        },
         compile_two_arguments_patterns::{
             parse_indexed_addr_and_reg, parse_register_8bit_and_indexed_registers_with_offset,
             parse_register_8bit_and_indexed_registers_without_offset,
@@ -130,38 +132,24 @@ pub(in crate::compiler) fn parse_mov(
             );
             Ok(tokenized_line.len())
         }
-        // MOV AL..BH, 0x100
-        AddressingMode::Register8bitAndAddress {
+
+        AddressingMode::Register8bitAndIndexedAddressing {
             high_token,
             low_token,
-            address_bytes,
-            register_type,
-        } => match &register_type {
-            Registers8bit::AL => {
-                convert_and_push_instructions!(
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    (
-                        token => vec![0xA0],
-                       &low_token=> address_bytes.to_vec()
-                    )
-                );
-                Ok(tokenized_line.len())
-            }
-            _ => {
-                let reg_idx = get_8bit_register(&high_token).get_as_idx();
-                convert_and_push_instructions!(
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    (
-                        token => vec![0x8A],
-                       &high_token=> vec![0x06 | reg_idx << 3],
-                       &low_token=> address_bytes.to_vec()
-                    )
-                );
-                Ok(tokenized_line.len())
-            }
-        },
+            register_type: Registers8bit::AL,
+            addr_type: IndexedAddressingTypes::Offset(address_bytes),
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => vec![0xA0],
+                   &low_token=> address_bytes.as_u16().to_le_bytes().to_vec()
+                )
+            );
+            Ok(tokenized_line.len())
+        }
+
         // MOV 0x100, AL..BH
         AddressingMode::AddressAnd8bitRegister {
             high_token,
@@ -263,36 +251,18 @@ pub(in crate::compiler) fn parse_mov(
             compiled_bytes,
             compiled_bytes_ref,
         ),
-        AddressingMode::Register8bitAndIndexedAddress {
+        AddressingMode::Register8bitAndIndexedAddressing {
             high_token,
             low_token,
             register_type,
+            addr_type,
         } => {
-            parse_register_8bit_and_indexed_registers_without_offset(
+            parse_8bitreg_first_addr_mode(
+                i,
+                addressing_mode,
                 0x8A,
-                register_type,
+                tokenized_line,
                 token,
-                &high_token,
-                &low_token,
-                compiled_bytes,
-                compiled_bytes_ref,
-            )?;
-
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register8bitAndIndexedAddressWithOffset {
-            high_token,
-            low_token,
-            offset,
-            register_type,
-        } => {
-            parse_register_8bit_and_indexed_registers_with_offset(
-                0x8A,
-                register_type,
-                token,
-                &high_token,
-                &low_token,
-                &offset,
                 compiled_bytes,
                 compiled_bytes_ref,
             )?;

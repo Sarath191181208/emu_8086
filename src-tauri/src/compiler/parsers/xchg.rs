@@ -157,23 +157,12 @@ pub(in crate::compiler) fn parse_xchg(
             high_token: _,
             low_token: _,
         }
-        | AddressingMode::Register8bitAndIndexedAddress {
+        | AddressingMode::Register8bitAndIndexedAddressing {
             high_token: _,
             low_token: _,
             register_type: _,
-        }
-        | AddressingMode::Register8bitAndIndexedAddressWithOffset {
-            high_token: _,
-            low_token: _,
-            register_type: _,
-            offset: _,
-        }
-        | AddressingMode::Register8bitAndAddress {
-            high_token: _,
-            low_token: _,
-            address_bytes: _,
-            register_type: _,
-        } => parse_8bitreg_first_addr_mode(
+            addr_type: _,
+        }=> parse_8bitreg_first_addr_mode(
             i,
             addressing_mode,
             reg_8bit_and_anything_ins,
