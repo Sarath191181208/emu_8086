@@ -99,10 +99,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     macro_rules! single_segment_push_fixture {
         ($segment_name: ident) => {
@@ -110,9 +107,7 @@ mod test {
 
             #[test]
             fn [<push_ $segment_name>](){
-                compile_and_test_str(
-                    &format!(
-                        "
+                let code = &format!("
                         org 100h 
                         .data 
                         var dw 0x1000 
@@ -120,13 +115,10 @@ mod test {
                         push {}
                         ",
                         stringify!($segment_name)
-                    ),
-                    2,
-                    |cpu: &CPU, mem: &Memory| {
-                        assert_eq!(cpu.stack_pointer, 0xFFFC);
-                        assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x0700);
-                    },
-                );
+                    );
+                    let (cpu, mem) = run_code(code, 2);
+                                            assert_eq!(cpu.stack_pointer, 0xFFFC);
+                        assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x0700);
             }
         }
     }
@@ -139,127 +131,96 @@ mod test {
 
     #[test]
     fn push_bp() {
-        compile_and_test_str(
-            "
-            org 100h 
-            .data 
-            var dw 0x1000 
-            code: 
-            mov bp, 0x101
-            push bp
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                // cpu.print_stack(mem);
-                assert_eq!(cpu.stack_pointer, 0xFFFC);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x101);
-            },
-        );
+        let code = "
+        org 100h 
+        .data 
+        var dw 0x1000 
+        code: 
+        mov bp, 0x101
+        push bp
+        ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.stack_pointer, 0xFFFC);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x101);
     }
 
     #[test]
     fn push_var() {
-        compile_and_test_str(
-            "
-            org 100h 
-            .data 
-            var dw 0x101 
-            code: 
-            push var
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                // cpu.print_stack(mem);
-                assert_eq!(cpu.stack_pointer, 0xFFFC);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x101);
-            },
-        );
+        let code = "
+        org 100h 
+        .data 
+        var dw 0x101 
+        code: 
+        push var
+        ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.stack_pointer, 0xFFFC);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x101);
     }
 
     #[test]
     fn push_var_with_offset() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data
-            var dw 0x101
-            code:
-            mov bx, 0x102
-            push [bx]
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                // cpu.print_stack(mem);
-                assert_eq!(cpu.stack_pointer, 0xFFFC);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x101);
-            },
-        );
+        let code = "
+        org 100h
+        .data
+        var dw 0x101
+        code:
+        mov bx, 0x102
+        push [bx]
+        ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.stack_pointer, 0xFFFC);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x101);
     }
-
     #[test]
     fn push_var_with_8bit_offset() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data
-            var dw 0x101
-            code:
-            mov bx, 0x102
-            push [bx + 1]
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                // cpu.print_stack(mem);
-                assert_eq!(cpu.stack_pointer, 0xFFFC);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0xBB01);
-            },
-        );
+        let code = "
+        org 100h
+        .data
+        var dw 0x101
+        code:
+        mov bx, 0x102
+        push [bx + 1]
+        ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.stack_pointer, 0xFFFC);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0xBB01);
     }
 
     #[test]
     fn push_var_with_16bit_offset() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data
-            var dw 0x101
-            code:
-            mov bx, 0x02
-            push [bx + 0x100]
-            ",
-            3,
-            |cpu: &CPU, mem: &Memory| {
-                // cpu.print_stack(mem);
-                assert_eq!(cpu.stack_pointer, 0xFFFC);
-                assert_eq!(cpu.read_word_from_pointer(mem, 0xFFFC), 0x0101);
-            },
-        );
+        let code = "
+        org 100h
+        .data
+        var dw 0x101
+        code:
+        mov bx, 0x02
+        push [bx + 0x100]
+        ";
+        let (cpu, mem) = run_code(code, 3);
+        assert_eq!(cpu.stack_pointer, 0xFFFC);
+        assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x0101);
     }
 
     #[test]
     fn push_16bit_offset_label() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data
-            var dw 0x101
-            code:
-            push offset var
-            label:
-            push label
-            push label+0x10
-            ",
-            4,
-            |cpu: &CPU, mem: &Memory| {
-                // cpu.print_stack(mem);
-                assert_eq!(cpu.stack_pointer, 0xFFF8);
-                let stack_values = [0x0102, 0x0107, 0x0117];
-                let mut sp = 0xFFFC;
-                for val in stack_values.iter() {
-                    assert_eq!(cpu.read_word_from_pointer(mem, sp), *val);
-                    sp -= 2;
-                }
-            },
-        );
+        let code = "
+        org 100h
+        .data
+        var dw 0x101
+        code:
+        push offset var
+        label:
+        push label
+        push label+0x10
+        ";
+        let (cpu, mem) = run_code(code, 4);
+        assert_eq!(cpu.stack_pointer, 0xFFF8);
+        let stack_values = [0x0102, 0x0107, 0x0117];
+        let mut sp = 0xFFFC;
+        for val in stack_values.iter() {
+            assert_eq!(cpu.read_word_from_pointer(&mem, sp), *val);
+            sp -= 2;
+        }
     }
 }
