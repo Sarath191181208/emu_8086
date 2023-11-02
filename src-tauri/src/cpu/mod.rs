@@ -336,6 +336,9 @@ impl CPU {
             // SUB, AX, 0x1234 i.e immediate addressing
             0x2D => self.sub_ax_in_immediate_addressing(mem),
 
+            // XOR mem, reg8
+            0x30 => self.execute_xor_byte_addr_as_first_operand(mem),
+
             // INC 16bit register
             0x40..=0x47 => self.execute_inc_word_register(opcode),
             // DEC 16bit register
