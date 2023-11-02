@@ -89,29 +89,29 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
                     )
                 );
             } else {
-                // let and_ins = match num {
-                //     Either::Left(_) => vec![reg16bit_and_8bit_num], // for 8 bit numbers
-                //     Either::Right(_) => vec![reg16bit_and_16bit_num], // for 16 bit numbers
-                // };
-                let and_ins = {
-                    if reg16bit_and_8bit_num.is_none() {
-                        vec![reg16bit_and_16bit_num]
-                    } else {
-                        match num{
-                            Either::Left(_) => vec![reg16bit_and_8bit_num.unwrap()],
-                            Either::Right(_) => vec![reg16bit_and_16bit_num],
+                let is_8_bit_ins = if reg16bit_and_8bit_num.is_some() {
+                    match num {
+                        Either::Left(num_u8) => {
+                            if num_u8 > 0x7F {
+                                false
+                            } else {
+                                true
+                            }
                         }
+                        Either::Right(_) => false,
                     }
+                } else {
+                    false
                 };
-                let num_vec = {
-                    if reg16bit_and_8bit_num.is_none() {
-                        num.get_as_u16().to_le_bytes().to_vec()
-                    } else {
-                        match num{
-                            Either::Left(num) => num.to_le_bytes().to_vec(),
-                            Either::Right(num) => num.to_le_bytes().to_vec(),
-                        }
-                    }
+                let and_ins = if is_8_bit_ins {
+                    vec![reg16bit_and_8bit_num.unwrap()]
+                } else {
+                    vec![reg16bit_and_16bit_num]
+                };
+                let num_vec = if is_8_bit_ins {
+                    num.get_as_bytes()
+                } else {
+                    num.get_as_u16().to_le_bytes().to_vec()
                 };
                 convert_and_push_instructions!(
                     compiled_bytes,
@@ -218,13 +218,14 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
             address_bytes,
             num,
         } => {
-            let ins = match addr16bit_and_8bit_num{
-                Some(ins) => ins,
-                None => addr16bit_and_16bit_num,
+            let is_ins_u8 = addr16bit_and_8bit_num.is_some() && (num <= 0x7F);
+            let ins = match is_ins_u8 {
+                true => addr16bit_and_8bit_num.unwrap(),
+                false => addr16bit_and_16bit_num,
             };
-            let num = match addr16bit_and_8bit_num{
-                Some(_) => num.to_le_bytes().to_vec(),
-                None => (num as u16).to_le_bytes().to_vec(),
+            let num = match is_ins_u8 {
+                true => num.to_le_bytes().to_vec(),
+                false => (num as u16).to_le_bytes().to_vec(),
             };
             convert_and_push_instructions!(
                 compiled_bytes,
