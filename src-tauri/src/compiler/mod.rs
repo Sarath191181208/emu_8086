@@ -304,7 +304,7 @@ fn compile(
                 Ok(compiled_line)
             }
 
-                        Instructions::Xor => {
+            Instructions::Xor => {
                 let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
