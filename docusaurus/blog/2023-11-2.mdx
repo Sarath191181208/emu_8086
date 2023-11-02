@@ -6,6 +6,8 @@ authors:
   image_url: https://avatars.githubusercontent.com/u/74459981?v=4
 ---
 
+import { GenerateCompilationTable } from "@site/src/components/AddressingModes";
+
 # Support for execution of `OR` ins 
 
 ## Execution of `OR` instructions
@@ -13,3 +15,36 @@ The `OR` instruction performs a bitwise OR operation on the value in register `r
 ```asm6502 showLineNumbers
 OR AX, BX
 ```
+
+## Compilation of `XOR` ins 
+
+It is used to perform bitwise XOR operation on the value in register `rs1` and `rs2` and stores the result in register `rs1`. The syntax is:
+```asm6502 showLineNumbers
+XOR AX, BX
+```
+
+<GenerateCompilationTable 
+    instructionName="XOR"
+    reg_16bit_and_anything_ins= {0x33}
+    reg_8bit_and_anything_ins= {0x32}
+    indexed_addressing_and_anyting_ins= {0x31}
+    addr_and_8bit_reg= {0x30}
+    al_and_num_ins= {0x34}
+    ax_and_num_ins= {0x35}
+    reg16bit_and_16bit_num= {0x81}
+    reg16bit_and_8bit_num= {0x83}
+    reg8bit_and_num= {0x80}
+    reg_num_sub_ins= {0xF0}
+    addr16bit_and_16bit_num= {0x81}
+    addr16bit_and_8bit_num= {0x83}
+    addr8bit_and_num= {0x80}
+    addr_num_sub_ins= {0x36}
+/>
+
+## Execution of the `xor` instruction
+The `xor` instruction performs a bitwise XOR operation on the value in register `rs1` and `rs2` and stores the result in register `rs1`. The syntax is:
+```asm6502 showLineNumbers
+xor AX, BX
+```
+Algorithm: 
+op1 <- op1 XOR op2
