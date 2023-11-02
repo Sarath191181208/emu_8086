@@ -60,6 +60,11 @@ pub(crate) enum AddressingMode {
         high_token: Token,
         low_token: Token,
     },
+    Register16bitAndIndexedAddressWithOffset {
+        high_token: Token,
+        low_token: Token,
+        offset: SignedU16,
+    },
 
     Register8bitAndIndexedAddress {
         high_token: Token,
@@ -67,11 +72,6 @@ pub(crate) enum AddressingMode {
         register_type: Registers8bit,
     },
 
-    Register16bitAndIndexedAddressWithOffset {
-        high_token: Token,
-        low_token: Token,
-        offset: SignedU16,
-    },
 
     Register8bitAndIndexedAddressWithOffset {
         high_token: Token,
@@ -80,12 +80,6 @@ pub(crate) enum AddressingMode {
         offset: SignedU16,
     },
 
-    AddressAnd16bitRegister {
-        high_token: Token,
-        low_token: Token,
-        address_bytes: [u8; 2],
-        register_type: Registers16bit,
-    },
     AddressAnd16bitNumber {
         high_token: Token,
         low_token: Token,
@@ -352,11 +346,11 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 }),
 
                 Assembly8086Tokens::Register16bit(reg) => {
-                    Ok(AddressingMode::AddressAnd16bitRegister {
+                    Ok(AddressingMode::IndexedAddressingAndRegister {
                         high_token: compact_high_token,
                         low_token: low_token.clone(),
-                        address_bytes: offset_val.to_le_bytes(),
                         register_type: reg.clone(),
+                        addr_type: IndexedAddressingTypes::Offset(offset.clone()),
                     })
                 }
 

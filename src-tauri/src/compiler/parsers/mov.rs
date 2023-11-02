@@ -3,7 +3,10 @@ use std::vec;
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        tokens::{registers16bit::Registers16bit, registers8bit::Registers8bit},
+        tokens::{
+            indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
+            registers8bit::Registers8bit,
+        },
         CompiledBytesReference, TokenizedLine,
     },
     convert_and_push_instructions,
@@ -142,38 +145,38 @@ pub(in crate::compiler) fn parse_mov(
             }
         },
         // MOV 0x100, AX..DI
-        AddressingMode::AddressAnd16bitRegister {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => match &register_type {
-            Registers16bit::AX => {
-                convert_and_push_instructions!(
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    (
-                       &high_token=> vec![0xA3],
-                        &low_token => address_bytes.to_vec()
-                    )
-                );
-                Ok(tokenized_line.len())
-            }
-            _ => {
-                let reg_idx = get_idx_from_token(&low_token)?;
-                convert_and_push_instructions!(
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    (
-                        token => vec![0x89],
-                       &high_token=> vec![0x06
-                         | reg_idx << 3],
-                        &low_token => address_bytes.to_vec()
-                    )
-                );
-                Ok(tokenized_line.len())
-            }
-        },
+        // AddressingMode::AddressAnd16bitRegister {
+        //     high_token,
+        //     low_token,
+        //     address_bytes,
+        //     register_type,
+        // } => match &register_type {
+        //     Registers16bit::AX => {
+        //         convert_and_push_instructions!(
+        //             compiled_bytes,
+        //             compiled_bytes_ref,
+        //             (
+        //                &high_token=> vec![0xA3],
+        //                 &low_token => address_bytes.to_vec()
+        //             )
+        //         );
+        //         Ok(tokenized_line.len())
+        //     }
+        //     _ => {
+        //         let reg_idx = get_idx_from_token(&low_token)?;
+        //         convert_and_push_instructions!(
+        //             compiled_bytes,
+        //             compiled_bytes_ref,
+        //             (
+        //                 token => vec![0x89],
+        //                &high_token=> vec![0x06
+        //                  | reg_idx << 3],
+        //                 &low_token => address_bytes.to_vec()
+        //             )
+        //         );
+        //         Ok(tokenized_line.len())
+        //     }
+        // },
         // MOV AX..DI, var
         AddressingMode::AddressAnd16bitNumber {
             high_token,
@@ -359,6 +362,24 @@ pub(in crate::compiler) fn parse_mov(
             )?;
             Ok(tokenized_line.len())
         }
+
+        AddressingMode::IndexedAddressingAndRegister {
+            high_token,
+            low_token,
+            register_type: Registers16bit::AX,
+            addr_type: IndexedAddressingTypes::Offset(address_bytes),
+        } => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                   &high_token=> vec![0xA3],
+                    &low_token => address_bytes.as_u16().to_le_bytes().to_vec()
+                )
+            );
+            Ok(tokenized_line.len())
+        }
+
         AddressingMode::IndexedAddressingAndRegister {
             high_token,
             low_token,

@@ -169,25 +169,6 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
             Ok(tokenized_line.len())
         }
 
-        AddressingMode::AddressAnd16bitRegister {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => {
-            let reg_idx = get_idx_from_reg(&high_token, &register_type)?;
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![indexed_addressing_and_anyting_ins],
-                    &high_token => vec![0x06 | reg_idx << 3],
-                    &low_token => address_bytes.to_vec()
-                )
-            );
-            Ok(tokenized_line.len())
-        }
-
         AddressingMode::AddressAnd8bitRegister {
             high_token,
             low_token,

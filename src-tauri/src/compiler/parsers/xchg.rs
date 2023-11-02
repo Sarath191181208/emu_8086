@@ -127,25 +127,6 @@ pub(in crate::compiler) fn parse_xchg(
             compiled_bytes_ref,
         ),
 
-        AddressingMode::AddressAnd16bitRegister {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => {
-            // 0x86 0x00..0x07
-            let reg_idx = register_type.get_index_or_err(&low_token)?;
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x87],
-                    &low_token => vec![0x06 | reg_idx << 3],
-                    &high_token => address_bytes.to_vec()
-                )
-            );
-            Ok(tokenized_line.len())
-        }
         AddressingMode::AddressAnd8bitRegister {
             high_token,
             low_token,
