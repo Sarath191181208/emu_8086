@@ -14,8 +14,6 @@ use crate::{
 use super::{
     compile_two_arguments_patterns::{
         parse_byte_indexed_addr_and_8bit_reg, parse_indexed_addr_and_reg,
-        parse_register_8bit_and_indexed_registers_with_offset,
-        parse_register_8bit_and_indexed_registers_without_offset,
     },
     AddressingMode,
 };
@@ -35,7 +33,6 @@ pub(in crate::compiler) fn parse_8bitreg_first_addr_mode(
             low_token,
             register_type,
             addr_type,
-            
         } => {
             parse_byte_indexed_addr_and_8bit_reg(
                 root_ins,

@@ -12,7 +12,7 @@ use crate::{
         tokenized_line::TokenizedLine,
         tokens::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
-            registers8bit::Registers8bit, Assembly8086Tokens, SignedU16, Token,
+            registers8bit::Registers8bit, Assembly8086Tokens, Token,
         },
         types_structs::{VariableAddressMap, VariableReferenceMap},
         CompiledLineLabelRef,

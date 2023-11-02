@@ -17,10 +17,7 @@ use super::{
         compile_first_ins_reg_pattern::{
             parse_16bitreg_first_addr_mode, parse_8bitreg_first_addr_mode,
         },
-        compile_two_arguments_patterns::{
-            parse_indexed_addr_and_reg, parse_register_8bit_and_indexed_registers_with_offset,
-            parse_register_8bit_and_indexed_registers_without_offset,
-        },
+        compile_two_arguments_patterns::parse_indexed_addr_and_reg,
         AddressingMode,
     },
     utils::{get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction},
@@ -134,7 +131,7 @@ pub(in crate::compiler) fn parse_mov(
         }
 
         AddressingMode::Register8bitAndIndexedAddressing {
-            high_token,
+            high_token: _,
             low_token,
             register_type: Registers8bit::AL,
             addr_type: IndexedAddressingTypes::Offset(address_bytes),
@@ -252,10 +249,10 @@ pub(in crate::compiler) fn parse_mov(
             compiled_bytes_ref,
         ),
         AddressingMode::Register8bitAndIndexedAddressing {
-            high_token,
-            low_token,
-            register_type,
-            addr_type,
+            high_token: _,
+            low_token: _,
+            register_type: _,
+            addr_type: _,
         } => {
             parse_8bitreg_first_addr_mode(
                 i,

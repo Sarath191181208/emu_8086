@@ -162,7 +162,7 @@ pub(in crate::compiler) fn parse_xchg(
             low_token: _,
             register_type: _,
             addr_type: _,
-        }=> parse_8bitreg_first_addr_mode(
+        } => parse_8bitreg_first_addr_mode(
             i,
             addressing_mode,
             reg_8bit_and_anything_ins,
