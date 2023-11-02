@@ -348,6 +348,12 @@ impl CPU {
             // XOR reg16, reg16/mem
             0x33 => self.execute_xor_16bit_reg(mem),
 
+            // XOR AL, 0x12 i.e immediate addressing
+            0x34 => self.xor_al_in_immediate_addressing(mem),
+
+            // XOR AX, 0x1234 i.e immediate addressing
+            0x35 => self.xor_ax_in_immediate_addressing(mem),
+
             // INC 16bit register
             0x40..=0x47 => self.execute_inc_word_register(opcode),
             // DEC 16bit register
@@ -373,10 +379,12 @@ impl CPU {
                     0x0E => self.execute_or_byte_addr_and_number(mem),
                     0x26 => self.execute_and_byte_addr_and_number(mem),
                     0x2E => self.sub_direct_address_8bit_val_immediate_value(mem),
+                    0x36 => self.execute_xor_byte_addr_and_number(mem),
                     0xC0..=0xC7 => self.execute_add_immediate_byte(mem),
                     0xC8..=0xCF => self.execute_or_8bit_reg_and_number(mem),
                     0xE0..=0xE7 => self.execute_and_8bit_reg_and_number(mem),
                     0xE8..=0xEF => self.execute_sub_immediate_byte(mem),
+                    0xF0..=0xF7 => self.execute_xor_8bit_reg_and_number(mem),
                     _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x80", opcode),
                 }
             }
@@ -389,10 +397,12 @@ impl CPU {
                     0x0E => self.execute_or_word_addr_and_number(mem, opcode),
                     0x26 => self.execute_and_word_addr_and_number(mem, opcode),
                     0x2E => self.sub_direct_address_16bit_val_immediate_value(mem, opcode),
+                    0x36 => self.execute_xor_word_addr_and_number(mem, opcode),
                     0xC0..=0xC7 => self.execute_add_reg_immediate_word(mem, opcode),
                     0xC8..=0xCF => self.execute_or_16bit_reg_and_number(mem, opcode),
                     0xE0..=0xE7 => self.execute_and_16bit_reg_and_number(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
+                    0xF0..=0xF7 => self.execute_xor_16bit_reg_and_number(mem, opcode),
                     _ => self.execute_unknown_ins(mem, opcode),
                 }
             }

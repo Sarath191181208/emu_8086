@@ -123,4 +123,40 @@ mod xor_tests {
         assert_eq!(cpu.stack_pointer, 0x1110);
         assert_eq!(cpu.base_pointer, 0x9080);
     }
+
+    #[test]
+    fn xor_8bit_reg_and_num() {
+        let code = "
+        MOV AL, 0x10
+        XOR AL, 0x10
+
+        MOV BL, 0x10
+        XOR BL, 0x01
+
+        MOV [0x100], 0x10
+        XOR b.[0x100], 0x11
+        ";
+        let (cpu, mem) = run_code(code, 6);
+        assert_eq!(cpu.get_ax_low(), 0x00);
+        assert_eq!(cpu.get_bx_low(), 0x11);
+        assert_eq!(cpu.read_byte_from_pointer(&mem, 0x100), 0x01);
+    }
+
+    #[test]
+    fn xor_16bit_reg_and_num() {
+        let code = "
+        MOV SP, 0x100
+        XOR SP, 0x10
+
+        MOV BP, 0x100
+        XOR BP, 0x10
+
+        MOV AX, 0x100
+        XOR AX, 0x10
+        ";
+        let (cpu, _) = run_code(code, 6);
+        assert_eq!(cpu.stack_pointer, 0x110);
+        assert_eq!(cpu.base_pointer, 0x110);
+        assert_eq!(cpu.ax, 0x110);
+    }
 }

@@ -49,7 +49,7 @@ fn compile_code_for_tests(code: &str, cpu: &mut CPU, mem: &mut Memory) {
             for err in e {
                 err.print_compilation_error(code);
             }
-            assert!(false);
+            panic!("Compilation failed");
             return;
         }
     };
