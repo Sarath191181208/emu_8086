@@ -35,6 +35,10 @@ impl CompilationError {
         )
     }
 
+    pub(super) fn error_line(line: LineNumber, msg: &str) -> Self {
+        CompilationError::new_without_suggestions(line, 0, u8::MAX , msg)
+    }
+
     pub(super) fn error_between_tokens(token1: &Token, token2: &Token, msg: &str) -> Self {
         CompilationError::new_without_suggestions(
             token1.line_number,
