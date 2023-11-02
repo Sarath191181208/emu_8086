@@ -43,7 +43,16 @@ macro_rules! generate_test_with_cycles {
 }
 
 fn compile_code_for_tests(code: &str, cpu: &mut CPU, mem: &mut Memory) {
-    let (compiled_bytes, _, is_org_defined) = compile_lines(code, false).unwrap();
+    let (compiled_bytes, is_org_defined) = match compile_lines(code, false) {
+        Ok((compiled_bytes, _, is_org_defined)) => (compiled_bytes, is_org_defined),
+        Err(e) => {
+            for err in e {
+                err.print_compilation_error(code);
+            }
+            assert!(false);
+            return;
+        }
+    };
     if is_org_defined {
         cpu.set_org_defined()
     }
