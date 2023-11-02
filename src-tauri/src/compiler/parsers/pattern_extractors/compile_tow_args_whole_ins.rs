@@ -235,20 +235,11 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
             high_token: _,
             low_token: _,
         }
-        | AddressingMode::Register16bitAndAddress {
+        | AddressingMode::Register16bitAndIndexedAddressing {
             high_token: _,
             low_token: _,
-            address_bytes: _,
             register_type: _,
-        }
-        | AddressingMode::Register16bitAndIndexedAddress {
-            high_token: _,
-            low_token: _,
-        }
-        | AddressingMode::Register16bitAndIndexedAddressWithOffset {
-            high_token: _,
-            low_token: _,
-            offset: _,
+            addr_type: _,
         } => parse_16bitreg_first_addr_mode(
             i,
             addressing_mode,

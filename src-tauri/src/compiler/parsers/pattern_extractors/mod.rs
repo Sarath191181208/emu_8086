@@ -29,6 +29,7 @@ pub(in super::super) mod compile_two_arguments_patterns;
 pub(in super::super) mod offset_label_pattern;
 pub(in crate::compiler) mod utils;
 
+#[derive(Debug, Clone)]
 pub(crate) enum AddressingMode {
     Registers16bit {
         high_token: Token,
@@ -49,21 +50,11 @@ pub(crate) enum AddressingMode {
         num: u8,
     },
 
-    Register16bitAndAddress {
+    Register16bitAndIndexedAddressing {
         high_token: Token,
         low_token: Token,
-        address_bytes: [u8; 2],
         register_type: Registers16bit,
-    },
-
-    Register16bitAndIndexedAddress {
-        high_token: Token,
-        low_token: Token,
-    },
-    Register16bitAndIndexedAddressWithOffset {
-        high_token: Token,
-        low_token: Token,
-        offset: SignedU16,
+        addr_type: IndexedAddressingTypes,
     },
 
     Register8bitAndIndexedAddress {
@@ -71,7 +62,6 @@ pub(crate) enum AddressingMode {
         low_token: Token,
         register_type: Registers8bit,
     },
-
 
     Register8bitAndIndexedAddressWithOffset {
         high_token: Token,
@@ -212,28 +202,14 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     high_token: compact_high_token,
                     low_token,
                 }),
-                Assembly8086Tokens::IndexedAddressing(field) => match field.get_offset() {
-                    Some(offset) => match field {
-                        IndexedAddressingTypes::Offset(offset) => {
-                            let offset_val = offset.as_u16();
-                            Ok(AddressingMode::Register16bitAndAddress {
-                                high_token: compact_high_token,
-                                low_token,
-                                address_bytes: offset_val.to_le_bytes(),
-                                register_type: register_type.clone(),
-                            })
-                        }
-                        _ => Ok(AddressingMode::Register16bitAndIndexedAddressWithOffset {
-                            high_token: compact_high_token,
-                            low_token,
-                            offset,
-                        }),
-                    },
-                    None => Ok(AddressingMode::Register16bitAndIndexedAddress {
+                Assembly8086Tokens::IndexedAddressing(field) => {
+                    Ok(AddressingMode::Register16bitAndIndexedAddressing {
                         high_token: compact_high_token,
                         low_token,
-                    }),
-                },
+                        register_type: register_type.clone(),
+                        addr_type: field.clone(),
+                    })
+                }
 
                 _ => Err(CompilationError::new_without_suggestions(
                     token.line_number,

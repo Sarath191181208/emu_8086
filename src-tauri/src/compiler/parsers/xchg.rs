@@ -38,7 +38,7 @@ pub(in crate::compiler) fn parse_xchg(
     let reg_16bit_and_anything_ins = 0x87;
     let indexed_addressing_and_anyting_ins = 0x86;
 
-    match addressing_mode {
+    match addressing_mode.clone() {
         AddressingMode::Registers16bitNumber {
             high_token: _,
             low_token,
@@ -103,20 +103,11 @@ pub(in crate::compiler) fn parse_xchg(
             Ok(i + 3)
         }
 
-        AddressingMode::Register16bitAndAddress {
+        AddressingMode::Register16bitAndIndexedAddressing {
             high_token: _,
             low_token: _,
-            address_bytes: _,
             register_type: _,
-        }
-        | AddressingMode::Register16bitAndIndexedAddress {
-            high_token: _,
-            low_token: _,
-        }
-        | AddressingMode::Register16bitAndIndexedAddressWithOffset {
-            high_token: _,
-            low_token: _,
-            offset: _,
+            addr_type: _,
         } => parse_16bitreg_first_addr_mode(
             i,
             addressing_mode,
