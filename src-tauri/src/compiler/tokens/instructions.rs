@@ -27,5 +27,6 @@ pub(crate) enum Instructions {
     Ret,
     Sub,
     Test,
+    Xchg,
     Xor,
 }
