@@ -94,7 +94,7 @@ mod xor_tests {
 
         MOV AL, 0x10
         MOV BP, 0x100
-        MOV [0x100xor_8bit_reg_and_16bit_mem_or_reg], 0x10
+        MOV [0x100], 0x10
         XOR AL, [BP]
         ";
         let (cpu, _) = run_code(code, 10);
