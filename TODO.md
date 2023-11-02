@@ -3,6 +3,7 @@
 - [ ] Unused macros.
 ## To support: 
 - [ ] Look into aux flag for `or` ins.
+- [ ] Support 1234:5778 addressing for `jmp` ins.
 - [ ] 🐞FIX: jmp to number 
 - [ ] 🐞FIX: not optimizing reg and num in add ins
 - [ ] 🐞FIX:  Running of macros.
