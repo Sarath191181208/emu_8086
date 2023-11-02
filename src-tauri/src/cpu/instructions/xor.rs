@@ -70,7 +70,7 @@ mod xor_tests {
     }
 
     #[test]
-    fn test_16bit_mem_and_reg(){
+    fn test_16bit_mem_and_reg() {
         let code = "
         MOV SP, 0x100
         MOV [0x100], 0x1010
@@ -82,7 +82,7 @@ mod xor_tests {
     }
 
     #[test]
-    fn xor_8bit_reg_and_16bit_mem_or_reg(){
+    fn xor_8bit_reg_and_16bit_mem_or_reg() {
         let code = "
         MOV CH, 0x10
         MOV b.[0x100], 0x10
