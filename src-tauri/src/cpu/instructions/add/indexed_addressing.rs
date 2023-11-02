@@ -116,147 +116,112 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
     fn no_offset_indexed_add() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data 
-            var dw 0x1234
-            code: 
-            mov bx, 0x100 
-            mov si, 0x02
-            add ax, [bx+si]
-            ",
-            4,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x1234);
-            },
-        );
+        let code = "
+        org 100h
+        .data 
+        var dw 0x1234
+        code: 
+        mov bx, 0x100 
+        mov si, 0x02
+        add ax, [bx+si]
+        ";
+        let (cpu, _) = run_code(code, 4);
+        assert_eq!(cpu.ax, 0x1234);
     }
 
     #[test]
     fn only_offset_indexed_add() {
-        compile_and_test_str(
-            " 
-            add ax, [0x1000]
-            ",
-            1,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x9090);
-            },
-        );
+        let code = " 
+        add ax, [0x1000]
+        ";
+        let (cpu, _) = run_code(code, 1);
+        assert_eq!(cpu.ax, 0x9090);
     }
 
     #[test]
     fn offset_8bit_index_add() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data 
-            _var db 0x20
-            var dw 0x1234
-            code: 
-            mov bx, 0x100 
-            mov si, 0x05
-            add ax, [bx+si-0x02]
-            ",
-            4,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x1234);
-            },
-        );
+        let code = "
+        org 100h
+        .data 
+        _var db 0x20
+        var dw 0x1234
+        code: 
+        mov bx, 0x100 
+        mov si, 0x05
+        add ax, [bx+si-0x02]
+        ";
+        let (cpu, _) = run_code(code, 4);
+        assert_eq!(cpu.ax, 0x1234);
     }
 
     #[test]
     fn offset_16bit_index_add() {
-        compile_and_test_str(
-            "
-            org 100h
-            .data 
-            _var dw 0x20
-            var dw 0x1234
-            code: 
-            mov bx, 0x02
-            mov si, 0x02
-            add ax, [bx+si+0x100]
-            ",
-            4,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.ax, 0x1234);
-            },
-        );
+        let code = "
+        org 100h
+        .data 
+        _var dw 0x20
+        var dw 0x1234
+        code: 
+        mov bx, 0x02
+        mov si, 0x02
+        add ax, [bx+si+0x100]
+        ";
+        let (cpu, _) = run_code(code, 4);
+        assert_eq!(cpu.ax, 0x1234);
     }
 }
 
 #[cfg(test)]
 mod tests_8bit {
-    use crate::{
-        cpu::{instructions::test_macro::compile_and_test_str, CPU},
-        memory::Memory,
-    };
+    use crate::cpu::instructions::test_macro::run_code;
 
     #[test]
-
     fn offset_8bit_register_and_offset() {
-        compile_and_test_str(
-            "
-    org 100h
-    .data
-    _var db 0x20
-    var db 0x12
-    code:
-    add al, [0x102]
-    ",
-            4,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.get_ax_low(), 0x20);
-            },
-        );
+        let code = "
+        org 100h
+        .data
+        _var db 0x20
+        var db 0x12
+        code:
+        add al, [0x102]
+        ";
+        let (cpu, _) = run_code(code, 4);
+        assert_eq!(cpu.get_ax_low(), 0x20);
     }
 
     #[test]
     fn offset_8bit_index_add_8bit() {
-        compile_and_test_str(
-            "
-    org 100h
-    .data
-    _var db 0x20
-    var db 0x12
-    code:
-    mov bx, 0x100
-    mov si, 0x05
-    add al, [bx+si-0x02]
-    ",
-            4,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.get_ax_low(), 0x12);
-            },
-        );
+        let code = "
+        org 100h
+        .data
+        _var db 0x20
+        var db 0x12
+        code:
+        mov bx, 0x100
+        mov si, 0x05
+        add al, [bx+si-0x02]
+        ";
+        let (cpu, _) = run_code(code, 4);
+        assert_eq!(cpu.get_ax_low(), 0x12);
     }
 
     #[test]
     fn offset_16bit_index_add_8bit() {
-        compile_and_test_str(
-            "
-    org 100h
-    .data
-    _var dw 0x20
-    var db 0x12
-    code:
-    mov bx, 0x02
-    mov si, 0x02
-    add al, [bx+si+0x100]
-    ",
-            4,
-            |cpu: &CPU, _: &Memory| {
-                assert_eq!(cpu.get_ax_low(), 0x12);
-            },
-        );
+        let code = "
+        org 100h
+        .data
+        _var dw 0x20
+        var db 0x12
+        code:
+        mov bx, 0x02
+        mov si, 0x02
+        add al, [bx+si+0x100]
+        ";
+        let (cpu, _) = run_code(code, 4);
+        assert_eq!(cpu.get_ax_low(), 0x12);
     }
 }
