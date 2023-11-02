@@ -50,7 +50,6 @@ fn compile_code_for_tests(code: &str, cpu: &mut CPU, mem: &mut Memory) {
                 err.print_compilation_error(code);
             }
             panic!("Compilation failed");
-            return;
         }
     };
     if is_org_defined {
