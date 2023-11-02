@@ -18,6 +18,7 @@ pub mod push;
 pub mod sub;
 pub mod test_ins;
 pub mod var;
+pub mod xor;
 
 pub(in crate::compiler) mod pattern_extractors;
 pub(in crate::compiler) mod utils;
