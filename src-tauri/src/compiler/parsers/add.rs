@@ -9,6 +9,7 @@ use crate::{
 
 use super::{
     pattern_extractors::{
+        compile_tow_args_whole_ins::{CompilingBytesForInstruction, compile_two_args_whole_ins},
         compile_two_arguments_patterns::{
             parse_indexed_addr_and_reg, parse_register_16bit_and_indexed_registers_with_offset,
             parse_register_16bit_and_indexed_registers_without_offset,
@@ -32,311 +33,34 @@ pub(in crate::compiler) fn parse_add(
         "This shouldn't happen, Please report this".to_string(),
         None,
     )?;
-    match addressing_mode {
-        AddressingMode::Registers16bit {
-            high_token,
-            low_token,
-        } => {
-            let high_reg_idx = get_idx_from_token(&high_token)?;
-            let low_reg_idx = get_idx_from_token(&low_token)?;
-            let ins = get_as_0xc0_0xff_pattern(high_reg_idx, low_reg_idx);
-            push_instruction(compiled_bytes, vec![0x03], token, compiled_bytes_ref);
-            push_instruction(compiled_bytes, vec![ins], &low_token, compiled_bytes_ref);
-            Ok(i + 3)
-        }
-        AddressingMode::Registers8bit {
-            high_token,
-            low_token,
-        } => {
-            let high_reg = get_8bit_register(&high_token);
-            let low_reg = get_8bit_register(&low_token);
-            let ins = get_as_0xc0_0xff_pattern(high_reg.get_as_idx(), low_reg.get_as_idx());
-            push_instruction(compiled_bytes, vec![0x02], token, compiled_bytes_ref);
-            push_instruction(compiled_bytes, vec![ins], &low_token, compiled_bytes_ref);
-            Ok(i + 3)
-        }
-        AddressingMode::Registers16bitNumber {
-            high_token,
-            low_token,
-            num,
-        } => {
-            let high_reg_idx = get_idx_from_token(&high_token)?;
-            let is_ax = high_reg_idx == 0;
-            if is_ax {
-                convert_and_push_instructions!(
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    (
-                        token => vec![0x05],
-                        &low_token => num.get_as_u16().to_le_bytes().to_vec()
-                    )
-                );
-            } else {
-                let add_ins = match num {
-                    Either::Right(_) => 0x81,
-                    Either::Left(num_u8) => {
-                        if num_u8 > 0x7F {
-                            0x81
-                        } else {
-                            0x83
-                        }
-                    }
-                };
-                let data_ins = match num {
-                    Either::Right(x) => x.to_le_bytes().to_vec(),
-                    Either::Left(x) => {
-                        if x > 0x7F {
-                            (x as u16).to_le_bytes().to_vec()
-                        } else {
-                            vec![x]
-                        }
-                    }
-                };
-                convert_and_push_instructions!(
-                    compiled_bytes,
-                    compiled_bytes_ref,
-                    (
-                        token => vec![add_ins],
-                        &high_token => vec![0xC0 | high_reg_idx],
-                        &low_token => data_ins
-                    )
-                );
-            }
 
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register8bitNumber {
-            high_token,
-            low_token,
-            num: number,
-        } => {
-            let high_reg = get_8bit_register(&high_token);
-            let is_al = high_reg.get_as_idx() == 0;
-            if is_al {
-                push_instruction(compiled_bytes, vec![0x04], token, compiled_bytes_ref);
-                push_instruction(compiled_bytes, vec![number], &low_token, compiled_bytes_ref);
-            } else {
-                push_instruction(compiled_bytes, vec![0x80], token, compiled_bytes_ref);
-                push_instruction(
-                    compiled_bytes,
-                    vec![0xC0 | high_reg.get_as_idx()],
-                    &high_token,
-                    compiled_bytes_ref,
-                );
-                push_instruction(compiled_bytes, vec![number], &low_token, compiled_bytes_ref);
-            }
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register16bitAndAddress {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => {
-            let reg_idx = get_idx_from_reg(&high_token, &register_type)?;
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x03],
-                    &high_token => vec![0x06 | reg_idx << 3],
-                    &low_token => address_bytes.to_vec()
-                )
-            );
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::AddressAnd16bitRegister {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => {
-            let reg_idx = get_idx_from_reg(&low_token, &register_type)?;
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x01],
-                   &high_token=> vec![0x06 | reg_idx << 3],
-                    &low_token => address_bytes.to_vec()
-                )
-            );
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::AddressAnd16bitNumber {
-            high_token,
-            low_token,
-            address_bytes,
-            num,
-        } => {
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x81, 0x06],
-                   &high_token=> address_bytes.to_vec(),
-                    &low_token => num.to_le_bytes().to_vec()
-                )
-            );
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register8bitAndAddress {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => {
-            let reg_idx = register_type.get_as_idx();
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x02],
-                    &high_token => vec![0x06 | reg_idx << 3],
-                    &low_token => address_bytes.to_vec()
-                )
-            );
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::AddressAnd8bitRegister {
-            high_token,
-            low_token,
-            address_bytes,
-            register_type,
-        } => {
-            let reg_idx = register_type.get_as_idx();
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x00],
-                   &high_token=> vec![0x06 | reg_idx << 3],
-                   &low_token=> address_bytes.to_vec()
-                )
-            );
-            Ok(i + 3)
-        }
-        AddressingMode::AddressAnd8bitNumber {
-            high_token,
-            low_token,
-            address_bytes,
-            num,
-        } => {
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x83, 0x06],
-                   &high_token=> address_bytes.to_vec(),
-                   &low_token=> vec![num]
-                )
-            );
-            Ok(tokenized_line.len())
-        }
+    let ins = CompilingBytesForInstruction {
+        reg_16bit_and_anything_ins: 0x03,
+        reg_8bit_and_anything_ins: 0x02,
+        indexed_addressing_and_anyting_ins: 0x01,
+        addr_and_8bit_reg: 0x00,
 
-        AddressingMode::ByteAddressAnd8bitNumber {
-            high_token,
-            low_token,
-            address_bytes,
-            num,
-        } => {
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => vec![0x80, 0x06],
-                   &high_token=> address_bytes.to_vec(),
-                   &low_token=> vec![num]
-                )
-            );
-            Ok(tokenized_line.len())
-        }
+        al_and_num_ins: Some(0x04),
+        ax_and_num_ins: Some(0x05),
+        reg16bit_and_16bit_num: 0x81,
+        reg16bit_and_8bit_num: Some(0x83),
+        reg8bit_and_num: 0x80,
+        reg_num_sub_ins: 0xC0,
 
-        AddressingMode::Register16bitAndIndexedAddress {
-            high_token,
-            low_token,
-        } => {
-            parse_register_16bit_and_indexed_registers_without_offset(
-                0x03,
-                token,
-                &high_token,
-                &low_token,
-                compiled_bytes,
-                compiled_bytes_ref,
-            )?;
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register16bitAndIndexedAddressWithOffset {
-            high_token,
-            low_token,
-            offset,
-        } => {
-            parse_register_16bit_and_indexed_registers_with_offset(
-                0x03,
-                token,
-                &high_token,
-                &low_token,
-                &offset,
-                compiled_bytes,
-                compiled_bytes_ref,
-            )?;
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register8bitAndIndexedAddress {
-            high_token,
-            low_token,
-            register_type,
-        } => {
-            parse_register_8bit_and_indexed_registers_without_offset(
-                0x02,
-                register_type,
-                token,
-                &high_token,
-                &low_token,
-                compiled_bytes,
-                compiled_bytes_ref,
-            )?;
+        addr16bit_and_16bit_num: 0x81,
+        addr16bit_and_8bit_num: Some(0x83),
+        addr8bit_and_num: 0x80,
+        addr_num_sub_ins: 0x06,
+    };
 
-            Ok(tokenized_line.len())
-        }
-        AddressingMode::Register8bitAndIndexedAddressWithOffset {
-            high_token,
-            low_token,
-            offset,
-            register_type,
-        } => {
-            parse_register_8bit_and_indexed_registers_with_offset(
-                0x02,
-                register_type,
-                token,
-                &high_token,
-                &low_token,
-                &offset,
-                compiled_bytes,
-                compiled_bytes_ref,
-            )?;
-            Ok(tokenized_line.len())
-        }
-
-        AddressingMode::IndexedAddressingAndRegister {
-            high_token,
-            low_token,
-            register_type,
-            addr_type,
-        } => {
-            parse_indexed_addr_and_reg(
-                0x01,
-                token,
-                &high_token,
-                &low_token,
-                register_type,
-                addr_type,
-                compiled_bytes,
-                compiled_bytes_ref,
-            )?;
-            Ok(tokenized_line.len())
-        }
-    }
+    compile_two_args_whole_ins(
+        tokenized_line,
+        i,
+        ins,
+        compiled_bytes,
+        compiled_bytes_ref,
+        addressing_mode,
+    )
 }
 
 #[cfg(test)]
