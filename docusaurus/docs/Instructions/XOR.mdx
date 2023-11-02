@@ -1,0 +1,67 @@
+---
+title: XOR
+description: Performs a logical XOR of the first operand with the second operand and stores the result in the first operand.
+---
+
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import {
+  RegisterAddressingMode,
+  ImmediateAddressingMode,
+  MemoryAddressingMode,
+  RegisterAndMemoryAddressing,
+  MemoryAndRegisterAddressing,
+  MemoryAndImmediateAddressing,
+  IndirectMemoryAndImmediateAddressing,
+  DirectMemoryAndImmediateAddressing
+} from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502
+XOR operand1, operand2
+```
+## Attributes
+
+| Attribute     | Description                                                                                                                                                   |
+| :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Operands**  | The first operand is a general purpose register or a memory location. The second operand is a general-purpose register, memory location, or immediate value. |
+| **Operation** | `operand1 = operand1 XOR operand2`                                                                                                                            |
+| **Size**      | 2 to 6 bytes.                                                                                                                                                 |
+| **Action**    | Performs a bitwise exclusive OR of the first operand with the second operand and stores the result in the first operand.                                      |
+| **Flags**     | <FlagsChangedTable carryFlag={false} overflowFlag={false} zeroFlag="changed" signFlag="changed" parityFlag="changed" auxiliaryCarryFlag="changed" />         |
+
+## Example 
+```asm6502 showLineNumbers
+MOV AX, 0x0003
+XOR AX, 0x0002 ; AX = 0x0001
+```
+
+> Here the value of AX is 0x0001 after the XOR instruction is executed. <br/>
+> This is because 0x0003 = 0b0000_0000_0000_0011 and 0x0002 = 0b0000_0000_0000_0010.  <br/>
+> The XOR operation is performed on each bit of the operands. <br/>
+> The result is 0b0000_0000_0000_0001 which is 0x0001.<br/>
+
+
+## Supported Modes 
+
+### Register, Register Addressing
+<RegisterAddressingMode instructionName="XOR" />
+
+### Register, Immediate Value Addressing 
+<ImmediateAddressingMode instructionName="XOR" />
+
+### Register, Direct Memory Addressing
+<MemoryAddressingMode instructionName="XOR" />
+
+### Register, Direct/Indirect Memory Addressing With (or) Without Displacement
+<RegisterAndMemoryAddressing instructionName="XOR" />
+
+###  Direct/Indirect Memory Addressing With (or) Without Displacement , Register Addressing 
+<MemoryAndRegisterAddressing instructionName="XOR"/>
+
+### Direct/Indirect, Immediate Value Addressing
+<DirectMemoryAndImmediateAddressing instructionName="XOR" />
+
+### Indirect Memory Addressing With (or) Without Displacement, Immediate Value Addressing
+
+<IndirectMemoryAndImmediateAddressing instructionName="XOR" />
