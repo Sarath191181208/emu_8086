@@ -94,12 +94,33 @@ mod xor_tests {
 
         MOV AL, 0x10
         MOV BP, 0x100
-        MOV [0x100], 0x10
+        MOV [0x100xor_8bit_reg_and_16bit_mem_or_reg], 0x10
         XOR AL, [BP]
         ";
         let (cpu, _) = run_code(code, 10);
         assert_eq!(cpu.get_cx_high(), 0x00);
         assert_eq!(cpu.get_bx_low(), 0x11);
         assert_eq!(cpu.get_ax_low(), 0x00);
+    }
+
+    #[test]
+    fn xor_16bit_reg_and_16bit_mem_or_reg() {
+        let code = "
+        MOV SP, 0x100
+        MOV [0x100], 0x1010
+        XOR SP, [0x100]
+
+        MOV BP, 0x10
+        MOV [0x100], 0x1010
+        XOR BP, [BP+0x90]
+
+        MOV BX, 0x01 
+        MOV AX, 0x10
+        XOR BX, AX
+        ";
+        let (cpu, _) = run_code(code, 9);
+        // assert_eq!(cpu.bx, 0x11);
+        assert_eq!(cpu.stack_pointer, 0x1110);
+        assert_eq!(cpu.base_pointer, 0x9080);
     }
 }
