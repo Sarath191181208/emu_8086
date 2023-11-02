@@ -342,6 +342,9 @@ impl CPU {
             // XOR mem, reg16 
             0x31 => self.execute_xor_word_addr_as_first_operand(mem),
 
+            // XOR reg8, reg8/mem
+            0x32 => self.execute_xor_8bit_reg(mem),
+
             // INC 16bit register
             0x40..=0x47 => self.execute_inc_word_register(opcode),
             // DEC 16bit register

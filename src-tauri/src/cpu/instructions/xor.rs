@@ -80,4 +80,26 @@ mod xor_tests {
         let (cpu, mem) = run_code(code, 3);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x100), 0x1110);
     }
+
+    #[test]
+    fn xor_8bit_reg_and_16bit_mem_or_reg(){
+        let code = "
+        MOV CH, 0x10
+        MOV b.[0x100], 0x10
+        XOR CH, [0x100]
+
+        MOV BL, 0x10
+        MOV BH, 0x01 
+        XOR BL, BH
+
+        MOV AL, 0x10
+        MOV BP, 0x100
+        MOV [0x100], 0x10
+        XOR AL, [BP]
+        ";
+        let (cpu, _) = run_code(code, 10);
+        assert_eq!(cpu.get_cx_high(), 0x00);
+        assert_eq!(cpu.get_bx_low(), 0x11);
+        assert_eq!(cpu.get_ax_low(), 0x00);
+    }
 }
