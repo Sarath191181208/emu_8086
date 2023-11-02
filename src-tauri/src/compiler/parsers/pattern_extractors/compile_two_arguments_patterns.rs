@@ -3,7 +3,7 @@ use crate::{
         compilation_error::CompilationError,
         parsers::utils::{
             get_as_0x00_0x3f_pattern, get_as_0x40_0x7f_pattern, get_as_0x80_0xbf_pattern,
-            get_idx_from_token, get_index_addr_as_idx, push_instruction,
+            get_index_addr_as_idx, push_instruction,
         },
         tokens::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
@@ -73,26 +73,6 @@ pub(crate) fn parse_register_8bit_and_indexed_registers_without_offset(
     )
 }
 
-pub(crate) fn parse_register_16bit_and_indexed_registers_without_offset(
-    base_instruction: u8,
-    token: &Token,
-    high_token: &Token,
-    low_token: &Token,
-    compiled_bytes: &mut Vec<u8>,
-    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-) -> Result<(), CompilationError> {
-    let high_reg_idx = get_idx_from_token(high_token)?;
-    parse_reg_and_indexed_reg_without_offset(
-        high_reg_idx,
-        base_instruction,
-        token,
-        high_token,
-        low_token,
-        compiled_bytes,
-        compiled_bytes_ref,
-    )
-}
-
 #[allow(clippy::too_many_arguments)]
 pub(in super::super) fn parse_register_and_indexed_registers_with_offset(
     base_instruction: u8,
@@ -137,28 +117,6 @@ pub(in super::super) fn parse_register_8bit_and_indexed_registers_with_offset(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
 ) -> Result<(), CompilationError> {
     let high_reg_idx = register.get_as_idx();
-    parse_register_and_indexed_registers_with_offset(
-        base_instruction,
-        high_reg_idx,
-        token,
-        high_token,
-        low_token,
-        offset,
-        compiled_bytes,
-        compiled_bytes_ref,
-    )
-}
-
-pub(crate) fn parse_register_16bit_and_indexed_registers_with_offset(
-    base_instruction: u8,
-    token: &Token,
-    high_token: &Token,
-    low_token: &Token,
-    offset: &SignedU16,
-    compiled_bytes: &mut Vec<u8>,
-    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
-) -> Result<(), CompilationError> {
-    let high_reg_idx = get_idx_from_token(high_token)?;
     parse_register_and_indexed_registers_with_offset(
         base_instruction,
         high_reg_idx,

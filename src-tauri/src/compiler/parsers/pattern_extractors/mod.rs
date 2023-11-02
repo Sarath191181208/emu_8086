@@ -326,7 +326,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                         high_token: compact_high_token,
                         low_token: low_token.clone(),
                         register_type: reg.clone(),
-                        addr_type: IndexedAddressingTypes::Offset(offset.clone()),
+                        addr_type: IndexedAddressingTypes::Offset(*offset),
                     })
                 }
 

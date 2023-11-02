@@ -6,7 +6,6 @@ use crate::{
         CompiledBytesReference,
     },
     convert_and_push_instructions,
-    cpu::instructions::add,
 };
 
 use super::{
@@ -14,11 +13,10 @@ use super::{
         compile_first_ins_reg_pattern::{
             parse_16bitreg_first_addr_mode, parse_8bitreg_first_addr_mode,
         },
-        compile_tow_args_whole_ins::{compile_two_args_whole_ins, CompilingBytesForInstruction},
         compile_two_arguments_patterns::parse_indexed_addr_and_reg,
         AddressingMode,
     },
-    utils::{get_8bit_register, get_idx_from_token},
+    utils::get_idx_from_token,
 };
 
 pub(in crate::compiler) fn parse_xchg(
@@ -66,12 +64,10 @@ pub(in crate::compiler) fn parse_xchg(
             low_token,
             address_bytes: _,
             num: _,
-        } => {
-            return Err(CompilationError::error_with_token(
-                &low_token,
-                "Invalid addressing mode for XCHG instruction",
-            ));
-        }
+        } => Err(CompilationError::error_with_token(
+            &low_token,
+            "Invalid addressing mode for XCHG instruction",
+        )),
 
         AddressingMode::Registers16bit {
             high_token,

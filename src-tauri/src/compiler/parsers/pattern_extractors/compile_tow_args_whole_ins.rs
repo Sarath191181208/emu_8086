@@ -1,9 +1,7 @@
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        parsers::utils::{
-            get_8bit_register, get_idx_from_reg, get_idx_from_token, push_instruction,
-        },
+        parsers::utils::{get_8bit_register, get_idx_from_token, push_instruction},
         tokenized_line::TokenizedLine,
         types_structs::CompiledBytesReference,
     },

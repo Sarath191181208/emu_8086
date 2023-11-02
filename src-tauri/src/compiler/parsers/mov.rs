@@ -16,9 +16,7 @@ use super::{
     pattern_extractors::{
         compile_first_ins_reg_pattern::parse_16bitreg_first_addr_mode,
         compile_two_arguments_patterns::{
-            parse_indexed_addr_and_reg, parse_register_16bit_and_indexed_registers_with_offset,
-            parse_register_16bit_and_indexed_registers_without_offset,
-            parse_register_8bit_and_indexed_registers_with_offset,
+            parse_indexed_addr_and_reg, parse_register_8bit_and_indexed_registers_with_offset,
             parse_register_8bit_and_indexed_registers_without_offset,
         },
         AddressingMode,
@@ -252,10 +250,10 @@ pub(in crate::compiler) fn parse_mov(
         }
 
         AddressingMode::Register16bitAndIndexedAddressing {
-            high_token,
-            low_token,
-            register_type,
-            addr_type,
+            high_token: _,
+            low_token: _,
+            register_type: _,
+            addr_type: _,
         } => parse_16bitreg_first_addr_mode(
             i,
             addressing_mode.clone(),

@@ -2,8 +2,7 @@ use crate::{
     compiler::{
         compilation_error::CompilationError,
         parsers::utils::{
-            get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_reg, get_idx_from_token,
-            push_instruction,
+            get_8bit_register, get_as_0xc0_0xff_pattern, get_idx_from_token, push_instruction,
         },
         tokenized_line::TokenizedLine,
         tokens::Token,
@@ -14,10 +13,8 @@ use crate::{
 
 use super::{
     compile_two_arguments_patterns::{
-        parse_register_16bit_and_indexed_registers_with_offset,
-        parse_register_16bit_and_indexed_registers_without_offset,
-        parse_register_8bit_and_indexed_registers_with_offset,
-        parse_register_8bit_and_indexed_registers_without_offset, parse_indexed_addr_and_reg,
+        parse_indexed_addr_and_reg, parse_register_8bit_and_indexed_registers_with_offset,
+        parse_register_8bit_and_indexed_registers_without_offset,
     },
     AddressingMode,
 };
@@ -157,10 +154,7 @@ pub(in crate::compiler) fn parse_16bitreg_first_addr_mode(
         _ => {
             Err(CompilationError::error_line(
                 token.line_number ,
-                &format!(
-                    "Invalid use of the `parse_16bitreg_first_addr_mode` function, Please report this issue!",
-                )))
-            
+                "Invalid use of the `parse_16bitreg_first_addr_mode` function, Please report this issue!"))
         },
     }
 }

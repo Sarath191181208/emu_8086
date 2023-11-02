@@ -4,7 +4,7 @@ use super::{
     compilation_error::CompilationError,
     lexer::Lexer,
     tokens::{instructions::Instructions, Assembly8086Tokens, Token},
-    types_structs::{CompiledBytesReference, Label, LineNumber},
+    types_structs::{CompiledBytesReference, Label},
 };
 
 pub(in crate::compiler) fn get_jmp_code_compiled_line(token: &Token) -> Vec<Token> {
@@ -36,7 +36,7 @@ impl CompilationError {
     }
 
     pub(super) fn error_line(line: u32, msg: &str) -> Self {
-        CompilationError::new_without_suggestions(line, 0, u8::MAX as u32 , msg)
+        CompilationError::new_without_suggestions(line, 0, u8::MAX as u32, msg)
     }
 
     pub(super) fn error_between_tokens(token1: &Token, token2: &Token, msg: &str) -> Self {
