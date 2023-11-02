@@ -1,21 +1,10 @@
-use crate::{
-    compiler::{
-        compilation_error::CompilationError, parsers::utils::get_idx_from_reg,
-        tokenized_line::TokenizedLine, CompiledBytesReference,
-    },
-    convert_and_push_instructions,
-    utils::Either,
+use crate::compiler::{
+    compilation_error::CompilationError, tokenized_line::TokenizedLine, CompiledBytesReference,
 };
 
-use super::{
-    pattern_extractors::{
-        compile_first_ins_reg_pattern::{
-            parse_16bitreg_first_addr_mode, parse_8bitreg_first_addr_mode,
-        },
-        compile_two_arguments_patterns::parse_indexed_addr_and_reg,
-        AddressingMode, compile_tow_args_whole_ins::{CompilingBytesForInstruction, compile_two_args_whole_ins},
-    },
-    utils::{get_8bit_register, get_idx_from_token, push_instruction},
+use super::pattern_extractors::{
+    compile_tow_args_whole_ins::{compile_two_args_whole_ins, CompilingBytesForInstruction},
+    AddressingMode,
 };
 
 pub(in crate::compiler) fn parse_and(
@@ -25,7 +14,6 @@ pub(in crate::compiler) fn parse_and(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
-
     let ins = CompilingBytesForInstruction {
         reg_16bit_and_anything_ins: 0x23,
         reg_8bit_and_anything_ins: 0x22,
@@ -45,14 +33,14 @@ pub(in crate::compiler) fn parse_and(
         addr_num_sub_ins: 0x26,
     };
 
-  compile_two_args_whole_ins(
+    compile_two_args_whole_ins(
         tokenized_line,
         i,
         ins,
         compiled_bytes,
         compiled_bytes_ref,
         addressing_mode,
-  )
+    )
 }
 
 #[cfg(test)]
