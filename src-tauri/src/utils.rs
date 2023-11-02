@@ -2,6 +2,7 @@ use serde::Serialize;
 
 use crate::compiler::tokens::Token;
 
+#[derive(Debug, Clone)]
 pub enum Either<T, U> {
     Left(T),
     Right(U),
