@@ -14,14 +14,6 @@ pub(in crate::compiler) fn parse_test(
     compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
     addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
-    let _token = tokenized_line.get(
-        i,
-        "This shouldn't happen, Please report this".to_string(),
-        None,
-    )?;
-    // let reg_16bit_and_anything_ins = 0x85;
-    // let reg_8bit_and_anything_ins = 0x84;
-
     let ins = CompilingBytesForInstruction {
         reg_16bit_and_anything_ins: 0x85,
         reg_8bit_and_anything_ins: 0x84,
