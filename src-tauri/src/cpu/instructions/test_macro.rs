@@ -1,4 +1,8 @@
-use crate::{compiler::compile_lines, cpu::CPU, memory::Memory};
+use crate::{
+    compiler::compile_lines,
+    cpu::CPU,
+    memory::{self, Memory},
+};
 
 #[deprecated(note = "please use `run_code` instead")]
 #[macro_export]
@@ -79,6 +83,24 @@ pub fn run_code(code: &str, cycles: usize) -> (CPU, Memory) {
     cpu.reset(&mut mem);
 
     compile_code_for_tests(code, &mut cpu, &mut mem);
+
+    for _ in 0..cycles {
+        cpu.execute(&mut mem);
+    }
+
+    (cpu, mem)
+}
+
+pub fn execute_code(code: &str) -> (CPU, Memory) {
+    let mut cpu = CPU::new();
+    let mut mem = Memory::new();
+    cpu.reset(&mut mem);
+
+    compile_code_for_tests(code, &mut cpu, &mut mem);
+
+    // calc the number of non blank lines in code 
+    let cycles = code.lines().filter(|line| !line.is_empty()).count();
+    dbg!(cycles);
 
     for _ in 0..cycles {
         cpu.execute(&mut mem);

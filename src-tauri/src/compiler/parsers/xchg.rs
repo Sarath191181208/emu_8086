@@ -36,6 +36,7 @@ pub(in crate::compiler) fn parse_xchg(
     let reg_16bit_and_anything_ins = 0x87;
     let indexed_addressing_and_anyting_ins = 0x87;
     let byte_indexed_addressing_and_anyting_ins = 0x86;
+    let xchg_ax_and_reg_ins = 0x90;
 
     match addressing_mode.clone() {
         AddressingMode::Registers16bitNumber {
@@ -78,7 +79,7 @@ pub(in crate::compiler) fn parse_xchg(
             let low_reg_idx = get_idx_from_token(&low_token)?;
             let is_ax_in_low_or_high = high_reg_idx == 0 || low_reg_idx == 0;
             if is_ax_in_low_or_high {
-                let ins = 0x90 + high_reg_idx + low_reg_idx;
+                let ins = xchg_ax_and_reg_ins + high_reg_idx + low_reg_idx;
                 convert_and_push_instructions!(
                     compiled_bytes,
                     compiled_bytes_ref,
@@ -92,7 +93,7 @@ pub(in crate::compiler) fn parse_xchg(
                     compiled_bytes,
                     compiled_bytes_ref,
                     (
-                        token => vec![0x87],
+                        token => vec![reg_16bit_and_anything_ins],
                         &low_token => vec![ins]
                     )
                 );

@@ -413,6 +413,12 @@ impl CPU {
             // TEST AX..DI, reg/mem
             0x85 => self.execute_test_16bit_reg(mem),
 
+            // XCHG 8bit register/mem, 8bit register/mem
+            0x86 => self.execute_xchg_8bit_reg_including_mem(mem),
+
+            // XCHG 16bit register/mem, 16bit register/mem
+            0x87 => self.execute_xchg_16bit_regs_including_mem(mem),
+
             // MOV indexed addressing, 16bit register
             0x89 => self.execute_mov_indexed_addr_16bit_register(mem),
 
@@ -444,6 +450,7 @@ impl CPU {
 
             // No op
             0x90 => self.execute_nop(mem),
+            0x91..=0x97 => self.execute_xchg_ax(opcode),
 
             // MOV AL, [0x102]
             0xA0 => self.execute_mov_al_direct_addressing(mem),
@@ -624,9 +631,9 @@ impl CPU {
         mem.read_byte(self.data_segment, pointer)
     }
 
-    // fn write_byte_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Byte) {
-    //     mem.write_byte_with_u20(offset, data);
-    // }
+    fn write_byte_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Byte) {
+        mem.write_byte_with_u20(offset, data);
+    }
 
     fn write_word_to_u20(&mut self, mem: &mut Memory, offset: U20, data: Word) {
         mem.write_word_with_u20(offset, data);
