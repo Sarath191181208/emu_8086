@@ -16,10 +16,10 @@ pub(in crate::compiler) fn parse_sbb(
     addressing_mode: AddressingMode,
 ) -> Result<usize, CompilationError> {
     let ins = CompilingBytesForInstruction {
-        reg_16bit_and_anything_ins: 0x1B,
-        reg_8bit_and_anything_ins: 0x1A,
-        indexed_addressing_and_anyting_ins: 0x19,
         addr_and_8bit_reg: 0x18,
+        indexed_addressing_and_anyting_ins: 0x19,
+        reg_8bit_and_anything_ins: 0x1A,
+        reg_16bit_and_anything_ins: 0x1B,
 
         al_and_num_ins: Some(0x1C),
         ax_and_num_ins: Some(0x1D),
@@ -28,9 +28,9 @@ pub(in crate::compiler) fn parse_sbb(
         reg8bit_and_num: 0x80,
         reg_num_sub_ins: 0xD8,
 
+        addr8bit_and_num: 0x80,
         addr16bit_and_16bit_num: 0x81,
         addr16bit_and_8bit_num: Some(0x83),
-        addr8bit_and_num: 0x80,
         addr_num_sub_ins: 0x1E,
     };
 
