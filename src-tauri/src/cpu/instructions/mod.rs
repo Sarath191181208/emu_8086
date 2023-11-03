@@ -4,6 +4,7 @@ pub mod inc;
 pub mod jmp;
 pub mod mov;
 pub mod mul;
+pub mod sbb;
 pub mod sub;
 
 pub mod and;
