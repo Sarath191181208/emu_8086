@@ -284,92 +284,6 @@ impl CPU {
         offset + memory_offset
     }
 
-    pub(super) fn consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(
-        &mut self,
-        mem: &mut Memory,
-        exec_fn: &dyn Fn(&mut CPU, u8, u8) -> Option<u8>,
-    ) {
-        // This is a function where the first argument is a 16bit register and the second argument is a 16bit reg or a memory address
-        // The function consumes bytes from the memory and extracts the values of the fowllling addressing
-        // For example: MOV AX, [0x1234] | MOV AX, [BX+SI] | MOV AX, [BX] | MOV AX, [0x1234] it calculates the address and gets the value from the memory
-        // and executes the exec_fn with the values of the register and the memory value
-        // If the function returns a value it sets the register to that value
-
-        let ins = self.consume_instruction(mem);
-        let (res, reg_idx) = match ins {
-            0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
-                // MVI
-                let reg_idx = ins >> 3;
-                let addr = self.consume_word(mem);
-                let val = self.read_byte_from_pointer(mem, addr);
-                let reg_val = self.get_8bit_register_by_index(reg_idx);
-                let res = exec_fn(self, reg_val, val);
-                (res, reg_idx)
-            }
-            0x00..=0x3F => {
-                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x00_0x3f_pattern(ins);
-                let mem_addr = self.get_offset_from_index_of_indexed_registers(indexed_addr_idx);
-                let mem_val = self.read_byte_from_u20(mem, mem_addr);
-                let reg_val = self.get_8bit_register_by_index(reg_idx);
-                let res = exec_fn(self, reg_val, mem_val);
-                (res, reg_idx)
-            }
-            0x40..=0x7F => {
-                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x40_0x7f_pattern(ins);
-                let mem_addr = self.consume_byte_and_get_cummulative_offset(mem, indexed_addr_idx);
-                let mem_val = self.read_byte_from_u20(mem, mem_addr);
-                let reg_val = self.get_8bit_register_by_index(reg_idx);
-                let res = exec_fn(self, reg_val, mem_val);
-                (res, reg_idx)
-            }
-            0x80..=0xBF => {
-                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x80_0xbf_pattern(ins);
-                let mem_addr = self.consume_word_and_get_cummulative_offset(mem, indexed_addr_idx);
-                let mem_val = self.read_byte_from_u20(mem, mem_addr);
-                let reg_val = self.get_8bit_register_by_index(reg_idx);
-                let res = exec_fn(self, reg_val, mem_val);
-                (res, reg_idx)
-            }
-            0xC0..=0xFF => {
-                let (low_reg, reg_idx) = self.get_index_from_c0_ff_pattern(ins);
-                let high_val = self.get_8bit_register_by_index(reg_idx % 8);
-                let low_val = self.get_8bit_register_by_index(low_reg % 8);
-                let res = exec_fn(self, high_val, low_val);
-                (res, reg_idx)
-            }
-        };
-        if let Some(res) = res {
-            self.set_8bit_register_by_index(reg_idx, res);
-        }
-    }
-
-    pub(super) fn consume_bytes_and_parse_byte_mem_as_first_arg_double_ins(
-        &mut self,
-        mem: &mut Memory,
-        exec_fn: &dyn Fn(&mut CPU, u8, u8) -> Option<u8>,
-    ) {
-        // This is a function where the first argument is a 16bit register and the second argument is a 16bit reg or a memory address
-        // The function consumes bytes from the memory and extracts the values of the fowllling addressing
-        // For example: MOV AX, [0x1234] | MOV AX, [BX+SI] | MOV AX, [BX] | MOV AX, [0x1234] it calculates the address and gets the value from the memory
-        // and executes the exec_fn with the values of the register and the memory value
-        // If the function returns a value it sets the register to that value
-        let ins = self.consume_instruction(mem);
-        let (res, mem_addr): (Option<u8>, u16) = match ins {
-            0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
-                let reg_idx = ins >> 3;
-                let addr = self.consume_word(mem);
-                let val = self.read_byte_from_pointer(mem, addr);
-                let reg_val = self.get_8bit_register_by_index(reg_idx);
-                let res = exec_fn(self, val, reg_val);
-                (res, addr)
-            }
-            _ => (None, 0),
-        };
-        if let Some(res) = res {
-            self.write_byte_from_pointer(mem, mem_addr, res);
-        }
-    }
-
     pub(super) fn consume_bytes_and_parse_double_ins(
         &mut self,
         mem: &mut Memory,
@@ -405,6 +319,56 @@ impl CPU {
         }
     }
 
+    pub(super) fn consume_bytes_and_parse_8bit_reg_as_first_arg_double_ins(
+        &mut self,
+        mem: &mut Memory,
+        exec_fn: &dyn Fn(&mut CPU, u8, u8) -> Option<u8>,
+    ) {
+        let (reg_idx, res) = match self.consume_bytes_and_parse_double_ins(mem) {
+            AddressingMode::Address(reg_idx, addr) => {
+                let val = self.read_byte_from_u20(mem, addr);
+                let reg_val = self.get_8bit_register_by_index(reg_idx);
+                let res = exec_fn(self, reg_val, val);
+                (reg_idx, res)
+            }
+            AddressingMode::Reg(reg_idx, low_reg) => {
+                let reg_val = self.get_8bit_register_by_index(reg_idx % 8);
+                let low_reg_val = self.get_8bit_register_by_index(low_reg % 8);
+                let res = exec_fn(self, reg_val, low_reg_val);
+                (reg_idx, res)
+            }
+        };
+
+        if let Some(res) = res {
+            self.set_8bit_register_by_index(reg_idx, res);
+        }
+    }
+
+    pub(super) fn consume_bytes_and_parse_byte_mem_as_first_arg_double_ins(
+        &mut self,
+        mem: &mut Memory,
+        exec_fn: &dyn Fn(&mut CPU, u8, u8) -> Option<u8>,
+    ) {
+        match self.consume_bytes_and_parse_double_ins(mem) {
+            AddressingMode::Address(reg_idx, addr) => {
+                let val = self.read_byte_from_u20(mem, addr.clone());
+                let reg_val = self.get_8bit_register_by_index(reg_idx);
+                let res = exec_fn(self, val, reg_val);
+                if let Some(res) = res {
+                    self.write_byte_to_u20(mem, addr, res);
+                }
+            }
+            AddressingMode::Reg(reg_idx, low_reg) => {
+                let reg_val = self.get_8bit_register_by_index(reg_idx % 8);
+                let low_reg_val = self.get_8bit_register_by_index(low_reg % 8);
+                let res = exec_fn(self, reg_val, low_reg_val);
+                if let Some(res) = res {
+                    self.set_8bit_register_by_index(reg_idx, res);
+                }
+            }
+        };
+    }
+
     pub(super) fn consume_bytes_and_parse_16bit_reg_as_first_arg_double_ins(
         &mut self,
         mem: &mut Memory,
@@ -435,65 +399,24 @@ impl CPU {
         mem: &mut Memory,
         exec_fn: &dyn Fn(&mut CPU, u16, u16) -> Option<u16>,
     ) {
-        // This is a function where the first argument is a 16bit register and the second argument is a 16bit reg or a memory address
-        // The function consumes bytes from the memory and extracts the values of the fowllling addressing
-        // For example: MOV AX, [0x1234] | MOV AX, [BX+SI] | MOV AX, [BX] | MOV AX, [0x1234] it calculates the address and gets the value from the memory
-        // and executes the exec_fn with the values of the register and the memory value
-        // If the function returns a value it sets the register to that value
-        let ins = self.consume_instruction(mem);
-        let (res, mem_addr): (Option<u16>, Either<u16, U20>) = match ins {
-            0x06 | 0x0E | 0x16 | 0x1E | 0x26 | 0x2E | 0x36 | 0x3E => {
-                let reg_idx = ins >> 3;
-                let addr = self.consume_word(mem);
-                let val = self.read_word_from_pointer(mem, addr);
+        match self.consume_bytes_and_parse_double_ins(mem) {
+            AddressingMode::Address(reg_idx, addr) => {
+                let val = self.read_word_from_u20(mem, addr.clone());
                 let reg_val = self.get_16bit_register_by_index(reg_idx);
                 let res = exec_fn(self, val, reg_val);
-                (res, Either::Left(addr))
+                if let Some(res) = res {
+                    self.write_word_to_u20(mem, addr, res);
+                }
             }
-            0x00..=0x3F => {
-                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x00_0x3f_pattern(ins);
-                let mem_addr = self.get_offset_from_index_of_indexed_registers(indexed_addr_idx);
-                let mem_addr_clone = mem_addr.clone();
-                let mem_val = self.read_word_from_u20(mem, mem_addr);
-                let reg_val = self.get_16bit_register_by_index(reg_idx);
-                let res = exec_fn(self, mem_val, reg_val);
-                (res, Either::Right(mem_addr_clone))
-            }
-            0x40..=0x7F => {
-                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x40_0x7f_pattern(ins);
-                let mem_addr = self.consume_byte_and_get_cummulative_offset(mem, indexed_addr_idx);
-                let mem_addr_clone = mem_addr.clone();
-                let mem_val = self.read_word_from_u20(mem, mem_addr);
-                let reg_val = self.get_16bit_register_by_index(reg_idx);
-                let res = exec_fn(self, mem_val, reg_val);
-                (res, Either::Right(mem_addr_clone))
-            }
-            0x80..=0xBF => {
-                let (indexed_addr_idx, reg_idx) = self.get_index_from_0x80_0xbf_pattern(ins);
-                let mem_addr = self.consume_word_and_get_cummulative_offset(mem, indexed_addr_idx);
-                let mem_addr_clone = mem_addr.clone();
-                let mem_val = self.read_word_from_u20(mem, mem_addr);
-                let reg_val = self.get_16bit_register_by_index(reg_idx);
-                let res = exec_fn(self, mem_val, reg_val);
-                (res, Either::Right(mem_addr_clone))
-            }
-            0xC0..=0xFF => {
-                let (low_reg, reg_idx) = self.get_index_from_c0_ff_pattern(ins);
+            AddressingMode::Reg(reg_idx, low_reg) => {
                 let reg_val = self.get_16bit_register_by_index(reg_idx % 8);
                 let low_reg_val = self.get_16bit_register_by_index(low_reg % 8);
                 let res = exec_fn(self, reg_val, low_reg_val);
                 if let Some(res) = res {
                     self.set_16bit_register_by_index(reg_idx, res);
                 }
-                (None, Either::Left(0))
             }
         };
-        if let Some(res) = res {
-            match mem_addr {
-                Either::Left(addr) => self.write_word_from_pointer(mem, addr, res),
-                Either::Right(addr) => self.write_word_to_u20(mem, addr, res),
-            }
-        }
     }
 }
 
