@@ -194,7 +194,7 @@ export function IndirectMemoryAndImmediateAddressing(
 ) {
   // not supported yet
   return (
-    <Admonition type="danger" title="Warning">
+    <Admonition type="danger" title="Warning, This feature is still not supported.">
       <p>
         This is a mode in which the operand is specified as a memory location
         while the other operand is specified as a constant. The first operand is

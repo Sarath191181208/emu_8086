@@ -2,8 +2,10 @@
 - [ ] For same parameter names in macro definitions.
 - [ ] Unused macros.
 ## To support: 
+
+- [ ] Support `ADC` and `CMP` instructions.
 - [ ] Look into aux flag for `or` ins.
-- [ ] Support 1234:5778 addressing for `jmp` ins.
+- [ ] Support 1234:5778 addressing, [bx+10] addressing for `jmp` ins.
 - [ ] 🐞FIX: jmp to number 
 - [ ] 🐞FIX: not optimizing reg and num in add ins
 - [ ] 🐞FIX:  Running of macros.
