@@ -2,7 +2,6 @@ use crate::{
     consts::{Word, U20},
     cpu::CPU,
     memory::Memory,
-    utils::Either,
 };
 
 #[macro_export]
