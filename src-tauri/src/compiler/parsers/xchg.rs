@@ -34,7 +34,8 @@ pub(in crate::compiler) fn parse_xchg(
 
     let reg_8bit_and_anything_ins = 0x86;
     let reg_16bit_and_anything_ins = 0x87;
-    let indexed_addressing_and_anyting_ins = 0x86;
+    let indexed_addressing_and_anyting_ins = 0x87;
+    let byte_indexed_addressing_and_anyting_ins = 0x86;
 
     match addressing_mode.clone() {
         AddressingMode::Registers16bitNumber {
@@ -66,7 +67,7 @@ pub(in crate::compiler) fn parse_xchg(
             num: _,
         } => Err(CompilationError::error_with_token(
             &low_token,
-            "Invalid addressing mode for XCHG instruction",
+            "Invalid addressing mode for XCHG instruction, only supports registers and indexed addressing as second argument",
         )),
 
         AddressingMode::Registers16bit {
@@ -126,7 +127,7 @@ pub(in crate::compiler) fn parse_xchg(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => vec![0x86],
+                    token => vec![byte_indexed_addressing_and_anyting_ins],
                     &low_token => vec![0x06 | reg_idx << 3],
                     &high_token => address_bytes.to_vec()
                 )
@@ -172,4 +173,55 @@ pub(in crate::compiler) fn parse_xchg(
             compiled_bytes_ref,
         ),
     }
+}
+
+#[cfg(test)]
+mod xor_ins_tests {
+
+    use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
+    use pretty_assertions::assert_eq;
+
+    compile_and_compare_ins!(
+        test_xchg_reg16bit_and_anything,
+        "
+        XCHG BX, [BX]
+        XCHG SI, [0x100]
+        XCHG AX, [SI+BP+0x10]
+        XCHG BP, [BP+0x100]
+        XCHG CX, DI
+        xchg ax, sp 
+        xchg bp, di 
+        ",
+        vec![
+            0x87, 0x1F, 0x87, 0x36, 0x00, 0x01, 0x87, 0x42, 0x10, 0x87, 0xAE, 0x00, 0x01, 0x87,
+            0xCF, 0x94, 0x87, 0xEF
+        ]
+    );
+
+    compile_and_compare_ins!(
+        test_xchg_8bitreg_and_anything,
+        "
+        xchg ah, dh
+        xchg bh, [0x100]
+        ",
+        vec![
+            0x86, 0xE6, 
+            0x86, 0x3E, 0x00, 0x01
+        ]
+    );
+
+        compile_and_compare_ins!(
+        test_or_addr_and_anything,
+        "
+        XCHG [0x100], bp
+        XCHG [bp], cx
+        XCHG [0x100], bl
+
+        ",
+        vec![
+            0x87, 0x2E, 0x00, 0x01, 
+            0x87, 0x4E, 0x00, 
+            0x86, 0x1E, 0x00, 0x01
+        ]
+    );
 }
