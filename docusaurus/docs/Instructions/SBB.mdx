@@ -1,0 +1,72 @@
+---
+title: SBB
+description: Subtracts the second operand from the first operand along with the carry flag.
+---
+
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import {
+  RegisterAddressingMode,
+  ImmediateAddressingMode,
+  MemoryAddressingMode,
+  RegisterAndMemoryAddressing,
+  MemoryAndRegisterAddressing,
+  MemoryAndImmediateAddressing,
+  IndirectMemoryAndImmediateAddressing,
+  DirectMemoryAndImmediateAddressing,
+} from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502
+SBB operand1, operand2
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                                                  |
+| :------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands**  | The first operand is a general purpose register or a memory location. The second operand is a general-purpose register, memory location, or immediate value. |
+| **Operation** | `operand1 = operand1 - (operand2 + carry_flag)`                                                                                                              |
+| **Size**      | 2 to 6 bytes.                                                                                                                                                |
+| **Action**    | Subtracts the second operand from the first operand along with the carry flag.                                                                               |
+| **Flags**     | <FlagsChangedTable carryFlag= "changed" overflowFlag= "changed" zeroFlag="changed" signFlag="changed" parityFlag="changed" auxiliaryCarryFlag="changed" />   |
+
+## Example
+
+```asm6502 showLineNumbers
+MOV AX, 0x0003
+SBB AX, 0x0002 ; AX = 0x0001
+```
+
+> Here the value of AX is 0x0001 after the execution of the `SBB` instruction. <br/>
+> The carry flag is set to 0x00.
+
+## Supported Modes
+
+### Register, Register Addressing
+
+<RegisterAddressingMode instructionName="SBB" />
+
+### Register, Immediate Value Addressing
+
+<ImmediateAddressingMode instructionName="SBB" />
+
+### Register, Direct Memory Addressing
+
+<MemoryAddressingMode instructionName="SBB" />
+
+### Register, Direct/Indirect Memory Addressing With (or) Without Displacement
+
+<RegisterAndMemoryAddressing instructionName="SBB" />
+
+### Direct/Indirect Memory Addressing With (or) Without Displacement , Register Addressing
+
+<MemoryAndRegisterAddressing instructionName="SBB" />
+
+### Direct/Indirect, Immediate Value Addressing
+
+<DirectMemoryAndImmediateAddressing instructionName="SBB" />
+
+### Indirect Memory Addressing With (or) Without Displacement, Immediate Value Addressing
+
+<IndirectMemoryAndImmediateAddressing instructionName="SBB" />
