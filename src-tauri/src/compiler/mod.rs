@@ -41,7 +41,7 @@ use self::{
         mov::parse_mov, mul::parse_mul, or::parse_or, out_ins::parse_out,
         pattern_extractors::parse_two_arguments_line, pop::parse_pop, push::parse_push,
         sub::parse_sub, test_ins::parse_test, utils::iterate_with_seperator,
-        var::parse_var_declaration, xchg::parse_xchg, xor::parse_xor,
+        var::parse_var_declaration, xchg::parse_xchg, xor::parse_xor, sbb::parse_sbb,
     },
     tokenized_line::TokenizedLine,
     tokens::{
