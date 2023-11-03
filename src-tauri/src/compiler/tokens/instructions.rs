@@ -25,6 +25,7 @@ pub(crate) enum Instructions {
     Proc,
     Push,
     Ret,
+    Sbb,
     Sub,
     Test,
     Xchg,
