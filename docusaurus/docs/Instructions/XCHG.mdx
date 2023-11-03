@@ -1,0 +1,56 @@
+---
+title: XCHG
+description: Exchange the contents of two registers or a register and a memory location.
+---
+
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import {
+  RegisterAddressingMode,
+  ImmediateAddressingMode,
+  MemoryAddressingMode,
+  RegisterAndMemoryAddressing,
+  MemoryAndRegisterAddressing,
+  MemoryAndImmediateAddressing,
+  IndirectMemoryAndImmediateAddressing,
+  DirectMemoryAndImmediateAddressing,
+} from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502
+XOR operand1, operand2
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                                  |
+| :------------ | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands**  | The first operand is a general purpose register or a memory location. The second operand is a general purpose register or a memory location. |
+| **Operation** | `operand1, operand2 = operand2, operand1`                                                                                                    |
+| **Action**    | The contents of the first operand are exchanged with the contents of the second operand.                                                     |
+| **Size**      | 2 to 6 Bytes                                                                                                                                 |
+| **Flags**     | No flags are affected.                                                                                                                       |
+
+## Example 
+```asm6502 showLineNumbers
+MOV AX, 0x10; This is the hex number 10 = 16 in decimal
+MOV BX, 10O ; This is the ocatal number 10  = 8 in decimal
+XCHG AX, BX ; Exchange the contents of AX and BX
+```
+
+> The contents of AX are now changed with the contents of BX. <br/>
+> AX now contains 8 and BX now contains 16.
+
+## Supported Modes 
+
+### Register, Register Addressing
+<RegisterAddressingMode instructionName="XCHG" />
+
+### Register, Direct Memory Addressing
+<MemoryAddressingMode instructionName="XCHG" />
+
+### Register, Direct/Indirect Memory Addressing With (or) Without Displacement
+<RegisterAndMemoryAddressing instructionName="XCHG" />
+
+###  Direct/Indirect Memory Addressing With (or) Without Displacement , Register Addressing 
+<MemoryAndRegisterAddressing instructionName="XCHG"/>
