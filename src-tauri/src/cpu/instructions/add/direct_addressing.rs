@@ -78,7 +78,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test_add_direct_address {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_ax_var() {
@@ -89,7 +89,7 @@ mod test_add_direct_address {
             code: 
             ADD AX, var
             ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x1234);
     }
 
@@ -102,7 +102,7 @@ mod test_add_direct_address {
             code: 
             ADD AL, var
             ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0012);
     }
 
@@ -116,7 +116,7 @@ mod test_add_direct_address {
             mov bx, 0x1111
             ADD var, BX
             ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x2345);
     }
 
@@ -130,7 +130,7 @@ mod test_add_direct_address {
             mov cl, 0x11
             ADD var, cl
             ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x23);
     }
 
@@ -143,7 +143,7 @@ mod test_add_direct_address {
             code: 
             ADD var, 0x1111
             ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x2345);
     }
 
@@ -156,7 +156,7 @@ mod test_add_direct_address {
             code: 
             ADD var, 0x11
             ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x45);
     }
 
@@ -169,7 +169,7 @@ mod test_add_direct_address {
             code: 
             ADD var, 0x20
             ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x30);
     }
 }

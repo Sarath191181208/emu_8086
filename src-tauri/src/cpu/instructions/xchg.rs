@@ -47,10 +47,10 @@ impl CPU {
         }
     }
 
-    pub(in crate::cpu) fn execute_xchg_ax(&mut self, opcode: u8){
+    pub(in crate::cpu) fn execute_xchg_ax(&mut self, opcode: u8) {
         let reg_idx = opcode % 8;
         let reg_val = self.get_16bit_register_by_index(reg_idx);
-        let ax_val = self.ax ;
+        let ax_val = self.ax;
 
         self.set_ax(reg_val);
         self.set_16bit_register_by_index(reg_idx, ax_val);
@@ -59,7 +59,7 @@ impl CPU {
 
 #[cfg(test)]
 mod xchg_exec_tests {
-    use crate::cpu::instructions::test_macro::{run_code, execute_code};
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_8bit_mem_and_reg() {
@@ -72,7 +72,7 @@ mod xchg_exec_tests {
             MOV BH, 0x02 
             XCHG AH, BH
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x100), 0x10);
         assert_eq!(cpu.get_cx_high(), 0x01);
     }

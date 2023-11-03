@@ -92,7 +92,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test_ins_execution_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -101,7 +101,7 @@ mod test_ins_execution_tests {
             mov ax,  0x0F0F 
             test ax, 0x0F0F
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.negative_flag, false);
         assert_eq!(cpu.pairity_flag, true);
@@ -113,7 +113,7 @@ mod test_ins_execution_tests {
             mov al,  0x0F 
             test al, 0x0F
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.negative_flag, false);
         assert_eq!(cpu.pairity_flag, true);
@@ -126,7 +126,7 @@ mod test_ins_execution_tests {
             mov bx,  0x0F0F 
             test ax, bx
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.negative_flag, false);
         assert_eq!(cpu.pairity_flag, true);
@@ -139,7 +139,7 @@ mod test_ins_execution_tests {
             mov bl,  0x0F 
             test al, bl
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.negative_flag, false);
         assert_eq!(cpu.pairity_flag, true);
@@ -156,7 +156,7 @@ mod test_ins_execution_tests {
             mov ax, 0x0F0F 
             test ax, [var]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, true);
         assert_eq!(cpu.pairity_flag, true);
         assert_eq!(cpu.negative_flag, false);
@@ -173,7 +173,7 @@ mod test_ins_execution_tests {
             mov ax, 0x0F0F 
             test ax, [bx]
         ";
-        let (cpu, _) = run_code(code, 5);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.pairity_flag, false);
         assert_eq!(cpu.negative_flag, false);
@@ -190,7 +190,7 @@ mod test_ins_execution_tests {
             mov ax, 0x0F0F 
             test ax, [bx + 0x01]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.pairity_flag, false);
         assert_eq!(cpu.negative_flag, false);
@@ -207,7 +207,7 @@ mod test_ins_execution_tests {
             mov ax, 0x0F0F 
             test ax, [bx + 0x100]
         ";
-        let (cpu, _) = run_code(code, 5);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.pairity_flag, false);
         assert_eq!(cpu.negative_flag, false);
@@ -224,7 +224,7 @@ mod test_ins_execution_tests {
             mov al, 0x0F 
             test al, [var]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, true);
         assert_eq!(cpu.pairity_flag, true);
         assert_eq!(cpu.negative_flag, false);
@@ -242,7 +242,7 @@ mod test_ins_execution_tests {
             mov al, 0x0F 
             test al, [bx]
         ";
-        let (cpu, _) = run_code(code, 5);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.pairity_flag, false);
         assert_eq!(cpu.negative_flag, false);
@@ -260,7 +260,7 @@ mod test_ins_execution_tests {
             mov al, 0x0F 
             test al, [bx + 0x01]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.pairity_flag, false);
         assert_eq!(cpu.negative_flag, false);
@@ -278,7 +278,7 @@ mod test_ins_execution_tests {
             mov al, 0x0F 
             test al, [bx + 0x100]
         ";
-        let (cpu, _) = run_code(code, 5);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.zero_flag, false);
         assert_eq!(cpu.pairity_flag, false);
         assert_eq!(cpu.negative_flag, false);

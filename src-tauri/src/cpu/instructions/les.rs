@@ -44,7 +44,7 @@ impl CPU {
 
 #[cfg(test)]
 mod les_exec_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_reg_direct_mem_test() {
@@ -55,7 +55,7 @@ mod les_exec_tests {
         code: 
         les ax, var
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x100);
         assert_eq!(cpu.extra_segment, 0x06C4);
     }
@@ -69,7 +69,7 @@ mod les_exec_tests {
         mov si, 0x02 
         les ax, [bx+si]
         ";
-        let (cpu, _) = run_code(code, 5);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0xBE01);
         assert_eq!(cpu.extra_segment, 0x0002)
     }
@@ -83,7 +83,7 @@ mod les_exec_tests {
         mov si, 0x02 
         les sp, [bx+si+0x01]
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0x02BE);
         assert_eq!(cpu.extra_segment, 0xC400);
     }
@@ -97,7 +97,7 @@ mod les_exec_tests {
         mov si, 0x1
         les di, [bx+si+0x100]
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.destination_index, 0xBE00);
         assert_eq!(cpu.extra_segment, 0x0001)
     }

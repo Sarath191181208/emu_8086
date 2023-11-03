@@ -116,7 +116,7 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn no_offset_indexed_add() {
@@ -129,7 +129,7 @@ mod tests {
         mov si, 0x02
         add ax, [bx+si]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x1234);
     }
 
@@ -138,7 +138,7 @@ mod tests {
         let code = " 
         add ax, [0x1000]
         ";
-        let (cpu, _) = run_code(code, 1);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x9090);
     }
 
@@ -154,7 +154,7 @@ mod tests {
         mov si, 0x05
         add ax, [bx+si-0x02]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x1234);
     }
 
@@ -170,14 +170,14 @@ mod tests {
         mov si, 0x02
         add ax, [bx+si+0x100]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x1234);
     }
 }
 
 #[cfg(test)]
 mod tests_8bit {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn offset_8bit_register_and_offset() {
@@ -189,7 +189,7 @@ mod tests_8bit {
         code:
         add al, [0x102]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0x20);
     }
 
@@ -205,7 +205,7 @@ mod tests_8bit {
         mov si, 0x05
         add al, [bx+si-0x02]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0x12);
     }
 
@@ -221,7 +221,7 @@ mod tests_8bit {
         mov si, 0x02
         add al, [bx+si+0x100]
         ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0x12);
     }
 }

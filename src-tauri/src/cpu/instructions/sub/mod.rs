@@ -54,7 +54,7 @@ impl CPU {
 
 #[cfg(test)]
 mod sub_mem_reg_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_sub_mem_reg() {
@@ -66,7 +66,7 @@ mod sub_mem_reg_tests {
         mov [bx + 0x02], cx
         sub [bx + 0x02], ax
         ";
-        let (cpu, mem) = run_code(code, 5);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0xFCDB);
     }
 
@@ -80,7 +80,7 @@ mod sub_mem_reg_tests {
         mov [si + 0x100], cx
         sub [si + 0x100], ax
         ";
-        let (cpu, mem) = run_code(code, 5);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0xFCDB);
     }
 }

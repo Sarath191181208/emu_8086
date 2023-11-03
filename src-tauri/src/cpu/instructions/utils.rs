@@ -380,7 +380,7 @@ impl CPU {
                 let reg_idx = ins >> 3;
                 let addr = self.consume_word(mem);
                 let offset = U20::from(addr);
-                let offset = offset + U20::from(self.data_segment*0x10);
+                let offset = offset + U20::from(self.data_segment * 0x10);
                 AddressingMode::Address(reg_idx, offset)
             }
             0x00..=0x3F => {

@@ -86,7 +86,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_pop_16bit_reg_and_segments() {
@@ -118,7 +118,7 @@ mod test {
         pop ss
         pop ds
     ";
-        let (cpu, _) = run_code(code, 22);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.ax, 0x100);
         assert_eq!(cpu.bx, 0x101);
@@ -162,7 +162,7 @@ mod test {
         mov bx, 0x08
         pop [bx + 0x100] ; var4 = var1
     ";
-        let (cpu, mem) = run_code(code, 22);
+        let (cpu, mem) = execute_code(code);
 
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x4567);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x104), 0x3456);

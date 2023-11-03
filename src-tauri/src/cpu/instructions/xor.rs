@@ -56,7 +56,7 @@ impl CPU {
 
 #[cfg(test)]
 mod xor_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_8bit_mem_and_reg() {
@@ -65,7 +65,7 @@ mod xor_tests {
             MOV [0x100], 01010101b
             XOR [0x100], CH
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x100), 0b11111111);
     }
 
@@ -77,7 +77,7 @@ mod xor_tests {
         XOR [0x100], SP
         ";
 
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x100), 0x1110);
     }
 
@@ -97,7 +97,7 @@ mod xor_tests {
         MOV [0x100], 0x10
         XOR AL, [BP]
         ";
-        let (cpu, _) = run_code(code, 10);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_cx_high(), 0x00);
         assert_eq!(cpu.get_bx_low(), 0x11);
         assert_eq!(cpu.get_ax_low(), 0x00);
@@ -118,7 +118,7 @@ mod xor_tests {
         MOV AX, 0x10
         XOR BX, AX
         ";
-        let (cpu, _) = run_code(code, 9);
+        let (cpu, _) = execute_code(code);
         // assert_eq!(cpu.bx, 0x11);
         assert_eq!(cpu.stack_pointer, 0x1110);
         assert_eq!(cpu.base_pointer, 0x9080);
@@ -136,7 +136,7 @@ mod xor_tests {
         MOV [0x100], 0x10
         XOR b.[0x100], 0x11
         ";
-        let (cpu, mem) = run_code(code, 6);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0x00);
         assert_eq!(cpu.get_bx_low(), 0x11);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x100), 0x01);
@@ -154,7 +154,7 @@ mod xor_tests {
         MOV AX, 0x100
         XOR AX, 0x10
         ";
-        let (cpu, _) = run_code(code, 6);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0x110);
         assert_eq!(cpu.base_pointer, 0x110);
         assert_eq!(cpu.ax, 0x110);

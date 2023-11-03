@@ -55,7 +55,7 @@ impl CPU {
 
 #[cfg(test)]
 mod add_test_mem_reg {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_add_mem_reg() {
@@ -76,7 +76,7 @@ mod add_test_mem_reg {
             mov bx, 0x04
             add [0x1234+bx] , dx
         ";
-        let (cpu, mem) = run_code(code, 12);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x1234), 0x1234);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x1236), 0x1236);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x1238), 0x1238);

@@ -10,11 +10,11 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn ret_test() {
-        let (cpu, _) = run_code("PUSH 0x03 \n ret", 2);
+        let (cpu, _) = execute_code("PUSH 0x03 \n ret");
         assert_eq!(cpu.instruction_pointer, 0x03);
     }
 }

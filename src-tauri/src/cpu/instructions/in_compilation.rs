@@ -28,14 +28,14 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn no_offset_indexed_add() {
         let code = "
             MOV AL, 0x10
             IN AL, 0x80";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0);
     }
 
@@ -44,7 +44,7 @@ mod tests {
         let code = "
             MOV AX, 0x1010
             IN AX, 0x80";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0);
     }
 
@@ -54,7 +54,7 @@ mod tests {
             MOV DX, 0x80
             MOV AL, 0x10
             IN AL, DX";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0);
     }
 
@@ -64,7 +64,7 @@ mod tests {
             MOV DX, 0x80
             MOV AX, 0x1010
             IN AX, DX";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0);
     }
 }

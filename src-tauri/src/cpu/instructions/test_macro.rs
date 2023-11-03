@@ -1,8 +1,4 @@
-use crate::{
-    compiler::compile_lines,
-    cpu::CPU,
-    memory::{self, Memory},
-};
+use crate::{compiler::compile_lines, cpu::CPU, memory::Memory};
 
 #[deprecated(note = "please use `run_code` instead")]
 #[macro_export]
@@ -98,7 +94,7 @@ pub fn execute_code(code: &str) -> (CPU, Memory) {
 
     compile_code_for_tests(code, &mut cpu, &mut mem);
 
-    // calc the number of non blank lines in code 
+    // calc the number of non blank lines in code
     let cycles = code.lines().filter(|line| !line.is_empty()).count();
     dbg!(cycles);
 

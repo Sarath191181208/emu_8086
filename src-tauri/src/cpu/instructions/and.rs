@@ -122,7 +122,7 @@ impl CPU {
 
 #[cfg(test)]
 mod and_ins_exec_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn and_reg_and_reg_or_mem_tests() {
@@ -151,7 +151,7 @@ mod and_ins_exec_tests {
                 mov dx, 0x0F0F
                 and dx, w.[var2]
         ";
-        let (cpu, _) = run_code(code, 16);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0F0F);
         assert_eq!(cpu.cx, 0x0F0F);
         assert_eq!(cpu.dx, 0x0801);
@@ -188,7 +188,7 @@ mod and_ins_exec_tests {
             and dl, var2
         ";
 
-        let (cpu, _) = run_code(code, 16);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0x0F);
         assert_eq!(cpu.get_bx_low(), 0x02);
         assert_eq!(cpu.get_cx_low(), 0x0F);
@@ -202,7 +202,7 @@ mod and_ins_exec_tests {
         mov al , 0x0F
         and al, 0x0F
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0x0F);
         assert!(cpu.pairity_flag);
     }
@@ -214,7 +214,7 @@ mod and_ins_exec_tests {
         and ax, 0x0F0F 
         ";
 
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0F0F);
         assert!(cpu.pairity_flag);
     }
@@ -231,7 +231,7 @@ mod and_ins_exec_tests {
         mov dx, 0x91
         and dx, 0x0F0F
         ";
-        let (cpu, _) = run_code(code, 6);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.bx, 0xF0F);
         assert_eq!(cpu.cx, 0x0F);
         assert_eq!(cpu.dx, 0x0001);
@@ -244,7 +244,7 @@ mod and_ins_exec_tests {
         mov bl, 0xF0
         and bl, 0x0F
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_bx_low(), 0x00);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
     }
@@ -258,7 +258,7 @@ mod and_ins_exec_tests {
         code: 
             and [var], 0x0F0F
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x01);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
@@ -272,7 +272,7 @@ mod and_ins_exec_tests {
         code: 
             and [var], 0x0F
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x101), 0x01);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
@@ -287,7 +287,7 @@ mod and_ins_exec_tests {
             mov bl , 0x0F
             and var, bl
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x101), 0x01);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
@@ -303,7 +303,7 @@ mod and_ins_exec_tests {
             and var, bx
         ";
 
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x01);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }
@@ -317,7 +317,7 @@ mod and_ins_exec_tests {
         and [bx+0x100], ax
         ";
 
-        let (cpu, mem) = run_code(code, 4);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x02);
         assert_eq!(cpu.get_flags_as_binary(), 0b00);
     }

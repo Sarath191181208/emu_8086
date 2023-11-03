@@ -28,14 +28,14 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn out_al_10() {
         let code = "
             mov al, 0x10
             OUT 0x80, AL";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_port(0x80), 0x10);
     }
 
@@ -44,7 +44,7 @@ mod tests {
         let code = "
             mov ax, 0x1020
             OUT 0x80, AX";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_port_word(0x80), 0x1020);
     }
 
@@ -54,7 +54,7 @@ mod tests {
             mov al, 0x10
             mov dx, 0x80
             OUT DX, AL";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_port(0x80), 0x10);
     }
 
@@ -64,7 +64,7 @@ mod tests {
             mov ax, 0x1020
             mov dx, 0x80
             OUT DX, AX";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_port_word(0x80), 0x1020);
     }
 }

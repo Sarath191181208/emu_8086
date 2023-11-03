@@ -21,7 +21,7 @@ impl CPU {
 
 #[cfg(test)]
 mod sub_16bit_register_addressing {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     // sub ax, cx
     #[test]
@@ -31,7 +31,7 @@ mod sub_16bit_register_addressing {
             MOV CX, 0x0013
             SUB AX, CX
             ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0EFC);
         assert_eq!(cpu.get_flags_as_binary(), 0b00010000)
     }
@@ -43,7 +43,7 @@ mod sub_16bit_register_addressing {
         mov DX, 0x13 
         SUB BX, DX 
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.bx, 0xFFED);
         assert_eq!(cpu.get_flags_as_binary(), 0b000110101)
     }
@@ -55,7 +55,7 @@ mod sub_16bit_register_addressing {
         mov BP, 0x0013
         SUB SP, BP
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0xEFED);
         assert_eq!(cpu.get_flags_as_binary(), 0b00110100)
     }
@@ -63,7 +63,7 @@ mod sub_16bit_register_addressing {
 
 #[cfg(test)]
 mod sub_8bit_register_addressing {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_sub_al_cl() {
@@ -72,7 +72,7 @@ mod sub_8bit_register_addressing {
         MOV CL, 0x13
         SUB AL, CL
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0xFC);
         assert_eq!(cpu.get_flags_as_binary(), 0b00010101)
     }
@@ -84,7 +84,7 @@ mod sub_8bit_register_addressing {
         MOV DL, 0x13
         SUB BL, DL
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_bx_low(), 0xDD);
         assert_eq!(cpu.get_flags_as_binary(), 0b00110100)
     }

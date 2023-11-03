@@ -43,7 +43,7 @@ impl CPU {
 
 #[cfg(test)]
 mod lea_exec_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_reg_mem_tests() {
@@ -52,7 +52,7 @@ mod lea_exec_tests {
         mov si, 0x02 
         lea ax, [bx+si]
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x102);
     }
 
@@ -63,7 +63,7 @@ mod lea_exec_tests {
         mov si, 0x02 
         lea sp, [bx+si+0x01]
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0x103);
     }
 
@@ -74,7 +74,7 @@ mod lea_exec_tests {
         mov si, 0xffff
         lea di, [bx+si+0x01]
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.destination_index, 0xFFFF);
     }
 }

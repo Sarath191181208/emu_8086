@@ -56,7 +56,7 @@ impl CPU {
 
 #[cfg(test)]
 mod or_execution_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_or_ax_and_num() {
@@ -64,7 +64,7 @@ mod or_execution_tests {
         mov ax, 0x101 
         or ax, 0x010
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x111);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000)
     }
@@ -75,7 +75,7 @@ mod or_execution_tests {
         mov al, 0xF0
         or al, 0x0F
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0xFF);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0100);
     }
@@ -86,7 +86,7 @@ mod or_execution_tests {
         mov ax, 0x101
         or ax, 0x010
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x111);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }
@@ -97,7 +97,7 @@ mod or_execution_tests {
         mov al, 0x01
         or al, 0x10
         ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_ax_low(), 0x11);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }
@@ -109,7 +109,7 @@ mod or_execution_tests {
         mov bp, 0x0101
         or sp, bp
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0x1111);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }
@@ -121,7 +121,7 @@ mod or_execution_tests {
         mov [0x100], 0x1100
         or ax, [0x100]
         ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x1110);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
     }
@@ -140,7 +140,7 @@ mod or_execution_tests {
             mov bx, 0x100 
             or [bx+0x02], ax
         ";
-        let (cpu, mem) = run_code(code, 6);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x100), 0x1110);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x1111);
     }
@@ -151,7 +151,7 @@ mod or_execution_tests {
         mov [0x100], 0x1100
         or [0x100], 0x0011
         ";
-        let (cpu, mem) = run_code(code, 2);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x100), 0x1111);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }

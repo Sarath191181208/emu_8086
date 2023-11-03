@@ -50,7 +50,7 @@ impl CPU {
 
 #[cfg(test)]
 mod mov_indexed_addr_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_mov_idx_addr_reg() {
@@ -65,7 +65,7 @@ mod mov_indexed_addr_tests {
         mov bx, 0x1230 
         mov [bx + 0x08], cx
         ";
-        let (cpu, mem) = run_code(code, 8);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x1234), 0x100);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x1236), 0x200);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x1238), 0x300);

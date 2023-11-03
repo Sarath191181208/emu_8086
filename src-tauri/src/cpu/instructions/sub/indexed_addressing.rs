@@ -120,7 +120,7 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn no_offset_indexed_sub() {
@@ -133,7 +133,7 @@ mod tests {
         mov si, 0x02
         sub ax, [bx+si]
     ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.ax, 0xEDCC);
     }
@@ -143,7 +143,7 @@ mod tests {
         let code = " 
         sub dx, [0x1000]
     ";
-        let (cpu, _) = run_code(code, 1);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.dx, 0x6F70);
     }
@@ -160,7 +160,7 @@ mod tests {
         mov si, 0x05
         sub ax, [bx+si-0x02]
     ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.ax, 0xEDCC);
     }
@@ -177,7 +177,7 @@ mod tests {
         mov si, 0x02
         sub ax, [bx+si+0x100]
     ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.ax, 0xEDCC);
     }
@@ -185,7 +185,7 @@ mod tests {
 
 #[cfg(test)]
 mod tests_8bit {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn offset_8bit_index_sub_8bit() {
@@ -199,7 +199,7 @@ mod tests_8bit {
         mov si, 0x05
         sub al, [bx+si-0x02]
     ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.get_ax_low(), 0xEE);
     }
@@ -216,7 +216,7 @@ mod tests_8bit {
         mov si, 0x02
         sub al, [bx+si+0x100]
     ";
-        let (cpu, _) = run_code(code, 4);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.get_ax_low(), 0xEE);
     }

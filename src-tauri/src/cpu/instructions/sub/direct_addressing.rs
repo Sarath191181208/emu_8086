@@ -77,7 +77,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test_add_direct_address {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_ax_var() {
@@ -88,7 +88,7 @@ mod test_add_direct_address {
         code: 
         SUB AX, var
     ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.ax, 0xEDCC);
         assert_eq!(cpu.get_flags_as_binary(), 0b0011_0101);
@@ -104,7 +104,7 @@ mod test_add_direct_address {
         mov sp, 0x01
         SUB VAR, SP
     ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
 
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x1233);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
@@ -119,7 +119,7 @@ mod test_add_direct_address {
         code: 
         SUB var, 0x1000
     ";
-        let (cpu, mem) = run_code(code, 2);
+        let (cpu, mem) = execute_code(code);
 
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x0234);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
@@ -134,7 +134,7 @@ mod test_add_direct_address {
         code: 
         SUB var, 0x10
     ";
-        let (cpu, mem) = run_code(code, 2);
+        let (cpu, mem) = execute_code(code);
 
         assert_eq!(cpu.read_word_from_pointer(&mem, 0x102), 0x1224);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
@@ -150,7 +150,7 @@ mod test_add_direct_address {
         MOV CL, 0x10
         SUB CL, var
     ";
-        let (cpu, _) = run_code(code, 3);
+        let (cpu, _) = execute_code(code);
 
         assert_eq!(cpu.cx, 0x00FE);
         assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
@@ -166,7 +166,7 @@ mod test_add_direct_address {
         MOV DL, 0x10
         SUB var, DL
     ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
 
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0x02);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
@@ -181,7 +181,7 @@ mod test_add_direct_address {
         code: 
         SUB var, 0x20
     ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
 
         assert_eq!(cpu.read_byte_from_pointer(&mem, 0x102), 0xF2);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0101);

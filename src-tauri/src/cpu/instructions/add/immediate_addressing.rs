@@ -59,12 +59,12 @@ impl CPU {
 
 #[cfg(test)]
 mod add_immediate_16bit_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn add_ax_ax_no_overflow() {
         let code = "MOV AX, 0x1234 \n ADD AX, 0x1234";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x2468);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
     }
@@ -72,7 +72,7 @@ mod add_immediate_16bit_tests {
     #[test]
     fn add_ax_ax_overflow() {
         let code = "MOV AX, 0xFFFF \n ADD AX, 0xFFFF";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0xFFFE);
         assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
     }
@@ -80,7 +80,7 @@ mod add_immediate_16bit_tests {
     #[test]
     fn add_ax_ax_zero() {
         let code = "MOV AX, 0x0000 \n ADD AX, 0x0000";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0000);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0010);
     }
@@ -88,7 +88,7 @@ mod add_immediate_16bit_tests {
     #[test]
     fn add_ax_ax_negative() {
         let code = "MOV AX, 0x0001 \n ADD AX, 0xFFFF";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0000);
         assert_eq!(cpu.get_flags_as_binary(), 0b0011_0011);
     }
@@ -96,7 +96,7 @@ mod add_immediate_16bit_tests {
     #[test]
     fn add_bx_0x1234() {
         let code = "MOV BX, 0x0001 \n ADD BX, 0x1234";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.bx, 0x1235);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }
@@ -104,7 +104,7 @@ mod add_immediate_16bit_tests {
     #[test]
     fn add_bx_0xffff_overflow() {
         let code = "MOV BX, 0xFFFF \n ADD BX, 0xFFFF";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.bx, 0xFFFE);
         assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
     }
@@ -112,7 +112,7 @@ mod add_immediate_16bit_tests {
     #[test]
     fn add_bx_0xffee() {
         let code = "MOV BX, 0xFF01 \n ADD BX, 0xFFEE";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.bx, 0xFEEF);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0101);
     }
@@ -120,12 +120,12 @@ mod add_immediate_16bit_tests {
 
 #[cfg(test)]
 mod add_immediate_8bit_tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn add_al_0x12() {
         let code = "MOV AL, 0x01 \n ADD AL, 0x12";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x13);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
     }
@@ -133,7 +133,7 @@ mod add_immediate_8bit_tests {
     #[test]
     fn add_al_0xff_overflow() {
         let code = "MOV AL, 0xFE \n ADD AL, 0xFF";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0xFD);
         assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
     }
@@ -141,7 +141,7 @@ mod add_immediate_8bit_tests {
     #[test]
     fn add_cl_0x12() {
         let code = "MOV CL, 0x01 \n ADD CL, 0x12";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.cx, 0x13);
         assert_eq!(cpu.get_flags_as_binary(), 0b0000_0000);
     }
@@ -149,7 +149,7 @@ mod add_immediate_8bit_tests {
     #[test]
     fn add_cl_0xff_overflow() {
         let code = "MOV CL, 0xFE \n ADD CL, 0xFF";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.cx, 0xFD);
         assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
     }
@@ -157,7 +157,7 @@ mod add_immediate_8bit_tests {
     #[test]
     fn add_bh_0x12() {
         let code = "MOV BX, 0xFF01 \n ADD BH, 0x12";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.bx, 0x1101);
         assert_eq!(cpu.get_flags_as_binary(), 0b0011_0001);
     }
@@ -165,7 +165,7 @@ mod add_immediate_8bit_tests {
     #[test]
     fn add_bh_0xff_overflow() {
         let code = "MOV BX, 0xFF01 \n ADD BH, 0xFF";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.bx, 0xFE01);
         assert_eq!(cpu.get_flags_as_binary(), 0b0010_0101);
     }

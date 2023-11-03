@@ -99,7 +99,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     macro_rules! single_segment_push_fixture {
         ($segment_name: ident) => {
@@ -116,7 +116,7 @@ mod test {
                         ",
                         stringify!($segment_name)
                     );
-                    let (cpu, mem) = run_code(code, 2);
+                    let (cpu, mem) = execute_code(code);
                                             assert_eq!(cpu.stack_pointer, 0xFFFC);
                         assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x0700);
             }
@@ -139,7 +139,7 @@ mod test {
         mov bp, 0x101
         push bp
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0xFFFC);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x101);
     }
@@ -153,7 +153,7 @@ mod test {
         code: 
         push var
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0xFFFC);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x101);
     }
@@ -168,7 +168,7 @@ mod test {
         mov bx, 0x102
         push [bx]
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0xFFFC);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x101);
     }
@@ -182,7 +182,7 @@ mod test {
         mov bx, 0x102
         push [bx + 1]
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0xFFFC);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0xBB01);
     }
@@ -197,7 +197,7 @@ mod test {
         mov bx, 0x02
         push [bx + 0x100]
         ";
-        let (cpu, mem) = run_code(code, 3);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0xFFFC);
         assert_eq!(cpu.read_word_from_pointer(&mem, 0xFFFC), 0x0101);
     }
@@ -214,7 +214,7 @@ mod test {
         push label
         push label+0x10
         ";
-        let (cpu, mem) = run_code(code, 4);
+        let (cpu, mem) = execute_code(code);
         assert_eq!(cpu.stack_pointer, 0xFFF8);
         let stack_values = [0x0102, 0x0107, 0x0117];
         let mut sp = 0xFFFC;

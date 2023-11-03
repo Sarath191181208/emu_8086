@@ -22,5 +22,5 @@ pub mod ret;
 pub mod test_ins;
 pub mod test_macro;
 pub(in crate::cpu::instructions) mod utils;
-pub mod xor;
 pub mod xchg;
+pub mod xor;

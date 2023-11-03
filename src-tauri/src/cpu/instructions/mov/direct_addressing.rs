@@ -43,7 +43,7 @@ impl CPU {
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn mov_ax_var() {
@@ -54,7 +54,7 @@ mod tests {
             code: 
             mov ax, var
             ";
-        let (cpu, _) = run_code(code, 2);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x1234);
     }
 }
