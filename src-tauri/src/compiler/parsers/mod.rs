@@ -2,6 +2,7 @@ pub mod adc;
 pub mod add;
 pub mod and;
 pub mod call;
+pub mod cmp;
 pub mod dec;
 pub mod directives;
 pub mod in_ins;
