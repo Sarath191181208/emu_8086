@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[2808],{383:t=>{t.exports=JSON.parse('{"title":"Instructions","slug":"/category/instructions","permalink":"/emu_8086/docs/category/instructions","navigation":{"previous":{"title":"Tutorial Intro","permalink":"/emu_8086/docs/intro"},"next":{"title":"AND","permalink":"/emu_8086/docs/Instructions/AND"}}}')}}]);
