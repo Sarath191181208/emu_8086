@@ -3,6 +3,18 @@ title: ADC
 description: Performs addition of operand1, operand2 and carry flag. Stores the result in operand1.
 ---
 
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import {
+  RegisterAddressingMode,
+  ImmediateAddressingMode,
+  MemoryAddressingMode,
+  RegisterAndMemoryAddressing,
+  MemoryAndRegisterAddressing,
+  MemoryAndImmediateAddressing,
+  IndirectMemoryAndImmediateAddressing,
+  DirectMemoryAndImmediateAddressing
+} from "@site/src/components/AddressingModes";
+
 ## Syntax
 
 ```asm6502
