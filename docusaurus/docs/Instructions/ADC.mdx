@@ -1,0 +1,52 @@
+---
+title: ADC
+description: Performs addition of operand1, operand2 and carry flag. Stores the result in operand1.
+---
+
+## Syntax
+
+```asm6502
+ADC operand1, operand2
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands**  | The first operand must be a register or a memory location. The second operand can be a register, a memory location or an immediate value. |
+| **Operation** | `operand1 = operand1 + (operand2 + carry flag)`                                                                                           |
+| **Size**      | 2 to 6 bytes                                                                                                                              |
+| **Action**    | Performs addition of operand1, operand2 and carry flag. Stores the result in operand1.                                                     | 
+| **Flags**     | <FlagsChangedTable carryFlag= "changed" overflowFlag= "changed" zeroFlag="changed" signFlag="changed" parityFlag="changed" auxiliaryCarryFlag="changed" />   |
+
+## Example 
+    
+```asm6502
+MOV AX, 0x0A
+MOV BX, 0x0B
+ADC AX, BX ; AX = AX + BX + CF = 0x0A + 0x0B + 0x00 = 0x15
+```
+
+## Supported Modes 
+
+### Register, Register Addressing
+<RegisterAddressingMode instructionName="XOR" />
+
+### Register, Immediate Value Addressing 
+<ImmediateAddressingMode instructionName="XOR" />
+
+### Register, Direct Memory Addressing
+<MemoryAddressingMode instructionName="XOR" />
+
+### Register, Direct/Indirect Memory Addressing With (or) Without Displacement
+<RegisterAndMemoryAddressing instructionName="XOR" />
+
+###  Direct/Indirect Memory Addressing With (or) Without Displacement , Register Addressing 
+<MemoryAndRegisterAddressing instructionName="XOR"/>
+
+### Direct/Indirect, Immediate Value Addressing
+<DirectMemoryAndImmediateAddressing instructionName="XOR" />
+
+### Indirect Memory Addressing With (or) Without Displacement, Immediate Value Addressing
+
+<IndirectMemoryAndImmediateAddressing instructionName="XOR" />
