@@ -36,12 +36,12 @@ use self::{
         is_org_defined,
     },
     parsers::{
-        add::parse_add, and::parse_and, call::parse_call, dec::parse_dec, in_ins::parse_in,
-        inc::parse_inc, jmp::parse_jmp, lea::parse_lea, les::parse_les, loop_ins::parse_loop,
-        mov::parse_mov, mul::parse_mul, or::parse_or, out_ins::parse_out,
+        adc::parse_adc, add::parse_add, and::parse_and, call::parse_call, dec::parse_dec,
+        in_ins::parse_in, inc::parse_inc, jmp::parse_jmp, lea::parse_lea, les::parse_les,
+        loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, or::parse_or, out_ins::parse_out,
         pattern_extractors::parse_two_arguments_line, pop::parse_pop, push::parse_push,
         sbb::parse_sbb, sub::parse_sub, test_ins::parse_test, utils::iterate_with_seperator,
-        var::parse_var_declaration, xchg::parse_xchg, xor::parse_xor, adc::parse_adc,
+        var::parse_var_declaration, xchg::parse_xchg, xor::parse_xor,
     },
     tokenized_line::TokenizedLine,
     tokens::{
@@ -213,7 +213,7 @@ fn compile(
             }
 
             Instructions::Adc => {
-                                let addressing_mode = parse_two_arguments_line(
+                let addressing_mode = parse_two_arguments_line(
                     &tokenized_line,
                     i,
                     is_org_defined,
