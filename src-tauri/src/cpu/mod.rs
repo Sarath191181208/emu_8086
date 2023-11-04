@@ -238,6 +238,9 @@ impl CPU {
     }
 
     fn execute_unknown_ins(&mut self, mem: &mut Memory, _opcode: Byte) {
+        println!("-----------------------------------");
+        println!("Unknown instruction: {:X}", _opcode);
+        println!("-----------------------------------");
         self.execute_nop(mem);
     }
 
@@ -390,6 +393,18 @@ impl CPU {
             // XOR AX, 0x1234 i.e immediate addressing
             0x35 => self.xor_ax_in_immediate_addressing(mem),
 
+            // CMP [0x1234], AL
+            0x38 => self.execute_cmp_byte_addr_as_first_operand(mem),
+
+            // CMP [0x1234], AX
+            0x39 => self.execute_cmp_word_addr_as_first_operand(mem),
+
+            // CMP 8bit register, 8bit register/mem
+            0x3A => self.execute_cmp_8bit_reg(mem),
+
+            // CMP AX, 16bit register/mem
+            0x3B => self.execute_cmp_16bit_reg(mem),
+
             // INC 16bit register
             0x40..=0x47 => self.execute_inc_word_register(opcode),
             // DEC 16bit register
@@ -418,6 +433,7 @@ impl CPU {
                     0x26 => self.execute_and_byte_addr_and_number(mem),
                     0x2E => self.sub_direct_address_8bit_val_immediate_value(mem),
                     0x36 => self.execute_xor_byte_addr_and_number(mem),
+                    0x3E => self.execute_cmp_byte_addr_and_number(mem),
                     0xC0..=0xC7 => self.execute_add_immediate_byte(mem),
                     0xC8..=0xCF => self.execute_or_8bit_reg_and_number(mem),
                     0xD0..=0xD7 => self.execute_adc_8bit_reg_and_number(mem),
@@ -425,7 +441,8 @@ impl CPU {
                     0xE0..=0xE7 => self.execute_and_8bit_reg_and_number(mem),
                     0xE8..=0xEF => self.execute_sub_immediate_byte(mem),
                     0xF0..=0xF7 => self.execute_xor_8bit_reg_and_number(mem),
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0x80", opcode),
+                    0xF8..=0xFF => self.execute_cmp_8bit_reg_and_number(mem),
+                    _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
 
@@ -528,7 +545,7 @@ impl CPU {
                 let ins = self.consume_instruction(mem);
                 match ins {
                     0x06 => self.execute_mov_direct_addressing_immediate_byte(mem),
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xC7", ins),
+                    _ => self.execute_unknown_ins(mem, 0xC6),
                 }
             }
 
@@ -537,7 +554,7 @@ impl CPU {
                 let ins = self.consume_instruction(mem);
                 match ins {
                     0x06 => self.execute_mov_direct_addressing_immediate_word(mem),
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xC7", ins),
+                    _ => self.execute_unknown_ins(mem, 0xC7),
                 }
             }
 
@@ -620,7 +637,7 @@ impl CPU {
                     0xC0..=0xC7 => self.execute_inc_register_byte(mem),
                     // DEC AL | BH | CL ..
                     0xC8..=0xCF => self.execute_dec_register_byte(mem),
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFE", opcode),
+                    _ => self.execute_unknown_ins(mem, 0xFE),
                 }
             }
 
@@ -644,10 +661,10 @@ impl CPU {
                         let int = self.execute_bios_di(mem);
                         return Some(int);
                     }
-                    _ => unimplemented!("Unimplemented opcode: {:X} for operation 0xFF", opcode),
+                    _ => self.execute_unknown_ins(mem, 0xFF),
                 }
             }
-            _ => unimplemented!("Unimplemented opcode: {:X}", opcode),
+            _ => self.execute_unknown_ins(mem, opcode),
         }
         None
     }

@@ -1,5 +1,6 @@
 pub mod adc;
 pub mod add;
+pub mod cmp;
 pub mod dec;
 pub mod inc;
 pub mod jmp;
