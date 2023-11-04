@@ -405,6 +405,12 @@ impl CPU {
             // CMP AX, 16bit register/mem
             0x3B => self.execute_cmp_16bit_reg(mem),
 
+            // CMP AL, 0x12 i.e immediate addressing
+            0x3C => self.cmp_al_in_immediate_addressing(mem),
+
+            // CMP AX, 0x1234 i.e immediate addressing
+            0x3D => self.cmp_ax_in_immediate_addressing(mem),
+
             // INC 16bit register
             0x40..=0x47 => self.execute_inc_word_register(opcode),
             // DEC 16bit register
