@@ -1,0 +1,76 @@
+---
+title: CMP
+description: Compare operand1 with operand2 and set the flags.
+---
+
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import {
+  RegisterAddressingMode,
+  ImmediateAddressingMode,
+  MemoryAddressingMode,
+  RegisterAndMemoryAddressing,
+  MemoryAndRegisterAddressing,
+  MemoryAndImmediateAddressing,
+  IndirectMemoryAndImmediateAddressing,
+  DirectMemoryAndImmediateAddressing,
+} from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502
+CMP operand1, operand2
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands**  | The first operand must be a register or a memory location. The second operand can be a register, a memory location or an immediate value.                  |
+| **Operation** | `operand1 - operand2 `                                                                                                                                     |
+| **Size**      | 2 to 6 bytes                                                                                                                                               |
+| **Action**    | Performs subtraction of operand2 from operand1. Does not store the result, but affects flags based on the result.                                          |
+| **Flags**     | <FlagsChangedTable carryFlag= "changed" overflowFlag= "changed" zeroFlag="changed" signFlag="changed" parityFlag="changed" auxiliaryCarryFlag="changed" /> |
+
+## Example
+
+```asm6502 showLineNumbers
+MOV AX, 0x0001
+MOV BX, 0x0002
+CMP AX, BX
+```
+
+The flags before the operation are :
+
+| Carry | Overflow | Zero | Sign | Parity | Auxiliary Carry |
+| ----- | -------- | ---- | ---- | ------ | --------------- |
+| 0     | 0        | 0    | 0    | 0      | 0               |
+
+The flags after the operation are:
+
+| Carry | Overflow | Zero | Sign | Parity | Auxiliary Carry |
+| ----- | -------- | ---- | ---- | ------ | --------------- |
+| 1     | 0        | 0    | 1    | 1      | 1               |
+
+## Supported Modes 
+
+### Register, Register Addressing
+<RegisterAddressingMode instructionName="CMP" />
+
+### Register, Immediate Value Addressing 
+<ImmediateAddressingMode instructionName="CMP" />
+
+### Register, Direct Memory Addressing
+<MemoryAddressingMode instructionName="CMP" />
+
+### Register, Direct/Indirect Memory Addressing With (or) Without Displacement
+<RegisterAndMemoryAddressing instructionName="CMP" />
+
+###  Direct/Indirect Memory Addressing With (or) Without Displacement , Register Addressing 
+<MemoryAndRegisterAddressing instructionName="CMP"/>
+
+### Direct/Indirect, Immediate Value Addressing
+<DirectMemoryAndImmediateAddressing instructionName="CMP" />
+
+### Indirect Memory Addressing With (or) Without Displacement, Immediate Value Addressing
+
+<IndirectMemoryAndImmediateAddressing instructionName="CMP" />
