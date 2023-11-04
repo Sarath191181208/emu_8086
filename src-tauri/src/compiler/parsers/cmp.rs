@@ -20,7 +20,7 @@ pub(in crate::compiler) fn parse_cmp(
         indexed_addressing_and_anyting_ins: 0x39,
         addr_and_8bit_reg: 0x38,
 
-        al_and_num_ins: Some(0x3c),
+        al_and_num_ins: Some(0x3C),
         ax_and_num_ins: Some(0x3D),
         reg16bit_and_16bit_num: 0x81,
         reg16bit_and_8bit_num: Some(0x83),
