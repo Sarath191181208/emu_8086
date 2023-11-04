@@ -7,6 +7,7 @@ pub(crate) enum Instructions {
     Add,
     And,
     Call,
+    Cmp,
     Dec,
     EndP,
     Hlt,
