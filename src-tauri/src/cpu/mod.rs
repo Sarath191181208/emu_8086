@@ -463,6 +463,7 @@ impl CPU {
                     0x26 => self.execute_and_word_addr_and_number(mem, opcode),
                     0x2E => self.sub_direct_address_16bit_val_immediate_value(mem, opcode),
                     0x36 => self.execute_xor_word_addr_and_number(mem, opcode),
+                    0x3E => self.execute_cmp_word_addr_and_number(mem, opcode),
                     0xC0..=0xC7 => self.execute_add_reg_immediate_word(mem, opcode),
                     0xC8..=0xCF => self.execute_or_16bit_reg_and_number(mem, opcode),
                     0xD0..=0xD7 => self.execute_adc_16bit_reg_and_number(mem, opcode),
@@ -470,6 +471,7 @@ impl CPU {
                     0xE0..=0xE7 => self.execute_and_16bit_reg_and_number(mem, opcode),
                     0xE8..=0xEF => self.execute_sub_immediate_word(mem, opcode),
                     0xF0..=0xF7 => self.execute_xor_16bit_reg_and_number(mem, opcode),
+                    0xF8..=0xFF => self.execute_cmp_16bit_reg_and_number(mem, opcode),
                     _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
