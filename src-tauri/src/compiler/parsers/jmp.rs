@@ -9,7 +9,7 @@ use crate::compiler::{
 };
 
 use super::pattern_extractors::offset_label_pattern::{
-    match_ins_to_bytes_single_ins_with_label_and_offset_label, parse_single_label_or_variable,
+    compile_single_ins_similar_as_jmp, parse_single_label_or_variable,
     parse_token_high_token_and_is_offset_defined, LabeledInstructionCompileData, OffsetMaps,
 };
 
@@ -38,9 +38,12 @@ pub(in crate::compiler) fn parse_jmp(
         bytes_of_8bit_ins: 1,
         bytes_of_16bit_ins: 2,
         is_offset,
+        segmented_indexing_instruction: vec![0xEA],
     };
 
     let offset_case = parse_single_label_or_variable(
+        tokenized_line,
+        i,
         line_number,
         "JMP",
         high_token,
@@ -52,7 +55,7 @@ pub(in crate::compiler) fn parse_jmp(
         },
     )?;
 
-    Ok(match_ins_to_bytes_single_ins_with_label_and_offset_label(
+    Ok(compile_single_ins_similar_as_jmp(
         i,
         token,
         high_token,
@@ -161,7 +164,7 @@ label:
 
 #[cfg(test)]
 mod test_16_bit_jmp_compile {
-    use crate::{compiler::compile_str, test_compile};
+    use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
     fn generate_inc_ins(size: u16) -> String {
         let mut ins = String::new();
         for _ in 0..size {
@@ -256,5 +259,13 @@ mod test_16_bit_jmp_compile {
         |instructions: &Vec<u8>| {
             assert_eq!(instructions, &[0x10, 0xEB, 0xFD]);
         }
+    );
+
+    compile_and_compare_ins!(
+        jmp_segmented_indexing,
+        "
+        JMP 0x200:0x100
+        ",
+        &[0xEA, 0x00, 0x01, 0x00, 0x02]
     );
 }

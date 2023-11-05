@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use crate::{
     compiler::{
         compilation_error::CompilationError,
-        parsers::utils::push_instruction,
+        parsers::utils::{check_token, push_instruction},
         suggestions_utils::get_all_registers_and_variable_suggestions,
         tokenized_line::TokenizedLine,
         tokens::{assembler_directives::AssemblerDirectives, Assembly8086Tokens, Token},
@@ -23,6 +23,7 @@ pub(in crate::compiler) enum Offset {
     U8(u8),
     U16(u16),
     Pointer(u16),
+    SegmentedAddressing(u16, u16),
 }
 
 pub(in crate::compiler) struct OffsetMaps<'a> {
@@ -35,6 +36,7 @@ pub(in crate::compiler) struct LabeledInstructionCompileData {
     pub ins_8bit: Vec<u8>,
     pub ins_16bit: Vec<u8>,
     pub pointer_offset_instruction: Vec<u8>,
+    pub segmented_indexing_instruction: Vec<u8>,
 
     pub bytes_of_8bit_ins: u8,
     pub bytes_of_16bit_ins: u16,
@@ -43,6 +45,8 @@ pub(in crate::compiler) struct LabeledInstructionCompileData {
 }
 
 pub(in crate::compiler) fn parse_single_label_or_variable(
+    tokenized_line: &TokenizedLine,
+    i: usize,
     line_number: LineNumber,
     instruction_name: &str,
     token: &Token,
@@ -86,6 +90,60 @@ pub(in crate::compiler) fn parse_single_label_or_variable(
             }
         }
 
+        Assembly8086Tokens::Number16bit(segment_num) => {
+            // check if the next token is Colon
+            check_token(tokenized_line, token, i + 1, &Assembly8086Tokens::Colon)?;
+
+            let low_token =
+                tokenized_line.get(i + 2, "Expected a 8bit token got None!".to_string(), None)?;
+
+            match &low_token.token_type {
+                Assembly8086Tokens::Number8bit(address_num) => Ok(Offset::SegmentedAddressing(
+                    *segment_num as u16,
+                    *address_num as u16,
+                )),
+                Assembly8086Tokens::Number16bit(address_num) => Ok(Offset::SegmentedAddressing(
+                    *segment_num as u16,
+                    *address_num,
+                )),
+
+                _ => Err(CompilationError::error_with_token(
+                    token,
+                    &format!(
+                        "Can't compile {:?} as the second argument to {}, Expected a label, offset",
+                        token.token_type, low_token.token_type
+                    ),
+                )),
+            }
+        }
+
+        Assembly8086Tokens::Number8bit(segment_num) => {
+            // check if the next token is Colon
+            check_token(tokenized_line, token, i + 1, &Assembly8086Tokens::Colon)?;
+
+            let low_token =
+                tokenized_line.get(i + 2, "Expected a 8bit token got None!".to_string(), None)?;
+
+            match &low_token.token_type {
+                Assembly8086Tokens::Number8bit(address_num) => Ok(Offset::SegmentedAddressing(
+                    *segment_num as u16,
+                    *address_num as u16,
+                )),
+                Assembly8086Tokens::Number16bit(address_num) => Ok(Offset::SegmentedAddressing(
+                    *segment_num as u16,
+                    *address_num,
+                )),
+
+                _ => Err(CompilationError::error_with_token(
+                    token,
+                    &format!(
+                        "Can't compile {:?} as the second argument to {}, Expected a label, offset",
+                        token.token_type, low_token.token_type
+                    ),
+                )),
+            }
+        }
+
         _ => Err(CompilationError::error_with_token(
             token,
             &format!(
@@ -96,7 +154,7 @@ pub(in crate::compiler) fn parse_single_label_or_variable(
     }
 }
 
-pub(in crate::compiler) fn match_ins_to_bytes_single_ins_with_label_and_offset_label(
+pub(in crate::compiler) fn compile_single_ins_similar_as_jmp(
     i: usize,
     token: &Token,
     high_token: &Token,
@@ -139,6 +197,20 @@ pub(in crate::compiler) fn match_ins_to_bytes_single_ins_with_label_and_offset_l
                 )
             );
             i + 2
+        }
+        Offset::SegmentedAddressing(segment_addr, pointer_addr) => {
+            let data_ins = [pointer_addr.to_le_bytes(), segment_addr.to_le_bytes()].concat();
+            let segment_ins = instruction_compile_data.segmented_indexing_instruction;
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => segment_ins,
+                    high_token => data_ins
+                )
+            );
+            // i + 2
+            u8::MAX as usize
         }
     }
 }
