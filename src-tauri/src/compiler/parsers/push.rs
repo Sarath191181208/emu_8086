@@ -13,12 +13,8 @@ use crate::{
     utils::Either,
 };
 
-use super::pattern_extractors::{
-    offset_label_pattern::{
-        parse_token_high_token_and_is_offset_defined, LabeledInstructionCompileData,
-    },
-    utils::evaluate_ins,
-};
+use super::pattern_extractors::utils::evaluate_ins;
+
 
 #[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn parse_push(
@@ -33,13 +29,12 @@ pub(in crate::compiler) fn parse_push(
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let prev_i = i;
-    let (i, token, high_token, is_offset_directive_defined) =
-        parse_token_high_token_and_is_offset_defined(
-            tokenized_line,
-            i,
-            variable_address_map,
-            "PUSH",
-        )?;
+    let token = tokenized_line.get(
+        i,
+        "This shouldn't happen, Please report this!".to_string(),
+        None,
+    )?;
+    let high_token = tokenized_line.get(i + 1, "Expected a token got None".to_string(), None)?;
 
     let new_token = evaluate_ins(
         prev_i + 1,
@@ -57,14 +52,9 @@ pub(in crate::compiler) fn parse_push(
         None => high_token,
     };
 
-    let instruction_compile_data = LabeledInstructionCompileData {
-        ins_8bit: vec![0x6A],
-        ins_16bit: vec![0x68],
-        bytes_of_8bit_ins: 1,
-        bytes_of_16bit_ins: 2,
-        is_offset: is_offset_directive_defined,
-        pointer_offset_instruction: vec![0xFF, 0x36],
-    };
+    let ins_8bit = vec![0x6A];
+    let ins_16bit = vec![0x68];
+    let pointer_offset_instruction = vec![0xFF, 0x36];
 
     match &high_token.token_type {
         Assembly8086Tokens::Register16bit(reg) => {
@@ -99,7 +89,7 @@ pub(in crate::compiler) fn parse_push(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => instruction_compile_data.pointer_offset_instruction,
+                    token => pointer_offset_instruction,
                     high_token => val.to_le_bytes_vec()
                 )
             );
@@ -165,7 +155,7 @@ pub(in crate::compiler) fn parse_push(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => instruction_compile_data.ins_16bit,
+                    token => ins_16bit,
                     high_token => val.to_le_bytes().to_vec()
                 )
             );
@@ -177,7 +167,7 @@ pub(in crate::compiler) fn parse_push(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => instruction_compile_data.ins_8bit,
+                    token => ins_8bit,
                     high_token => vec![*val]
                 )
             );
@@ -197,6 +187,7 @@ pub(in crate::compiler) fn parse_push(
 #[cfg(test)]
 mod push_ins_test {
     use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
+    use pretty_assertions::assert_eq;
 
     test_compile!(
         test_push_16bit_register,
