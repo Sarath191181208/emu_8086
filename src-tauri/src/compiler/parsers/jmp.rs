@@ -9,11 +9,8 @@ use crate::compiler::{
 };
 
 use super::pattern_extractors::offset_label_pattern::{
-    compile_single_ins_similar_as_jmp, parse_single_label_or_variable,
-    parse_token_high_token_and_is_offset_defined, LabeledInstructionCompileData, OffsetMaps, parse_labeled_relative_offset,
+    parse_labeled_relative_offset, LabeledInstructionCompileData,
 };
-
-
 
 #[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn parse_jmp(
@@ -26,7 +23,6 @@ pub(in crate::compiler) fn parse_jmp(
     label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
-
     let mut instruction_compile_data = LabeledInstructionCompileData {
         pointer_offset_instruction: vec![0xFF, 0x26],
         ins_8bit: vec![0xEB],
@@ -37,14 +33,18 @@ pub(in crate::compiler) fn parse_jmp(
         segmented_indexing_instruction: vec![0xEA],
     };
 
-    parse_labeled_relative_offset(tokenized_line, 
-        i, 
-        line_number, 
-        "JMP", 
-        compiled_bytes, 
+    parse_labeled_relative_offset(
+        tokenized_line,
+        i,
+        line_number,
+        "JMP",
+        compiled_bytes,
         compiled_bytes_ref,
         variable_address_map,
-        label_idx_map, compiled_line_ref_with_offset_maps, &mut instruction_compile_data)
+        label_idx_map,
+        compiled_line_ref_with_offset_maps,
+        &mut instruction_compile_data,
+    )
 }
 
 #[cfg(test)]

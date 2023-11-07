@@ -30,16 +30,16 @@ pub(in crate::compiler) fn parse_labeled_relative_offset(
     variable_address_map: Option<&VariableAddressMap>,
     label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
-    instruction_compile_data: &mut LabeledInstructionCompileData
+    instruction_compile_data: &mut LabeledInstructionCompileData,
 ) -> Result<usize, CompilationError> {
     let (i, token, high_token, is_offset) = parse_token_high_token_and_is_offset_defined(
         tokenized_line,
         i,
         variable_address_map,
-        instruction_name
+        instruction_name,
     )?;
 
-    instruction_compile_data.is_offset = is_offset; 
+    instruction_compile_data.is_offset = is_offset;
 
     let offset_case = parse_single_label_or_variable(
         tokenized_line,
@@ -47,7 +47,7 @@ pub(in crate::compiler) fn parse_labeled_relative_offset(
         line_number,
         instruction_name,
         high_token,
-        &instruction_compile_data,
+        instruction_compile_data,
         OffsetMaps {
             label_idx_map,
             compiled_line_ref_with_offset_maps,
