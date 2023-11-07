@@ -239,11 +239,12 @@ pub(in crate::compiler) fn compile_single_ins_similar_as_jmp(
 
         Offset::Pointer(offset) => {
             // let ins = instruction_compile_data.pointer_offset_instruction.clone();
-            // add sub ins to this vector 
-            let ins =   [
+            // add sub ins to this vector
+            let ins = [
                 instruction_compile_data.pointer_offset_instruction.clone(),
-                vec![instruction_compile_data.indexed_addressing_sub_instruction + 0x06]
-            ].concat();
+                vec![instruction_compile_data.indexed_addressing_sub_instruction + 0x06],
+            ]
+            .concat();
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
