@@ -15,7 +15,6 @@ use crate::{
 
 use super::pattern_extractors::utils::evaluate_ins;
 
-
 #[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn parse_push(
     tokenized_line: &TokenizedLine,

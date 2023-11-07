@@ -99,13 +99,12 @@ pub(in crate::compiler) fn parse_single_label_or_variable(
 
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(address_num) => Ok(Offset::SegmentedAddressing(
-                    *segment_num as u16,
+                    *segment_num,
                     *address_num as u16,
                 )),
-                Assembly8086Tokens::Number16bit(address_num) => Ok(Offset::SegmentedAddressing(
-                    *segment_num as u16,
-                    *address_num,
-                )),
+                Assembly8086Tokens::Number16bit(address_num) => {
+                    Ok(Offset::SegmentedAddressing(*segment_num, *address_num))
+                }
 
                 _ => Err(CompilationError::error_with_token(
                     token,
