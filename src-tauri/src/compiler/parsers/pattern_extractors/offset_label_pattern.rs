@@ -19,6 +19,53 @@ use crate::{
     utils::Either,
 };
 
+#[allow(clippy::too_many_arguments)]
+pub(in crate::compiler) fn parse_labeled_relative_offset(
+    tokenized_line: &TokenizedLine,
+    i: usize,
+    line_number: LineNumber,
+    instruction_name: &str,
+    compiled_bytes: &mut Vec<u8>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+    variable_address_map: Option<&VariableAddressMap>,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
+    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
+    instruction_compile_data: &mut LabeledInstructionCompileData
+) -> Result<usize, CompilationError> {
+    let (i, token, high_token, is_offset) = parse_token_high_token_and_is_offset_defined(
+        tokenized_line,
+        i,
+        variable_address_map,
+        instruction_name
+    )?;
+
+    instruction_compile_data.is_offset = is_offset; 
+
+    let offset_case = parse_single_label_or_variable(
+        tokenized_line,
+        i,
+        line_number,
+        instruction_name,
+        high_token,
+        &instruction_compile_data,
+        OffsetMaps {
+            label_idx_map,
+            compiled_line_ref_with_offset_maps,
+            variable_address_map,
+        },
+    )?;
+
+    Ok(compile_single_ins_similar_as_jmp(
+        i,
+        token,
+        high_token,
+        instruction_compile_data.clone(),
+        offset_case,
+        compiled_bytes,
+        compiled_bytes_ref,
+    ))
+}
+
 pub(in crate::compiler) enum Offset {
     U8(u8),
     U16(u16),
@@ -32,6 +79,7 @@ pub(in crate::compiler) struct OffsetMaps<'a> {
     pub variable_address_map: Option<&'a VariableAddressMap>,
 }
 
+#[derive(Debug, Clone)]
 pub(in crate::compiler) struct LabeledInstructionCompileData {
     pub ins_8bit: Vec<u8>,
     pub ins_16bit: Vec<u8>,
@@ -92,10 +140,10 @@ pub(in crate::compiler) fn parse_single_label_or_variable(
 
         Assembly8086Tokens::Number16bit(segment_num) => {
             // check if the next token is Colon
-            check_token(tokenized_line, token, i + 1, &Assembly8086Tokens::Colon)?;
+            check_token(tokenized_line, token, i + 2, &Assembly8086Tokens::Colon)?;
 
             let low_token =
-                tokenized_line.get(i + 2, "Expected a 8bit token got None!".to_string(), None)?;
+                tokenized_line.get(i + 3, "Expected a 8bit token got None!".to_string(), None)?;
 
             match &low_token.token_type {
                 Assembly8086Tokens::Number8bit(address_num) => Ok(Offset::SegmentedAddressing(
