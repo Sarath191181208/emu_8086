@@ -88,6 +88,9 @@ pub(in crate::compiler) struct LabeledInstructionCompileData {
 
     pub bytes_of_8bit_ins: u8,
     pub bytes_of_16bit_ins: u16,
+    // ex: 0xF8 0x06
+    //          ^^^^
+    pub indexed_addressing_sub_instruction: u8,
 
     pub is_offset: bool,
 }
@@ -235,11 +238,17 @@ pub(in crate::compiler) fn compile_single_ins_similar_as_jmp(
         }
 
         Offset::Pointer(offset) => {
+            // let ins = instruction_compile_data.pointer_offset_instruction.clone();
+            // add sub ins to this vector 
+            let ins =   [
+                instruction_compile_data.pointer_offset_instruction.clone(),
+                vec![instruction_compile_data.indexed_addressing_sub_instruction + 0x06]
+            ].concat();
             convert_and_push_instructions!(
                 compiled_bytes,
                 compiled_bytes_ref,
                 (
-                    token => instruction_compile_data.pointer_offset_instruction,
+                    token => ins,
                     high_token => offset.to_le_bytes().to_vec()
                 )
             );

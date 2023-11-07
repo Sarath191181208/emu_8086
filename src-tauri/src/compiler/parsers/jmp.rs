@@ -24,13 +24,14 @@ pub(in crate::compiler) fn parse_jmp(
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
     let mut instruction_compile_data = LabeledInstructionCompileData {
-        pointer_offset_instruction: vec![0xFF, 0x26],
+        pointer_offset_instruction: vec![0xFF],
         ins_8bit: vec![0xEB],
         ins_16bit: vec![0xE9],
         bytes_of_8bit_ins: 1,
         bytes_of_16bit_ins: 2,
         is_offset: false,
         segmented_indexing_instruction: vec![0xEA],
+        indexed_addressing_sub_instruction: 0x20,
     };
 
     parse_labeled_relative_offset(
