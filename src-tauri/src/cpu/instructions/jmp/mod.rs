@@ -1,50 +1,29 @@
-use crate::{cpu::CPU, memory::Memory};
+use crate::{
+    cpu::CPU, generate_16bit_jmp_method, generate_8bit_jmp_method, generate_mem_jmp_method,
+    memory::Memory,
+};
 
 pub mod jcxz;
 
-impl CPU {
-    pub(self) fn execute_8bit_offset_jmp(&mut self, offset: u8) {
-        match offset {
-            0x80..=0xFF => {
-                let offset = 0xFF - offset + 1;
-                self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset as u16);
-            }
-            0x00..=0x7F => {
-                self.instruction_pointer = self.instruction_pointer.wrapping_add(offset as u16);
-            }
-        }
-    }
-
-    pub(in crate::cpu) fn execute_jmp_8bit(&mut self, mem: &mut Memory) {
-        let offset = self.consume_instruction(mem);
-        self.execute_8bit_offset_jmp(offset);
-    }
-
-    pub(in crate::cpu) fn execute_jmp_16bit(&mut self, mem: &mut Memory) {
-        let offset_low = self.consume_instruction(mem);
-        let offset_high = self.consume_instruction(mem);
-
-        let offset = (offset_high as u16) << 8 | offset_low as u16;
-        match offset {
-            0x8000..=0xFFFF => {
-                print!("offset: {:x}", offset);
-                let offset = 0xFFFF - offset;
-                self.instruction_pointer = self.instruction_pointer.wrapping_sub(offset);
-            }
-            0x0000..=0x7FFF => {
-                self.instruction_pointer = self.instruction_pointer.wrapping_add(offset);
-            }
-        }
-    }
-
-    pub(in crate::cpu) fn execute_jmp_abs_address(&mut self, mem: &mut Memory) {
-        self.consume_instruction(mem); // consume 0x26
-        let address = self.consume_word(mem);
-        print!("address: {:x}", address);
-        self.instruction_pointer = address;
+fn exec_fn(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    let ip = cpu.instruction_pointer;
+    // if -ve sub else address
+    if offset < 0 {
+        Some(ip.wrapping_sub(offset.unsigned_abs()))
+    } else {
+        Some(ip.wrapping_add(offset.unsigned_abs()))
     }
 }
 
+fn exec_fn_abs(_: &mut CPU, offset: u16) -> Option<u16> {
+    Some(offset)
+}
+
+impl CPU {
+    generate_8bit_jmp_method!(jmp, exec_fn);
+    generate_16bit_jmp_method!(jmp, exec_fn);
+    generate_mem_jmp_method!(jmp, exec_fn_abs);
+}
 #[cfg(test)]
 mod test_8bit_jmp {
     use crate::{compiler::compile_lines, cpu::CPU, generate_test_with_cycles, memory::Memory};
@@ -130,7 +109,7 @@ mod test_16_bit_jmp {
             cpu.write_instructions(mem, &compiled_bytes);
         }),
         (|cpu: &CPU, _: &Memory| {
-            assert_eq!(cpu.instruction_pointer, 0x0002);
+            assert_eq!(cpu.instruction_pointer, 0x0001);
             assert_eq!(cpu.ax, 0x0081);
         }),
         0x82

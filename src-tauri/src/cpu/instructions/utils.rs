@@ -5,6 +5,65 @@ use crate::{
 };
 
 #[macro_export]
+macro_rules! generate_8bit_jmp_method {
+    ($ins_name: ident, $exec_fn: expr) => {
+        paste::item!(
+            pub(in $crate::cpu) fn [<execute_ $ins_name _8bit>](&mut self, mem: &mut Memory) {
+                let offset = self.consume_instruction(mem);
+                let exec_fn: &dyn Fn(&mut CPU, i16) -> Option<u16> = &$exec_fn;
+                let res = exec_fn(self, offset as i8 as i16);
+                if let Some(res) = res{
+                    self.instruction_pointer = res;
+                }
+            }
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! generate_16bit_jmp_method {
+    ($ins_name: ident, $exec_fn: expr) => {
+        paste::item!(
+            pub(in $crate::cpu) fn [<execute_ $ins_name _16bit>](&mut self, mem: &mut Memory){
+                let offset = self.consume_word(mem);
+                let exec_fn: &dyn Fn(&mut CPU, i16) -> Option<u16> = &$exec_fn;
+                if let Some(res) = exec_fn(self, offset as i16){
+                    self.instruction_pointer = res;
+                }
+            }
+        );
+    }
+}
+
+#[macro_export]
+macro_rules! generate_mem_jmp_method {
+    ($ins_name: ident, $exec_fn: expr) => {
+        paste::item!(
+            pub(in $crate::cpu) fn [<execute_ $ins_name _abs_address>](&mut self, mem: &mut Memory) {
+                let ins = self.consume_instruction(mem); // consume 0x26
+                let ins = ins % 8;
+                let exec_fn: &dyn Fn(&mut CPU, u16) -> Option<u16> = &$exec_fn;
+                let res:Option<u16> = match ins {
+                    0x06 =>{
+                        let address = self.consume_word(mem);
+                        exec_fn(self, address)
+                    }
+                    0x00..=0x07 => {
+                        let addr = self.get_offset_from_index_of_indexed_registers(ins);
+                        let jmp_addr = self.read_word_from_u20(mem, addr);
+                        exec_fn(self, jmp_addr)
+                    }
+                    _ => panic!("Invalid instruction"),
+                };
+                if let Some(addr) = res{
+                    self.instruction_pointer = addr;
+                }
+            }
+        );
+    };
+}
+
+#[macro_export]
 macro_rules! generate_16bit_reg_8bit_reg_indexed_and_byte_indexed_addressing_as_first_ins_methods {
     ($ins_name: ident, $exec_fn_16bit: expr, $exec_fn_8bit: expr) => {
         paste::item!(
