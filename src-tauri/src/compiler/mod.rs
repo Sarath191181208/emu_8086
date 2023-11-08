@@ -37,10 +37,10 @@ use self::{
     },
     parsers::{
         adc::parse_adc, add::parse_add, and::parse_and, call::parse_call, cmp::parse_cmp,
-        dec::parse_dec, in_ins::parse_in, inc::parse_inc, jmp::parse_jmp, lea::parse_lea,
-        les::parse_les, loop_ins::parse_loop, mov::parse_mov, mul::parse_mul, or::parse_or,
-        out_ins::parse_out, pattern_extractors::parse_two_arguments_line, pop::parse_pop,
-        push::parse_push, sbb::parse_sbb, sub::parse_sub, test_ins::parse_test,
+        dec::parse_dec, in_ins::parse_in, inc::parse_inc, ja::parse_ja, jmp::parse_jmp,
+        lea::parse_lea, les::parse_les, loop_ins::parse_loop, mov::parse_mov, mul::parse_mul,
+        or::parse_or, out_ins::parse_out, pattern_extractors::parse_two_arguments_line,
+        pop::parse_pop, push::parse_push, sbb::parse_sbb, sub::parse_sub, test_ins::parse_test,
         utils::iterate_with_seperator, var::parse_var_declaration, xchg::parse_xchg,
         xor::parse_xor,
     },
@@ -509,6 +509,21 @@ fn compile(
                 Ok(compiled_line)
             }
 
+            Instructions::Ja => {
+                let i = parse_ja(
+                    &tokenized_line,
+                    i,
+                    line_number,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    variable_address_map,
+                    &mut compiled_line.label_idx_map,
+                    compiled_line_offset_maps,
+                )?;
+                // compiled_line.extend(_compliled_line);
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JA", 1)?;
+                Ok(compiled_line)
+            }
             Instructions::Jmp => {
                 let i = parse_jmp(
                     &tokenized_line,
