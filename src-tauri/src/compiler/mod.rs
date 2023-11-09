@@ -692,7 +692,7 @@ fn compile(
                 Ok(compiled_line)
             }
 
-                        Instructions::Jl => {
+            Instructions::Jl => {
                 i = parse_label_pattern_full(
                     "JL",
                     vec![0x7C],

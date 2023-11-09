@@ -336,4 +336,36 @@ mod tests {
         let (cpu, _) = execute_code(&code);
         assert_eq!(cpu.ax, 0x0001);
     }
+
+    #[test]
+    fn test_jl_8bit() {
+        let code = "
+            MOV BX, -0x05
+            CMP BX, 0x05
+            JL label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0002);
+    }
+
+    #[test]
+    fn test_jl_16bit() {
+        let code = format!(
+            "
+            MOV BX, -0x05
+            CMP BX, 0x05
+            JL label
+            {}
+            label:
+            INC AX
+        ",
+            generate_inc_x80()
+        );
+
+        let (cpu, _) = execute_code(&code);
+        assert_eq!(cpu.ax, 0x0082);
+    }
 }

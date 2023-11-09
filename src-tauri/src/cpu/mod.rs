@@ -449,7 +449,7 @@ impl CPU {
             // JL 8bit offset
             0x7C => self.execute_jl_8bit(mem),
 
-            // JGE 8bit offset 
+            // JGE 8bit offset
             0x7D => self.execute_jge_8bit(mem),
 
             // JLE 8bit offset
