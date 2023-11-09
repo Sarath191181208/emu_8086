@@ -147,7 +147,7 @@ macro_rules! generate_execute_ins_16bit_reg_and_number {
                 let ins = self.consume_instruction(mem);
                 let reg_idx = ins%8;
                 let num = if is_num_u8 {
-                    self.consume_byte(mem) as u16
+                    self.consume_byte(mem) as i8 as u16
                 } else {
                     self.consume_word(mem)
                 };
@@ -191,7 +191,7 @@ macro_rules! generate_execute_ins_word_addr_and_number {
                 let addr = self.consume_word(mem);
                 let addr_val = self.read_word_from_pointer(mem, addr);
                 let num = if is_num_u8 {
-                    self.consume_byte(mem) as u16
+                    self.consume_byte(mem) as i8 as u16
                 } else {
                     self.consume_word(mem)
                 };

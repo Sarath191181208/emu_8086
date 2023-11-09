@@ -243,8 +243,8 @@ impl SignedU16 {
             let val_i8 = val as i8 * if self.is_negative { -1 } else { 1 };
             return Ok(Either::Left(val_i8 as u8));
         }
-        return Ok(Either::Right((self.val as i16 * if self.is_negative { -1 } else { 1 }) as u16));
+        Ok(Either::Right(
+            (self.val as i16 * if self.is_negative { -1 } else { 1 }) as u16,
+        ))
     }
-
-
 }

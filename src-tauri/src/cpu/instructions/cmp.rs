@@ -133,4 +133,14 @@ mod cmp_tests {
         let (cpu, _) = execute_code(code);
         assert_eq!(cpu.get_flags_as_binary(), 0b0001_0000);
     }
+
+    #[test]
+    fn cmp_reg_neg_num() {
+        let code = "
+            MOV BX, 0x05
+            CMP BX, -0x05";
+        let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.negative_flag, false);
+        assert_eq!(cpu.get_flags_as_binary(), 0b0011_0001);
+    }
 }

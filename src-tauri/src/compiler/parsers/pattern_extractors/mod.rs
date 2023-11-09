@@ -184,7 +184,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::Registers16bitNumber {
                     high_token: compact_high_token,
                     low_token,
-                    num: Either::Left(*num) ,
+                    num: Either::Left(*num),
                 }),
                 Assembly8086Tokens::Register16bit(_) => Ok(AddressingMode::Registers16bit {
                     high_token: compact_high_token,
@@ -234,6 +234,26 @@ pub(crate) fn parse_two_arguments_line<'a>(
                     low_token,
                     num: *num,
                 }),
+                Assembly8086Tokens::Number16bit(num) => {
+                    // check if num can be a u8 number
+                    if (*num as i16 as u16) <= 0xFF {
+                        Ok(AddressingMode::Register8bitNumber {
+                            high_token: compact_high_token,
+                            low_token,
+                            num: *num as u8,
+                        })
+                    } else {
+                        Err(CompilationError::new_without_suggestions(
+                            token.line_number,
+                            high_token.column_number + high_token.token_length + 1,
+                            len_lexed_strings - high_token.column_number - high_token.token_length,
+                            &format!(
+                                "Expected a 8bit value after {} got {:?} insted",
+                                ins, &low_token.token_type
+                            ),
+                        ))
+                    }
+                }
                 Assembly8086Tokens::Register8bit(_) => Ok(AddressingMode::Registers8bit {
                     high_token: compact_high_token,
                     low_token,

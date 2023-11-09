@@ -46,8 +46,8 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
         match start_token.token_type {
             Assembly8086Tokens::Register16bit(_)
             | Assembly8086Tokens::Register8bit(_)
-            | Assembly8086Tokens::Number16bit(_)
-            | Assembly8086Tokens::Number8bit(_)
+            // | Assembly8086Tokens::Number16bit(_)
+            // | Assembly8086Tokens::Number8bit(_)
             | Assembly8086Tokens::Instruction(_) => {
                 return Ok(None);
             }
