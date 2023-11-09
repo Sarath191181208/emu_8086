@@ -166,4 +166,36 @@ mod tests {
         let (cpu, _) = execute_code(&code);
         assert_eq!(cpu.ax, 0x0001);
     }
+
+    #[test] 
+    fn test_jbe_8bit() {
+        let code = "
+            MOV BX, 0x01
+            CMP BX, 0x05
+            JBE label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_jbe_16bit() {
+        let code = format!(
+            "
+            MOV BX, 0x01
+            CMP BX, 0x05
+            JBE label
+            {}
+            label:
+            INC AX
+        ",
+            generate_inc_x80()
+        );
+
+        let (cpu, _) = execute_code(&code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
 }
