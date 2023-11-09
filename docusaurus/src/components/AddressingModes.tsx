@@ -194,7 +194,10 @@ export function IndirectMemoryAndImmediateAddressing(
 ) {
   // not supported yet
   return (
-    <Admonition type="danger" title="Warning, This feature is still not supported.">
+    <Admonition
+      type="danger"
+      title="Warning, This feature is still not supported."
+    >
       <p>
         This is a mode in which the operand is specified as a memory location
         while the other operand is specified as a constant. The first operand is
@@ -209,7 +212,7 @@ ${props.instructionName} [BX+SI+10h], 0FFh
 ${props.instructionName} [BX+SI+100h], 0FFh
 `}
       </CodeBlock>
-      </Admonition>
+    </Admonition>
   );
 }
 
@@ -233,6 +236,37 @@ ${props.instructionName} [BX+SI+100h], 0FFh
     </>
   );
 }
+
+export function LabeledInstructionAddressinng(props: AddressingModeProps) {
+  // JMP label this kind of instructions
+  return (
+    <>
+      <p>
+        This is a mode in which the operand is specified as a label. The
+        instruction will jump to the label.
+      </p>
+      <p>Example: </p>
+      <CodeBlock language="asm6502" showLineNumbers>
+        {`
+label: 
+MOV AX, BX, 
+INC CX  
+
+${props.instructionName} label ; This is a 8 bit JMP
+${props.instructionName} 0x10  ; This is using an 8bit constant 
+
+; #########################
+; ### 0x80 instructions ### 
+; #########################
+
+${props.instructionName} label ; This is a 16 bit JMP 
+`}
+      </CodeBlock>
+    </>
+  );
+}
+
+
 
 interface AddressingModeTableProps {
   instructionName: string;

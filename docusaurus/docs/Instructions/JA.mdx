@@ -1,0 +1,45 @@
+---
+title: JA
+description: Jump if (Carry Flag=0 & Zero Flag=0)
+---
+
+import {
+  LabeledInstructionAddressinng,
+  } from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502 showLineNumbers
+    JA label
+    JA 0x02 ; 8bit constant
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Operands**  | `label` - A label to jump to. <br/> `0x02` - An 8bit constant to jump to.                                                            |
+| **Operation** | `JMP if CF = 0 and ZF = 0`                                                                                                           |
+| **Size**      | 8bit-ins: 2 bytes, 16bit-ins: 5 bytes                                                                                                |
+| **Action**    | Jump to the specified label if Carry Flag is clear and Zero Flag is clear. Generally used in conjunction with the `CMP` instruction. |
+| **Flags**     | No change                                                                                                                            |
+
+## Example
+```asm6502 showLineNumbers
+MOV AL, 250
+CMP AL, 5
+JA label1
+
+;AL is not above 5
+JMP exit
+
+label1:
+    ;AL is above 5
+exit:
+   RET
+```
+
+## Supported Modes 
+
+### Label/ 8bit constant
+<LabeledInstructionAddressinng  instructionName="JA" />
