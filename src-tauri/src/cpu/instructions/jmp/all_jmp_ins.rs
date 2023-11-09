@@ -48,7 +48,7 @@ fn exec_cf_1_or_zf_1_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
     generate_16bit_jmp_label_method!(ja, exec_cf_zf_0_jmp);
-    
+
     generate_8bit_jmp_method!(jae, exec_cf_0_jmp);
     generate_16bit_jmp_label_method!(jae, exec_cf_0_jmp);
 
@@ -167,7 +167,7 @@ mod tests {
         assert_eq!(cpu.ax, 0x0001);
     }
 
-    #[test] 
+    #[test]
     fn test_jbe_8bit() {
         let code = "
             MOV BX, 0x01

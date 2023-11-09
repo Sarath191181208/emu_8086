@@ -240,10 +240,7 @@ impl CPU {
     fn is_jmp_16bit(&self, mem: &Memory) -> bool {
         let next_ins = self.peek_instruction(mem);
         let next_next_ins = self.peek_next_instruction(mem);
-        match (next_ins, next_next_ins) {
-            (0x03, 0xE9) => true,
-            _ => false,
-        }
+        matches!((next_ins, next_next_ins), (0x03, 0xE9))
     }
 
     fn execute_nop(&mut self, mem: &mut Memory) {
