@@ -21,6 +21,22 @@ macro_rules! generate_8bit_jmp_method {
 }
 
 #[macro_export]
+macro_rules! generate_16bit_jmp_label_method {
+    ($ins_name: ident, $exec_fn: expr) => {
+        paste::item!(
+            pub(in $crate::cpu) fn [<execute_ $ins_name _16bit>](&mut self, mem: &mut Memory){
+                let _ = self.consume_word(mem); // this is just useless bytes 0x03, 0xE9
+                let offset = self.consume_word(mem);
+                let exec_fn: &dyn Fn(&mut CPU, i16) -> Option<u16> = &$exec_fn;
+                if let Some(res) = exec_fn(self, offset as i16){
+                    self.instruction_pointer = res;
+                }
+            }
+        );
+    }
+}
+
+#[macro_export]
 macro_rules! generate_16bit_jmp_method {
     ($ins_name: ident, $exec_fn: expr) => {
         paste::item!(
