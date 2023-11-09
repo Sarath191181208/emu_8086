@@ -43,3 +43,9 @@ exit:
 ### Label/ 8bit constant
 
 <LabeledInstructionAddressinng instructionName="JB" />
+
+:::info Info 
+There isn't a 16bit constant/label mode for this instruction. But you can use the 8bit constant mode and add a `JMP` instruction after it.
+
+ex: `JB 0x100` is equivalent to `JNB 0x03` + `JMP 0x100`. Here 0x03 is the size of the 16bit jmp instruction [0xE9, 0x00, 0x01].
+::: 
