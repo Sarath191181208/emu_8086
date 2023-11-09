@@ -9,7 +9,7 @@ fn get_new_ip(ip: u16, offset: i16) -> u16 {
 }
 
 fn exec_cf_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
-    if cpu.zero_flag != false || cpu.carry_flag != false {
+    if cpu.zero_flag || cpu.carry_flag {
         return None;
     }
 
