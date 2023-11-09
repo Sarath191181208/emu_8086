@@ -73,6 +73,11 @@ pub(in crate::compiler) enum Offset {
     SegmentedAddressing(u16, u16),
 }
 
+pub(in crate::compiler) enum LabeledOffsetCase {
+    U8(u8),
+    U16(u16),
+}
+
 pub(in crate::compiler) struct OffsetMaps<'a> {
     pub label_idx_map: &'a mut HashMap<String, (Token, usize, bool)>,
     pub compiled_line_ref_with_offset_maps: Option<&'a CompiledLineLabelRef<'a>>,
@@ -93,6 +98,55 @@ pub(in crate::compiler) struct LabeledInstructionCompileData {
     pub indexed_addressing_sub_instruction: u8,
 
     pub is_offset: bool,
+}
+
+pub(in crate::compiler) fn parse_label_pattern(
+    i: usize,
+    line_number: LineNumber,
+    instruction_name: &str,
+    token: &Token,
+    small_ins_offset: u8,
+    long_ins_offset: u16,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
+    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
+) -> Result<LabeledOffsetCase, CompilationError> {
+    match &token.token_type {
+        Assembly8086Tokens::Character(label) => {
+            let offset_bytes_from_line_and_is_label_before_ref =
+                match compiled_line_ref_with_offset_maps {
+                    None => None,
+                    Some(maps) => maps.find_label_offset(label, line_number),
+                };
+            if offset_bytes_from_line_and_is_label_before_ref.is_none() {
+                label_idx_map.insert(label.to_string(), (token.clone(), i, false));
+            }
+
+            let (offset_bytes, is_jmp_after_label) =
+                offset_bytes_from_line_and_is_label_before_ref.unwrap_or((0x00, false));
+
+            match calc_offset(
+                offset_bytes,
+                is_jmp_after_label,
+                small_ins_offset - 1,
+                long_ins_offset - 1,
+            ) {
+                Either::Left(num) => Ok(LabeledOffsetCase::U8(num)),
+                Either::Right(num) => Ok(LabeledOffsetCase::U16(num)),
+            }
+        }
+
+        Assembly8086Tokens::Number8bit(num) => {
+            Ok(LabeledOffsetCase::U8(num.wrapping_sub(small_ins_offset)))
+        }
+
+        _ => Err(CompilationError::error_with_token(
+            token,
+            &format!(
+                "Can't compile {:?} as the first argument to {}, Expected a label, offset",
+                instruction_name, token.token_type
+            ),
+        )),
+    }
 }
 
 pub(in crate::compiler) fn parse_single_label_or_variable(
