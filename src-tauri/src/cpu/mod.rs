@@ -233,16 +233,6 @@ impl CPU {
         mem.read_byte(self.code_segment, self.instruction_pointer)
     }
 
-    fn peek_next_instruction(&self, mem: &Memory) -> Byte {
-        mem.read_byte(self.code_segment, self.instruction_pointer.wrapping_add(1))
-    }
-
-    fn is_jmp_16bit(&self, mem: &Memory) -> bool {
-        let next_ins = self.peek_instruction(mem);
-        let next_next_ins = self.peek_next_instruction(mem);
-        matches!((next_ins, next_next_ins), (0x03, 0xE9))
-    }
-
     fn execute_nop(&mut self, mem: &mut Memory) {
         let _ = self.consume_instruction(mem);
     }
