@@ -316,7 +316,12 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
         match item {
             StackItem::Register16bit(_) => {}
             StackItem::Number(_, num) => {
-                offset = Some(num);
+                let sign = operator_stack.pop();
+                if let Some(StackOperator::Minus) = sign {
+                    offset = Some(num.negate());
+                } else {
+                    offset = Some(num);
+                }
             }
         }
     }
