@@ -7,7 +7,6 @@ pub mod dec;
 pub mod directives;
 pub mod in_ins;
 pub mod inc;
-pub mod ja;
 pub mod jmp;
 pub mod lea;
 pub mod les;
