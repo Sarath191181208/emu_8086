@@ -17,6 +17,7 @@ pub(crate) enum Instructions {
     Iret,
     Ja,
     Jae,
+    Jb,
     Jmp,
     Lea,
     Les,
