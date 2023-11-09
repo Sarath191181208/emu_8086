@@ -59,6 +59,21 @@ fn exec_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
     make_jmp(cpu, offset)
 }
 
+fn exec_zf_0_and_sf_eq_of(cpu: &mut CPU, offset: i16)-> Option<u16> {
+    if !cpu.zero_flag && cpu.negative_flag == cpu.overflow_flag {
+        return make_jmp(cpu, offset);
+    }
+    None
+}
+
+fn exec_zf_1_or_sf_neq_of(cpu: &mut CPU, offset: i16) -> Option<u16>{
+    if cpu.zero_flag || cpu.negative_flag != cpu.overflow_flag {
+        return make_jmp(cpu, offset);
+    }
+    None
+}
+
+
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
     generate_8bit_jmp_method!(jae, exec_cf_0_jmp);
@@ -66,6 +81,8 @@ impl CPU {
     generate_8bit_jmp_method!(jbe, exec_cf_1_or_zf_1_jmp);
     generate_8bit_jmp_method!(je, exec_zf_1_jmp);
     generate_8bit_jmp_method!(jne, exec_zf_0_jmp);
+    generate_8bit_jmp_method!(jg, exec_zf_0_and_sf_eq_of);
+    generate_8bit_jmp_method!(jle, exec_zf_1_or_sf_neq_of);
 }
 
 #[cfg(test)]
@@ -238,5 +255,19 @@ mod tests {
 
         let (cpu, _) = execute_code(&code);
         assert_eq!(cpu.ax, 0x0082);
+    }
+
+    #[test]
+    fn test_jg(){
+        let code = "
+            MOV BX, 0x05
+            CMP BX, -0x05
+            JG label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0001);
     }
 }
