@@ -15,7 +15,6 @@ fn exec_cf_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
     }
 
     let ip = cpu.instruction_pointer;
-    // if -ve sub else address
     let new_ip = get_new_ip(ip, offset);
     Some(new_ip)
 }
