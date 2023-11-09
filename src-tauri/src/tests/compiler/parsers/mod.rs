@@ -12,3 +12,4 @@ pub mod jle;
 pub mod jna;
 pub mod jnae;
 pub mod jnb;
+pub mod jnbe;
