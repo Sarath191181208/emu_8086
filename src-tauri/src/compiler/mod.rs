@@ -516,7 +516,6 @@ fn compile(
                     line_number,
                     compiled_bytes,
                     compiled_bytes_ref,
-                    variable_address_map,
                     &mut compiled_line.label_idx_map,
                     compiled_line_offset_maps,
                 )?;
