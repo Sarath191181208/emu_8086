@@ -238,22 +238,13 @@ impl SignedU16 {
 
     pub(crate) fn as_num(self) -> Result<Either<u8, u16>, &'static str> {
         // check if less than u8::MAX
-        if !self.is_negative {
-            if self.val < 0x80 {
-                return Ok(Either::Left(self.val as u8));
-            } else {
-                return Ok(Either::Right(self.val));
-            }
+        if self.val < 0x80 {
+            let val = self.val as u8;
+            let val_i8 = val as i8 * if self.is_negative { -1 } else { 1 };
+            return Ok(Either::Left(val_i8 as u8));
         }
-        if self.is_negative && self.val <= 0x80 {
-            if self.val == 0x00 {
-                return Ok(Either::Left(0x00));
-            }
-            Ok(Either::Left(0xFF - (self.val as u8) + 1_u8))
-        } else if self.val < 0x7FFF {
-            Ok(Either::Right(0xFFFF - (self.val) + 1_u16))
-        } else {
-            Err("Number is too big to be converted to 16 bit, Because the number is negative and the number is greater than 0x7FFF")
-        }
+        return Ok(Either::Right((self.val as i16 * if self.is_negative { -1 } else { 1 }) as u16));
     }
+
+
 }
