@@ -1,15 +1,11 @@
 use std::collections::HashMap;
 
-use crate::{
-    compiler::{
-        compilation_error::CompilationError, parsers::utils::push_instruction,
-        tokenized_line::TokenizedLine, tokens::Token, types_structs::LineNumber,
-        CompiledBytesReference, CompiledLineLabelRef,
-    },
-    convert_and_push_instructions,
+use crate::compiler::{
+    compilation_error::CompilationError, tokenized_line::TokenizedLine, tokens::Token,
+    types_structs::LineNumber, CompiledBytesReference, CompiledLineLabelRef,
 };
 
-use super::pattern_extractors::offset_label_pattern::{parse_label_pattern, LabeledOffsetCase};
+use super::pattern_extractors::offset_label_pattern::parse_label_pattern_full;
 
 #[allow(clippy::too_many_arguments)]
 pub(in crate::compiler) fn parse_ja(
@@ -21,54 +17,21 @@ pub(in crate::compiler) fn parse_ja(
     label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
     compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
 ) -> Result<usize, CompilationError> {
-    let token = tokenized_line.get(
-        i,
-        "This shouldn't happen please report this!".to_string(),
-        None,
-    )?;
-    let high_token = tokenized_line.get(
-        i + 1,
-        "Expected a label/seg:addr, got nothing!".to_string(),
-        None,
-    )?;
-    let addr_mode = parse_label_pattern(
-        i,
-        line_number,
-        "JA",
-        high_token,
-        2,
-        5,
-        label_idx_map,
-        compiled_line_ref_with_offset_maps,
-    )?;
-
     let ins_8bit = vec![0x77];
     let ins_16bit = vec![0x76, 0x03, 0xE9]; // JNBE ins
 
-    match addr_mode {
-        LabeledOffsetCase::U8(num) => {
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => ins_8bit,
-                    high_token => vec![num]
-                )
-            );
-            Ok(i + 1)
-        }
-        LabeledOffsetCase::U16(num) => {
-            convert_and_push_instructions!(
-                compiled_bytes,
-                compiled_bytes_ref,
-                (
-                    token => ins_16bit,
-                    high_token => num.to_le_bytes().to_vec()
-                )
-            );
-            Ok(i + 1)
-        }
-    }
+    parse_label_pattern_full(
+        "JA",
+        ins_8bit,
+        ins_16bit,
+        tokenized_line,
+        i,
+        line_number,
+        compiled_bytes,
+        compiled_bytes_ref,
+        label_idx_map,
+        compiled_line_ref_with_offset_maps,
+    )
 }
 
 #[cfg(test)]

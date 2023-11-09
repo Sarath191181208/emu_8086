@@ -101,7 +101,67 @@ pub(in crate::compiler) struct LabeledInstructionCompileData {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(in crate::compiler) fn parse_label_pattern(
+pub(in crate::compiler) fn parse_label_pattern_full(
+    instruction_name: &str,
+    ins_8bit: Vec<u8>,
+    ins_16bit: Vec<u8>,
+    tokenized_line: &TokenizedLine,
+    i: usize,
+    line_number: LineNumber,
+    compiled_bytes: &mut Vec<u8>,
+    compiled_bytes_ref: &mut Vec<CompiledBytesReference>,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
+    compiled_line_ref_with_offset_maps: Option<&CompiledLineLabelRef>,
+) -> Result<usize, CompilationError> {
+    let token = tokenized_line.get(
+        i,
+        "This shouldn't happen please report this!".to_string(),
+        None,
+    )?;
+    let high_token = tokenized_line.get(
+        i + 1,
+        "Expected a label/seg:addr, got nothing!".to_string(),
+        None,
+    )?;
+    let addr_mode = parse_only_label_pattern(
+        i,
+        line_number,
+        instruction_name,
+        high_token,
+        2,
+        5,
+        label_idx_map,
+        compiled_line_ref_with_offset_maps,
+    )?;
+
+    match addr_mode {
+        LabeledOffsetCase::U8(num) => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => ins_8bit,
+                    high_token => vec![num]
+                )
+            );
+            Ok(i + 1)
+        }
+        LabeledOffsetCase::U16(num) => {
+            convert_and_push_instructions!(
+                compiled_bytes,
+                compiled_bytes_ref,
+                (
+                    token => ins_16bit,
+                    high_token => num.to_le_bytes().to_vec()
+                )
+            );
+            Ok(i + 1)
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn parse_only_label_pattern(
     i: usize,
     line_number: LineNumber,
     instruction_name: &str,
