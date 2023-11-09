@@ -233,6 +233,19 @@ impl CPU {
         mem.read_byte(self.code_segment, self.instruction_pointer)
     }
 
+    fn peek_next_instruction(&self, mem: &Memory) -> Byte {
+        mem.read_byte(self.code_segment, self.instruction_pointer.wrapping_add(1))
+    }
+
+    fn is_jmp_16bit(&self, mem: &Memory) -> bool {
+        let next_ins = self.peek_instruction(mem);
+        let next_next_ins = self.peek_next_instruction(mem);
+        match (next_ins, next_next_ins) {
+            (0x03, 0xE9) => true,
+            _ => false,
+        }
+    }
+
     fn execute_nop(&mut self, mem: &mut Memory) {
         let _ = self.consume_instruction(mem);
     }
@@ -428,11 +441,20 @@ impl CPU {
             // PUSH label/offset_u8
             0x6A => self.execute_push_8bit_number(mem),
 
-            // JAE 16bit offset
-            0x72 => self.execute_jb_16bit(mem),
+            0x72 => match self.is_jmp_16bit(mem) {
+                // JAE 16bit offset
+                true => self.execute_jae_16bit(mem),
+                // JB 8bit offset
+                false => self.execute_jb_8bit(mem),
+            },
 
             // JAE 8bit offset
-            0x73 => self.execute_jae_8bit(mem),
+            0x73 => match self.is_jmp_16bit(mem) {
+                // JB 16bit offset
+                true => self.execute_jb_16bit(mem),
+                // JAE 8bit offset
+                false => self.execute_jae_8bit(mem),
+            },
 
             // JNBE 16bit offset
             0x76 => self.execute_jnbe_16bit(mem),

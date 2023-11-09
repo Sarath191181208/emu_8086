@@ -8,15 +8,18 @@ fn get_new_ip(ip: u16, offset: i16) -> u16 {
     }
 }
 
+fn make_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    let ip = cpu.instruction_pointer;
+    let new_ip = get_new_ip(ip, offset);
+    Some(new_ip)
+}
+
 fn exec_cf_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
     let is_carry_or_zero_true = cpu.carry_flag || cpu.zero_flag;
     if is_carry_or_zero_true {
         return None;
     }
-
-    let ip = cpu.instruction_pointer;
-    let new_ip = get_new_ip(ip, offset);
-    Some(new_ip)
+    make_jmp(cpu, offset)
 }
 
 fn exec_cf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
@@ -24,21 +27,28 @@ fn exec_cf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
         return None;
     }
 
-    let ip = cpu.instruction_pointer;
-    let new_ip = get_new_ip(ip, offset);
-    Some(new_ip)
+    make_jmp(cpu, offset)
+}
+
+fn exec_cf_1_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    if !cpu.carry_flag {
+        return None;
+    }
+    make_jmp(cpu, offset)
 }
 
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
     generate_16bit_jmp_label_method!(jnbe, exec_cf_zf_0_jmp);
     generate_8bit_jmp_method!(jae, exec_cf_0_jmp);
-    generate_16bit_jmp_label_method!(jb, exec_cf_0_jmp);
+    generate_16bit_jmp_label_method!(jae, exec_cf_0_jmp);
+    generate_8bit_jmp_method!(jb, exec_cf_1_jmp);
+    generate_16bit_jmp_label_method!(jb, exec_cf_1_jmp);
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::cpu::instructions::test_macro::run_code;
+    use crate::cpu::instructions::test_macro::execute_code;
 
     #[test]
     fn test_ja_8bit() {
@@ -50,8 +60,7 @@ mod tests {
             label:
             INC AX
         ";
-        let (cpu, _) = run_code(code, 5);
-        assert_eq!(cpu.instruction_pointer, 12);
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0001);
     }
 
@@ -65,8 +74,21 @@ mod tests {
             label:
             INC AX
         ";
-        let (cpu, _) = run_code(code, 5);
-        assert_eq!(cpu.instruction_pointer, 12);
+        let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_jb_8bit() {
+        let code = "
+            MOV BX, 0x01 
+            CMP BX, 0x05
+            JB label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0001);
     }
 }
