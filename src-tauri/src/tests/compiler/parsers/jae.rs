@@ -1,7 +1,5 @@
-
 use crate::{compile_and_compare_ins, compiler::compile_str, test_compile};
 use pretty_assertions::assert_eq;
-
 
 compile_and_compare_ins!(
     test_jae,
