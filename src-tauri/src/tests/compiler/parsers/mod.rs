@@ -10,3 +10,4 @@ pub mod jge;
 pub mod jl;
 pub mod jle;
 pub mod jna;
+pub mod jnae;
