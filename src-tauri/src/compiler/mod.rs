@@ -534,7 +534,7 @@ fn compile(
                 i = parse_label_pattern_full(
                     "JA",
                     vec![0x77],
-                    vec![0x76, 0x03, 0xE9],
+                    vec![0x76, 0x03, 0xE9], // JNBE ins
                     &tokenized_line,
                     i,
                     line_number,
@@ -547,6 +547,25 @@ fn compile(
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JA", 1)?;
                 Ok(compiled_line)
             }
+
+            Instructions::Jae => {
+                i = parse_label_pattern_full(
+                    "JAE",
+                    vec![0x73],
+                    vec![0x72, 0x03, 0xE9], // JB ins
+                    &tokenized_line,
+                    i,
+                    line_number,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    &mut compiled_line.label_idx_map,
+                    compiled_line_offset_maps,
+                )?;
+                // compiled_line.extend(_compliled_line);
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JAE", 1)?;
+                Ok(compiled_line)
+            }
+
             Instructions::Jmp => {
                 let i = parse_jmp(
                     &tokenized_line,
