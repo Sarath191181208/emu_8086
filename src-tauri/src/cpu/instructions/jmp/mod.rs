@@ -4,6 +4,7 @@ use crate::{
 };
 
 pub mod jcxz;
+pub mod all_jmp_ins;
 
 fn exec_fn(cpu: &mut CPU, offset: i16) -> Option<u16> {
     let ip = cpu.instruction_pointer;
