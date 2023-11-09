@@ -19,9 +19,22 @@ fn exec_cf_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
     Some(new_ip)
 }
 
+
+fn exec_cf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    if cpu.carry_flag {
+        return None;
+    }
+
+    let ip = cpu.instruction_pointer;
+    let new_ip = get_new_ip(ip, offset);
+    Some(new_ip)
+    }
+
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
     generate_16bit_jmp_label_method!(jnbe, exec_cf_zf_0_jmp);
+    generate_8bit_jmp_method!(jae, exec_cf_0_jmp );
+    generate_16bit_jmp_label_method!(jb, exec_cf_0_jmp);
 }
 
 #[cfg(test)]
@@ -34,6 +47,21 @@ mod tests {
             MOV BX, 0x01
             CMP BX, 0x00
             JA label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = run_code(code, 5);
+        assert_eq!(cpu.instruction_pointer, 12);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_jae_8bit() {
+        let code = "
+            MOV BX, 0x01
+            CMP BX, 0x00
+            JAE label
             INC AX
             label:
             INC AX
