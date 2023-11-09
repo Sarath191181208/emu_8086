@@ -128,8 +128,8 @@ pub(in crate::compiler) fn parse_label_pattern_full(
         line_number,
         instruction_name,
         high_token,
-        2,
-        5,
+        ins_8bit.len() as u8 + 1,
+        ins_16bit.len() as u16 + 2,
         label_idx_map,
         compiled_line_ref_with_offset_maps,
     )?;
