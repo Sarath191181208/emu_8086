@@ -50,6 +50,14 @@ impl CPU {
 mod tests {
     use crate::cpu::instructions::test_macro::execute_code;
 
+    fn generate_inc_x80() -> String {
+        let mut code = String::new();
+        for _ in 0..=0x80 {
+            code.push_str(&format!("INC AX\n"));
+        }
+        code
+    }
+
     #[test]
     fn test_ja_8bit() {
         let code = "
@@ -61,6 +69,21 @@ mod tests {
             INC AX
         ";
         let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_ja_16bit(){
+        let code = format!("
+            MOV BX, 0x01
+            CMP BX, 0x00
+            JA label
+            {}
+            label:
+            INC AX
+        ", generate_inc_x80());
+
+        let (cpu, _) = execute_code(&code);
         assert_eq!(cpu.ax, 0x0001);
     }
 
@@ -79,6 +102,21 @@ mod tests {
     }
 
     #[test]
+    fn test_jae_16bit(){
+        let code = format!("
+            MOV BX, 0x01
+            CMP BX, 0x00
+            JAE label
+            {}
+            label:
+            INC AX
+        ", generate_inc_x80());
+
+        let (cpu, _) = execute_code(&code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
     fn test_jb_8bit() {
         let code = "
             MOV BX, 0x01 
@@ -89,6 +127,21 @@ mod tests {
             INC AX
         ";
         let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_jb_16bit(){
+        let code = format!("
+            MOV BX, 0x01
+            CMP BX, 0x05
+            JB label
+            {}
+            label:
+            INC AX
+        ", generate_inc_x80());
+
+        let (cpu, _) = execute_code(&code);
         assert_eq!(cpu.ax, 0x0001);
     }
 }
