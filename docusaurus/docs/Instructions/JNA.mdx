@@ -1,0 +1,51 @@
+---
+title: JNA
+description: Jump if Carry Flag is 1 (or) Zero Flag is 1.
+---
+
+import { LabeledInstructionAddressinng } from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502 showLineNumbers
+    JNA label
+    JNA 0x02 ; 8bit constant
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                                         |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands**  | `label` - A label to jump to. <br/> `0x02` - An 8bit constant to jump to.                                                                           |
+| **Operation** | `JMP if CF = 1 (or) ZF = 1`                                                                                                                                     |
+| **Size**      | 8bit-ins: 2 bytes, 16bit-ins: 5 bytes                                                                                                               |
+| **Action**    | Jump to the specified label if Carry Flag is set (or) Zero Flag is set. Generally used in conjunction with the `CMP` instruction.|
+| **Flags**     | No change                                                                                                                                           |
+
+## Example
+
+```asm6502 showLineNumbers
+MOV AL, 250
+CMP AL, 5
+JNA label1
+
+;AL is not above 5
+JMP exit
+
+label1:
+    ;AL is above 5
+exit:
+   RET
+```
+
+## Supported Modes
+
+### Label/ 8bit constant
+
+<LabeledInstructionAddressinng instructionName="JNA" />
+
+:::info Info
+There isn't a 16bit constant/label mode for this instruction. But you can use the 8bit constant mode and add a `JMP` instruction after it.
+
+ex: `JNA 0x100` is equivalent to `JNBE 0x03` + `JMP 0x100`. Here 0x03 is the size of the 16bit jmp instruction [0xE9, 0x00, 0x01].
+:::
