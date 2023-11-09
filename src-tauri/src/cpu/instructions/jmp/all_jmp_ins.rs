@@ -9,7 +9,8 @@ fn get_new_ip(ip: u16, offset: i16) -> u16 {
 }
 
 fn exec_cf_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
-    if cpu.zero_flag || cpu.carry_flag {
+    let is_carry_or_zero_true = cpu.carry_flag || cpu.zero_flag;
+    if is_carry_or_zero_true {
         return None;
     }
 
@@ -22,4 +23,24 @@ fn exec_cf_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
     generate_16bit_jmp_label_method!(jnbe, exec_cf_zf_0_jmp);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::cpu::instructions::test_macro::run_code;
+
+    #[test]
+    fn test_ja_8bit() {
+        let code = "
+            MOV BX, 0x01
+            CMP BX, 0x00
+            JA label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = run_code(code, 5);
+        assert_eq!(cpu.instruction_pointer, 12);
+        assert_eq!(cpu.ax, 0x0001);
+    }
 }
