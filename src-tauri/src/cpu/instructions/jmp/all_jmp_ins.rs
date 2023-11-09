@@ -270,4 +270,22 @@ mod tests {
         let (cpu, _) = execute_code(code);
         assert_eq!(cpu.ax, 0x0001);
     }
+
+    #[test]
+    fn test_jg_16bit() {
+        let code = format!(
+            "
+            MOV BX, 0x05
+            CMP BX, -0x05
+            JG label
+            {}
+            label:
+            INC AX
+        ",
+            generate_inc_x80()
+        );
+
+        let (cpu, _) = execute_code(&code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
 }
