@@ -14,3 +14,4 @@ pub mod jnae;
 pub mod jnb;
 pub mod jnbe;
 pub mod jnc;
+pub mod jne;
