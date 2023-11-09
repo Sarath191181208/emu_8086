@@ -8,3 +8,4 @@ pub mod je;
 pub mod jg;
 pub mod jge;
 pub mod jl;
+pub mod jle;
