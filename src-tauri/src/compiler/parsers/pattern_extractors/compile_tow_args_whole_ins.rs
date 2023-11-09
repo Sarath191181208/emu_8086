@@ -89,7 +89,7 @@ pub(in crate::compiler) fn compile_two_args_whole_ins(
             } else {
                 let is_8_bit_ins = if reg16bit_and_8bit_num.is_some() {
                     match num {
-                        Either::Left(num_u8) => num_u8 <= 0x7F,
+                        Either::Left(_) => true,
                         Either::Right(_) => false,
                     }
                 } else {

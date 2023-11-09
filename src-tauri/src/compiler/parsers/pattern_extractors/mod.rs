@@ -184,7 +184,7 @@ pub(crate) fn parse_two_arguments_line<'a>(
                 Assembly8086Tokens::Number8bit(num) => Ok(AddressingMode::Registers16bitNumber {
                     high_token: compact_high_token,
                     low_token,
-                    num: Either::Left(*num),
+                    num: Either::Left(*num) ,
                 }),
                 Assembly8086Tokens::Register16bit(_) => Ok(AddressingMode::Registers16bit {
                     high_token: compact_high_token,
