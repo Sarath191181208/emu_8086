@@ -566,7 +566,7 @@ fn compile(
                 Ok(compiled_line)
             }
 
-                        Instructions::Jb => {
+            Instructions::Jb => {
                 i = parse_label_pattern_full(
                     "JB",
                     vec![0x72],
