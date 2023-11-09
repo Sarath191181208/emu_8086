@@ -641,7 +641,7 @@ fn compile(
             Instructions::Je => {
                 i = parse_label_pattern_full(
                     "JE",
-                    vec![0x75],
+                    vec![0x74],
                     vec![0x75, 0x03, 0xE9], // JB ins
                     &tokenized_line,
                     i,
