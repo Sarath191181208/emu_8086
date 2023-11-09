@@ -37,13 +37,26 @@ fn exec_cf_1_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
     make_jmp(cpu, offset)
 }
 
+fn exec_cf_1_or_zf_1_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    let is_carry_or_zero_true = cpu.carry_flag || cpu.zero_flag;
+    if !is_carry_or_zero_true {
+        return None;
+    }
+    make_jmp(cpu, offset)
+}
+
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
-    generate_16bit_jmp_label_method!(jnbe, exec_cf_zf_0_jmp);
+    generate_16bit_jmp_label_method!(ja, exec_cf_zf_0_jmp);
+    
     generate_8bit_jmp_method!(jae, exec_cf_0_jmp);
     generate_16bit_jmp_label_method!(jae, exec_cf_0_jmp);
+
     generate_8bit_jmp_method!(jb, exec_cf_1_jmp);
     generate_16bit_jmp_label_method!(jb, exec_cf_1_jmp);
+
+    generate_8bit_jmp_method!(jbe, exec_cf_1_or_zf_1_jmp);
+    generate_16bit_jmp_label_method!(jbe, exec_cf_1_or_zf_1_jmp);
 }
 
 #[cfg(test)]

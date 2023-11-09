@@ -456,11 +456,19 @@ impl CPU {
                 false => self.execute_jae_8bit(mem),
             },
 
-            // JNBE 16bit offset
-            0x76 => self.execute_jnbe_16bit(mem),
+            0x76 => match self.is_jmp_16bit(mem) {
+                // JA 16bit offset
+                true => self.execute_ja_16bit(mem),
+                // JBE 8bt offset
+                false => self.execute_jbe_8bit(mem),
+            },
 
-            // JA 8bit offset
-            0x77 => self.execute_ja_8bit(mem),
+            0x77 => match self.is_jmp_16bit(mem) {
+                // JBE 16bit offset
+                true => self.execute_jbe_16bit(mem),
+                // JA 8bit offset
+                false => self.execute_ja_8bit(mem),
+            },
 
             // ADD, SUB 8bit register, immediate_addressing
             0x80 => {
