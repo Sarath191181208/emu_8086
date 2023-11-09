@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn test_je_16bit(){
+    fn test_je_16bit() {
         let code = format!(
             "
             MOV BX, 0x01
