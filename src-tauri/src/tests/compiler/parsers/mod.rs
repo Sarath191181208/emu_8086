@@ -6,3 +6,4 @@ pub mod jc;
 pub mod jcxz;
 pub mod je;
 pub mod jg;
+pub mod jge;
