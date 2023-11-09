@@ -710,6 +710,24 @@ fn compile(
                 Ok(compiled_line)
             }
 
+            Instructions::Jle => {
+                i = parse_label_pattern_full(
+                    "JLE",
+                    vec![0x7E],
+                    vec![0x7F, 0x03, 0xE9], // JB ins
+                    &tokenized_line,
+                    i,
+                    line_number,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    &mut compiled_line.label_idx_map,
+                    compiled_line_offset_maps,
+                )?;
+                // compiled_line.extend(_compliled_line);
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JLE", 1)?;
+                Ok(compiled_line)
+            }
+
             Instructions::Jmp => {
                 let i = parse_jmp(
                     &tokenized_line,
