@@ -438,34 +438,14 @@ impl CPU {
             // PUSH label/offset_u8
             0x6A => self.execute_push_8bit_number(mem),
 
-            0x72 => match self.is_jmp_16bit(mem) {
-                // JAE 16bit offset
-                true => self.execute_jae_16bit(mem),
-                // JB 8bit offset
-                false => self.execute_jb_8bit(mem),
-            },
+            0x72 => self.execute_jb_8bit(mem),
 
             // JAE 8bit offset
-            0x73 => match self.is_jmp_16bit(mem) {
-                // JB 16bit offset
-                true => self.execute_jb_16bit(mem),
-                // JAE 8bit offset
-                false => self.execute_jae_8bit(mem),
-            },
+            0x73 => self.execute_jae_8bit(mem),
 
-            0x76 => match self.is_jmp_16bit(mem) {
-                // JA 16bit offset
-                true => self.execute_ja_16bit(mem),
-                // JBE 8bt offset
-                false => self.execute_jbe_8bit(mem),
-            },
+            0x76 => self.execute_jbe_8bit(mem),
 
-            0x77 => match self.is_jmp_16bit(mem) {
-                // JBE 16bit offset
-                true => self.execute_jbe_16bit(mem),
-                // JA 8bit offset
-                false => self.execute_ja_8bit(mem),
-            },
+            0x77 => self.execute_ja_8bit(mem),
 
             // ADD, SUB 8bit register, immediate_addressing
             0x80 => {
@@ -625,7 +605,7 @@ impl CPU {
             // CALL 16 bit address
             0xE8 => self.execute_call_and_16bitaddr(mem),
 
-            // JMP 16bit register
+            // JMP 16bit-memory
             0xE9 => self.execute_jmp_16bit(mem),
 
             // JMP 8bit register
