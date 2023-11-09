@@ -4,3 +4,4 @@ pub mod jb;
 pub mod jbe;
 pub mod jc;
 pub mod jcxz;
+pub mod je;
