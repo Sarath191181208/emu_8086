@@ -100,6 +100,7 @@ pub(in crate::compiler) struct LabeledInstructionCompileData {
     pub is_offset: bool,
 }
 
+#[clippy::allow(too_many_arguments)]
 pub(in crate::compiler) fn parse_label_pattern(
     i: usize,
     line_number: LineNumber,
