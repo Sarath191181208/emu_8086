@@ -61,7 +61,6 @@ fn exec_zf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
 
 fn exec_zf_0_and_sf_eq_of(cpu: &mut CPU, offset: i16) -> Option<u16> {
     if !cpu.zero_flag && cpu.negative_flag == cpu.overflow_flag {
-        dbg!(offset);
         return make_jmp(cpu, offset);
     }
     None
