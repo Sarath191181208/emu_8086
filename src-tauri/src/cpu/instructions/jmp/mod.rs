@@ -3,8 +3,8 @@ use crate::{
     memory::Memory,
 };
 
-pub mod jcxz;
 pub mod all_jmp_ins;
+pub mod jcxz;
 
 fn exec_fn(cpu: &mut CPU, offset: i16) -> Option<u16> {
     let ip = cpu.instruction_pointer;

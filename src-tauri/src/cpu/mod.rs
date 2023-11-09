@@ -434,7 +434,6 @@ impl CPU {
             // JA 8bit offset
             0x77 => self.execute_ja_8bit(mem),
 
-
             // ADD, SUB 8bit register, immediate_addressing
             0x80 => {
                 let opcode = self.peek_instruction(mem);
