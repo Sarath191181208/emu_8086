@@ -22,3 +22,4 @@ pub mod jnle;
 pub mod jno;
 pub mod jnp;
 pub mod jns;
+pub mod jnz;
