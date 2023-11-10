@@ -20,3 +20,4 @@ pub mod jnge;
 pub mod jnl;
 pub mod jnle;
 pub mod jno;
+pub mod jnp;
