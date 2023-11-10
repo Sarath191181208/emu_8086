@@ -17,3 +17,4 @@ pub mod jnc;
 pub mod jne;
 pub mod jng;
 pub mod jnge;
+pub mod jnl;
