@@ -28,3 +28,4 @@ pub mod jp;
 mod jpe;
 pub mod jpo;
 mod js;
+pub mod jz;
