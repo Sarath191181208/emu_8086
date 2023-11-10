@@ -41,6 +41,7 @@ pub(crate) enum Instructions {
     Jns,
     Jnz,
     Jo,
+    Jp,
     Jmp,
     Lea,
     Les,
