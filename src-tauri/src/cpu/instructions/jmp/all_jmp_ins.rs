@@ -87,6 +87,20 @@ fn exec_sf_neq_of_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
     None
 }
 
+fn exec_of_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    if cpu.overflow_flag {
+        return None;
+    }
+    make_jmp(cpu, offset)
+}
+
+fn exec_of_1_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    if !cpu.overflow_flag {
+        return None;
+    }
+    make_jmp(cpu, offset)
+}
+
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
     generate_8bit_jmp_method!(jae, exec_cf_0_jmp);
@@ -98,6 +112,9 @@ impl CPU {
     generate_8bit_jmp_method!(jle, exec_zf_1_or_sf_neq_of);
     generate_8bit_jmp_method!(jge, exec_sf_eq_of_jmp);
     generate_8bit_jmp_method!(jl, exec_sf_neq_of_jmp);
+
+    generate_8bit_jmp_method!(jo, exec_of_1_jmp);
+    generate_8bit_jmp_method!(jno, exec_of_0_jmp);
 }
 
 #[cfg(test)]
@@ -366,5 +383,37 @@ mod tests {
 
         let (cpu, _) = execute_code(&code);
         assert_eq!(cpu.ax, 0x0082);
+    }
+
+    #[test] 
+    fn test_jno_8bit(){
+        let code = "
+            MOV BX, 0x01
+            CMP BX, 0x05
+            JNO label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_jno_16bit() {
+        let code = format!(
+            "
+            MOV BX, 0x01
+            CMP BX, 0x05
+            JNO label
+            {}
+            label:
+            INC AX
+        ",
+            generate_inc_x80()
+        );
+
+        let (cpu, _) = execute_code(&code);
+        assert_eq!(cpu.ax, 0x0001);
     }
 }

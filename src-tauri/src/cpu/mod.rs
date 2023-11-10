@@ -428,6 +428,12 @@ impl CPU {
             // PUSH label/offset_u8
             0x6A => self.execute_push_8bit_number(mem),
 
+            // JO 8bit offset
+            0x70 => self.execute_jo_8bit(mem),
+
+            // JNO 8bit offset
+            0x71 => self.execute_jno_8bit(mem),
+
             // JB 8bit offset
             0x72 => self.execute_jb_8bit(mem),
 
