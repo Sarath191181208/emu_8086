@@ -385,8 +385,8 @@ mod tests {
         assert_eq!(cpu.ax, 0x0082);
     }
 
-    #[test] 
-    fn test_jno_8bit(){
+    #[test]
+    fn test_jno_8bit() {
         let code = "
             MOV BX, 0x01
             CMP BX, 0x05
