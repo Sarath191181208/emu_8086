@@ -890,7 +890,7 @@ fn compile(
                 Ok(compiled_line)
             }
 
-                        Instructions::Jnle => {
+            Instructions::Jnle => {
                 i = parse_label_pattern_full(
                     "JNLE",
                     vec![0x7F],
@@ -905,6 +905,24 @@ fn compile(
                 )?;
                 // compiled_line.extend(_compliled_line);
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JNLE", 1)?;
+                Ok(compiled_line)
+            }
+
+            Instructions::Jno => {
+                i = parse_label_pattern_full(
+                    "JNO",
+                    vec![0x71],
+                    vec![0x70, 0x03, 0xE9],
+                    &tokenized_line,
+                    i,
+                    line_number,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    &mut compiled_line.label_idx_map,
+                    compiled_line_offset_maps,
+                )?;
+                // compiled_line.extend(_compliled_line);
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JNO", 1)?;
                 Ok(compiled_line)
             }
 
