@@ -962,6 +962,24 @@ fn compile(
                 Ok(compiled_line)
             }
 
+                        Instructions::Jnz => {
+                i = parse_label_pattern_full(
+                    "JNZ",
+                    vec![0x75],
+                    vec![0x74, 0x03, 0xE9],
+                    &tokenized_line,
+                    i,
+                    line_number,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    &mut compiled_line.label_idx_map,
+                    compiled_line_offset_maps,
+                )?;
+                // compiled_line.extend(_compliled_line);
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JNZ", 1)?;
+                Ok(compiled_line)
+            }
+
             Instructions::Jmp => {
                 let i = parse_jmp(
                     &tokenized_line,
