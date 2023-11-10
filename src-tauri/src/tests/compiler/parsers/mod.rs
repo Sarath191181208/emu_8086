@@ -26,3 +26,4 @@ pub mod jnz;
 pub mod jo;
 pub mod jp;
 mod jpe;
+pub mod jpo;
