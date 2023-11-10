@@ -101,6 +101,20 @@ fn exec_of_1_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
     make_jmp(cpu, offset)
 }
 
+fn exec_pf_0_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    if cpu.pairity_flag {
+        return None;
+    }
+    make_jmp(cpu, offset)
+}
+
+fn exec_pf_1_jmp(cpu: &mut CPU, offset: i16) -> Option<u16> {
+    if !cpu.pairity_flag {
+        return None;
+    }
+    make_jmp(cpu, offset)
+}
+
 impl CPU {
     generate_8bit_jmp_method!(ja, exec_cf_zf_0_jmp);
     generate_8bit_jmp_method!(jae, exec_cf_0_jmp);
@@ -115,6 +129,9 @@ impl CPU {
 
     generate_8bit_jmp_method!(jo, exec_of_1_jmp);
     generate_8bit_jmp_method!(jno, exec_of_0_jmp);
+
+    generate_8bit_jmp_method!(jpe, exec_pf_1_jmp);
+    generate_8bit_jmp_method!(jnp, exec_pf_0_jmp);
 }
 
 #[cfg(test)]
@@ -415,5 +432,37 @@ mod tests {
 
         let (cpu, _) = execute_code(&code);
         assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_jnp_8bit() {
+        let code = "
+            MOV BX, 0x01
+            CMP BX, 0x06
+            JNP label
+            INC AX
+            label:
+            INC AX
+        ";
+        let (cpu, _) = execute_code(code);
+        assert_eq!(cpu.ax, 0x0001);
+    }
+
+    #[test]
+    fn test_jnp_16bit() {
+        let code = format!(
+            "
+            MOV BX, 0x01
+            CMP BX, 0x06
+            JNP label
+            {}
+            label:
+            INC AX
+        ",
+            generate_inc_x80()
+        );
+
+        let (cpu, _) = execute_code(&code);
+        assert_eq!(cpu.ax, 0x01);
     }
 }
