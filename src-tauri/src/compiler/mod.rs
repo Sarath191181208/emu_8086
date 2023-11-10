@@ -1018,7 +1018,7 @@ fn compile(
                     compiled_bytes,
                     compiled_bytes_ref,
                     (
-                       token => vec![]
+                       token => vec![0xF4]
                     )
                 );
                 i += 1;
