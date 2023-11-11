@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use crate::{
     compiler::{
         compilation_error::CompilationError,
+        suggestions_utils::get_all_registers_and_variable_suggestions,
         tokenized_line::TokenizedLine,
         tokens::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
@@ -9,10 +12,12 @@ use crate::{
         types_structs::{
             ArrayIndex, Label, VariableAddressMap, VariableReferenceMap, VariableType,
         },
-        CompiledBytesReference,
+        CompiledBytesReference, CompiledLineLabelRef,
     },
     utils::Either,
 };
+
+use super::pattern_extractors::utils::evaluate_ins;
 
 // define a static string
 pub const THIS_SHOULDNT_HAPPEN: &str = "This shouldn't happen, Please report this!";
@@ -275,4 +280,70 @@ impl SignedU16 {
         }
         self.val
     }
+}
+
+impl IndexedAddressingTypes {
+    pub(super) fn get_ins_and_and_offset(&self) -> (u8, Vec<u8>) {
+        // IndexedAddressingTypes::BX(Option<None>) -> (0x07, [])
+        // IndexedAddressingTypes::BX(Some(u8)) -> (0x47, [u8])
+        // IndexedAddressingTypes::Offset(u16) -> (0x87, [u8, u8])
+
+        if let IndexedAddressingTypes::Offset(offset) = self {
+            let offset = offset.as_u16();
+            return (0x06, offset.to_le_bytes().to_vec());
+        }
+
+        let offset = self.get_offset_and_default_bp_to_0();
+        let offset = offset.map(|num| num.as_num().unwrap());
+        let idx = self.get_as_idx().unwrap();
+
+        match offset {
+            None => (idx, vec![]),
+            Some(Either::Left(offset)) => (0x40 + idx, vec![offset]),
+            Some(Either::Right(offset)) => (0x80 + idx, offset.to_le_bytes().to_vec()),
+        }
+    }
+}
+
+pub(in crate::compiler) fn get_evaluated_token<'a>(
+    i: usize,
+    tokenized_line: &'a TokenizedLine,
+    is_org_defined: bool,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
+    variable_ref_map: &mut VariableReferenceMap,
+    variable_abs_address_map: &VariableAddressMap,
+    compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
+) -> Result<(&'a Token, Token), CompilationError> {
+    let token = tokenized_line.get(
+        i,
+        "This shouldn't happen, Please report this".to_string(),
+        None,
+    )?;
+
+    let high_token = tokenized_line.get(
+        i + 1,
+        "Expected a register/memory got nothing!".to_string(),
+        Some(vec![get_all_registers_and_variable_suggestions(Some(
+            variable_abs_address_map,
+        ))]),
+    )?;
+
+    let eval_token = evaluate_ins(
+        i + 1,
+        tokenized_line.len(),
+        tokenized_line,
+        is_org_defined,
+        label_idx_map,
+        variable_ref_map,
+        variable_abs_address_map,
+        compiled_line_offset_maps,
+    )?;
+
+    let high_token = if let Some(token) = &eval_token {
+        token
+    } else {
+        high_token
+    };
+
+    Ok((token, high_token.clone()))
 }
