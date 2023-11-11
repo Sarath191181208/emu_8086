@@ -418,13 +418,13 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
         return Ok(Some(Token {
             token_type: match (is_si_in_line.0, is_di_in_line.0) {
                 (false, false) => {
-                    Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BX(offset))
+                    get_indexed_addressing(IndexedAddressingTypes::BX(offset), variable_type)
                 }
                 (true, false) => {
-                    Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BxSi(offset))
+                    get_indexed_addressing(IndexedAddressingTypes::BxSi(offset), variable_type)
                 }
                 (false, true) => {
-                    Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BxDi(offset))
+                    get_indexed_addressing(IndexedAddressingTypes::BxDi(offset), variable_type)
                 }
                 (true, true) => return Err(CompilationError::default()),
             },
@@ -438,13 +438,13 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
         return Ok(Some(Token {
             token_type: match (is_si_in_line.0, is_di_in_line.0) {
                 (false, false) => {
-                    Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BP(offset))
+                    get_indexed_addressing(IndexedAddressingTypes::BP(offset), variable_type)
                 }
                 (true, false) => {
-                    Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BpSi(offset))
+                    get_indexed_addressing(IndexedAddressingTypes::BpSi(offset), variable_type)
                 }
                 (false, true) => {
-                    Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::BpDi(offset))
+                    get_indexed_addressing(IndexedAddressingTypes::BpDi(offset), variable_type)
                 }
                 (true, true) => return Err(CompilationError::default()),
             },
@@ -456,7 +456,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
 
     if is_si_in_line.0 {
         return Ok(Some(Token {
-            token_type: Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::SI(offset)),
+            token_type: get_indexed_addressing(IndexedAddressingTypes::SI(offset), variable_type),
             line_number,
             column_number,
             token_length,
@@ -465,7 +465,7 @@ pub(in crate::compiler) fn evaluate_ins<'a>(
 
     if is_di_in_line.0 {
         return Ok(Some(Token {
-            token_type: Assembly8086Tokens::IndexedAddressing(IndexedAddressingTypes::DI(offset)),
+            token_type: get_indexed_addressing(IndexedAddressingTypes::DI(offset), variable_type),
             line_number,
             column_number,
             token_length,
