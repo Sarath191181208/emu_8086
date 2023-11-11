@@ -42,6 +42,7 @@ use self::{
         call::parse_call,
         cmp::parse_cmp,
         dec::parse_dec,
+        div::parse_div,
         in_ins::parse_in,
         inc::parse_inc,
         jmp::parse_jmp,
@@ -63,7 +64,7 @@ use self::{
         utils::iterate_with_seperator,
         var::parse_var_declaration,
         xchg::parse_xchg,
-        xor::parse_xor, div::parse_div,
+        xor::parse_xor,
     },
     tokenized_line::TokenizedLine,
     tokens::{

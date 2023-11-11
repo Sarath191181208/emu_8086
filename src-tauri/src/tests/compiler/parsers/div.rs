@@ -22,7 +22,7 @@ compile_and_compare_ins!(
 );
 
 compile_and_compare_ins!(
-    test_div_8bit, 
+    test_div_8bit,
     "
         DIV AL
         DIV BL
@@ -30,7 +30,7 @@ compile_and_compare_ins!(
         DIV b.[BX+SI]
         DIV b.[BX+SI+0x10]
         DIV b.[BX+SI+0x100]
-    ", 
+    ",
     vec![
         0xF6, 0xF0, // DIV AL
         0xF6, 0xF3, // DIV BL
