@@ -63,7 +63,7 @@ use self::{
         utils::iterate_with_seperator,
         var::parse_var_declaration,
         xchg::parse_xchg,
-        xor::parse_xor,
+        xor::parse_xor, div::parse_div,
     },
     tokenized_line::TokenizedLine,
     tokens::{
@@ -515,6 +515,23 @@ fn compile(
 
             Instructions::Les => {
                 let i = parse_les(
+                    i,
+                    &tokenized_line,
+                    is_org_defined,
+                    &mut compiled_line.label_idx_map,
+                    variable_ref_map,
+                    variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                    compiled_line_offset_maps,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                )?;
+
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LEA", 2)?;
+                Ok(compiled_line)
+            }
+
+            Instructions::Div => {
+                let i = parse_div(
                     i,
                     &tokenized_line,
                     is_org_defined,
@@ -1103,6 +1120,7 @@ fn compile(
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "JMP", 1)?;
                 Ok(compiled_line)
             }
+
             Instructions::Hlt => {
                 convert_and_push_instructions!(
                     compiled_bytes,

@@ -46,6 +46,7 @@ pub(crate) enum Instructions {
     Jpo,
     Js,
     Jz,
+    Div,
     Jmp,
     Lea,
     Les,
