@@ -22,8 +22,8 @@ fn execute_div_operation(cpu: &mut CPU, val: u16) {
 fn execute_div_8bit_operation(cpu: &mut CPU, val: u8) {
     // AL = AX / operand
     // AH = remainder (modulus)
-    let quotient = (cpu.ax as u16) / (val as u16);
-    let remainder = (cpu.ax as u16) % (val as u16);
+    let quotient = (cpu.ax) / (val as u16);
+    let remainder = (cpu.ax) % (val as u16);
     cpu.set_ax_low(quotient as u8);
     cpu.set_ax_high(remainder as u8);
 }
