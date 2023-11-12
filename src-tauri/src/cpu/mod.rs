@@ -665,9 +665,13 @@ impl CPU {
                     // TEST b.[0x100], 0x12
                     0x06 => self.execute_test_byte_indexed_addressing_and_number(mem),
                     0x26 => self.execute_mul_address_8bit(mem),
+                    0x30..=0x37 => self.execute_div_single_operand_8bit_reg_or_mem(mem),
+                    0x70..=0x77 => self.execute_div_single_operand_8bit_reg_or_mem(mem),
+                    0xB0..=0xB7 => self.execute_div_single_operand_8bit_reg_or_mem(mem),
                     // TEST AL..DH, 0x12
                     0xC0..=0xC7 => self.execute_test_8bit_reg_and_number(mem),
                     0xE0..=0xE7 => self.execute_mul_8bit(mem),
+                    0xF0..=0xFF => self.execute_div_single_operand_8bit_reg_or_mem(mem),
                     _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
@@ -679,9 +683,13 @@ impl CPU {
                     // TEST w.[0x100], 0x1234
                     0x06 => self.execute_test_word_indexed_addressing_and_number(mem),
                     0x26 => self.execute_mul_address_16bit(mem),
+                    0x30..=0x37 => self.execute_div_single_operand_16bit_reg_or_mem(mem),
+                    0x70..=0x77 => self.execute_div_single_operand_16bit_reg_or_mem(mem),
+                    0xB0..=0xB7 => self.execute_div_single_operand_16bit_reg_or_mem(mem),
                     // TEST BX..DI, 0x1234
                     0xC0..=0xC7 => self.execute_test_16bit_reg_and_number(mem),
                     0xE0..=0xE7 => self.execute_mul_16bit(mem),
+                    0xF0..=0xFF => self.execute_div_single_operand_16bit_reg_or_mem(mem),
                     _ => self.execute_unknown_ins(mem, opcode),
                 }
             }
