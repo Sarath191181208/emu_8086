@@ -5,6 +5,43 @@ use crate::{
 };
 
 #[macro_export]
+macro_rules! generate_single_line_execution_ins {
+    ($ins_name: ident, $exec_fn: expr, $exec_fn_8bit: expr) => {
+        paste::item!(
+            pub(in $crate::cpu) fn [<execute_ $ins_name _single_operand_16bit_reg_or_mem>](&mut self, mem: &mut Memory) {
+                let exec_fn: &dyn Fn(&mut CPU, u16) =  &$exec_fn;
+
+                match self.consume_bytes_and_parse_double_ins(mem) {
+                    AddressingMode::Address(_, addr) => {
+                        let val = self.read_word_from_u20(mem, addr.clone());
+                         exec_fn(self, val);
+                    }
+                    AddressingMode::Reg(_, low_reg_idx) => {
+                        let reg_val = self.get_16bit_register_by_index(low_reg_idx % 8);
+                        exec_fn(self, reg_val);
+                    }
+                };
+            }
+            pub(in $crate::cpu) fn [<execute_ $ins_name _single_operand_8bit_reg_or_mem>](&mut self, mem: &mut Memory) {
+                let exec_fn_8bit: &dyn Fn(&mut CPU, u8) =  &$exec_fn_8bit;
+
+                match self.consume_bytes_and_parse_double_ins(mem) {
+                    AddressingMode::Address(_, addr) => {
+                        let val = self.read_byte_from_u20(mem, addr.clone());
+                         exec_fn_8bit(self, val);
+                    }
+                    AddressingMode::Reg(_, low_reg_idx) => {
+                        let reg_val = self.get_8bit_register_by_index(low_reg_idx % 8);
+                        exec_fn_8bit(self, reg_val);
+                    }
+                };
+            }
+
+        );
+    };
+}
+
+#[macro_export]
 macro_rules! generate_8bit_jmp_method {
     ($ins_name: ident, $exec_fn: expr) => {
         paste::item!(
