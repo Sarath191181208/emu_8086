@@ -101,6 +101,10 @@ impl CPU {
         self.ax = value;
     }
 
+    pub(self) fn set_dx(&mut self, value: Word) {
+        self.dx = value;
+    }
+
     pub(self) fn set_cx(&mut self, value: Word) {
         self.cx = value;
     }
