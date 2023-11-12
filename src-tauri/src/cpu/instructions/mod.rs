@@ -11,6 +11,7 @@ pub mod sub;
 
 pub mod and;
 pub mod call;
+pub mod div;
 pub mod in_compilation;
 pub mod int;
 pub mod iret;
