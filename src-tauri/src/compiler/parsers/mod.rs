@@ -5,7 +5,6 @@ pub mod call;
 pub mod cmp;
 pub mod dec;
 pub mod directives;
-pub mod div;
 pub mod in_ins;
 pub mod inc;
 pub mod jmp;
