@@ -552,7 +552,31 @@ fn compile(
                         sub_idx_offset: 0x30,
                     },
                 )?;
-                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LEA", 2)?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "DIV", 1)?;
+                Ok(compiled_line)
+            }
+
+            Instructions::Idiv => {
+                let i = parse_reg_mem_pattern_line(
+                    i,
+                    &tokenized_line,
+                    is_org_defined,
+                    ParseRegMemFnArgMaps {
+                        label_idx_map: &mut compiled_line.label_idx_map,
+                        variable_ref_map,
+                        variable_abs_address_map: variable_address_map
+                            .unwrap_or(&VariableAddressMap::default()),
+                        compiled_line_offset_maps,
+                    },
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                    CompilationData {
+                        ins_16bit: 0xF7,
+                        ins_8bit: 0xF6,
+                        sub_idx_offset: 0x38,
+                    },
+                )?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "IDIV", 1)?;
                 Ok(compiled_line)
             }
 
