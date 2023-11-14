@@ -42,7 +42,6 @@ use self::{
         call::parse_call,
         cmp::parse_cmp,
         dec::parse_dec,
-        div::parse_div,
         in_ins::parse_in,
         inc::parse_inc,
         jmp::parse_jmp,
@@ -54,7 +53,9 @@ use self::{
         or::parse_or,
         out_ins::parse_out,
         pattern_extractors::{
-            offset_label_pattern::parse_label_pattern_full, parse_two_arguments_line,
+            offset_label_pattern::parse_label_pattern_full,
+            parse_two_arguments_line,
+            reg_mem_pattern::{parse_reg_mem_pattern_line, CompilationData, ParseRegMemFnArgMaps},
         },
         pop::parse_pop,
         push::parse_push,
@@ -532,18 +533,25 @@ fn compile(
             }
 
             Instructions::Div => {
-                let i = parse_div(
+                let i = parse_reg_mem_pattern_line(
                     i,
                     &tokenized_line,
                     is_org_defined,
-                    &mut compiled_line.label_idx_map,
-                    variable_ref_map,
-                    variable_address_map.unwrap_or(&VariableAddressMap::default()),
-                    compiled_line_offset_maps,
+                    ParseRegMemFnArgMaps {
+                        label_idx_map: &mut compiled_line.label_idx_map,
+                        variable_ref_map,
+                        variable_abs_address_map: variable_address_map
+                            .unwrap_or(&VariableAddressMap::default()),
+                        compiled_line_offset_maps,
+                    },
                     compiled_bytes,
                     compiled_bytes_ref,
+                    CompilationData {
+                        ins_16bit: 0xF7,
+                        ins_8bit: 0xF6,
+                        sub_idx_offset: 0x30,
+                    },
                 )?;
-
                 error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "LEA", 2)?;
                 Ok(compiled_line)
             }
