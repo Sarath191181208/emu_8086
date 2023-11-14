@@ -1,0 +1,45 @@
+---
+title: DIV
+description: Unsigned divide.
+---
+import FlagsChangedTable from "@site/src/components/FlagsChangedTable";
+import { RegisterAndMemoryAddressingSingleInstruction } from "@site/src/components/AddressingModes";
+
+## Syntax
+
+```asm6502 showLineNumbers
+    DIV        BL ; 8 bit register
+    DIV        AX ; 16 bit register
+    DIV   [0x100] ; 16bit memory location
+    DIV b.[0x100] ; 8bit memory location
+```
+
+## Attributes
+
+| Attribute     | Description                                                                                                                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operands**  | `register` - A 16/8 bit register. <br/> `memory` - An 16/8 bit memory location.                                                                                                                                       |
+| **Operation** | If operand is a byte: <br/> &emsp; AL = AX / operand <br/> &emsp; AH = AX % operand -> (remainder) <br/> If operand is a word: <br/> &emsp; AX = (DX AX) / operand <br/> &emsp; DX = (DX AX) % operand -> (remainder) |
+| **Size**      | 3 bytes, 5 bytes                                                                                                                                                                                                      |
+| **Action**    | Unsigned division of the operand with the particular register/registers                                                                                                                                               |
+| **Flags**     | <FlagsChangedTable carryFlag= "changed" overflowFlag= "changed" zeroFlag="changed" signFlag="changed" parityFlag="changed" auxiliaryCarryFlag="changed" />   |
+
+## Example
+
+```asm6502 showLineNumbers
+MOV AX, 203   ; AX = 00CBh
+MOV BL, 4
+DIV BL        ; AL = 50 (32h), AH = 3
+```
+
+## Supported Modes
+
+### 16bit/8bit reg/mem addressing
+
+<RegisterAndMemoryAddressingSingleInstruction instructionName="DIV" />
+
+:::info Info
+There isn't a 16bit constant/label mode for this instruction. But you can use the 8bit constant mode and add a `JMP` instruction after it.
+
+ex: `DIV 0x100` is equivalent to `JBE 0x03` + `JMP 0x100`. Here 0x03 is the size of the 16bit jmp instruction [0xE9, 0x00, 0x01].
+:::

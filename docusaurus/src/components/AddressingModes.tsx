@@ -6,6 +6,47 @@ interface AddressingModeProps {
   instructionName: string;
 }
 
+export function RegisterAndMemoryAddressingSingleInstruction(props: AddressingModeProps) {
+  return (
+    <>
+      <p>
+        This is a mode in which the operand is specified as a register while the
+        other operand is specified as a memory location. The second operand is a
+        memory location whose address is contained in a register (or) an offset.
+        The second operand might also have an displacement.
+      </p>
+      <p>Example: </p>
+      <CodeBlock language="asm6502" showLineNumbers>
+        {`org 100h 
+data
+    VAR DB 0FFh
+    VAR2 DW 0Bh
+code:
+    ${props.instructionName} CL
+    ${props.instructionName} BX 
+
+    ${props.instructionName} Var
+    ${props.instructionName} w.[Var]
+    ${props.instructionName} w.[Var2]
+
+    ${props.instructionName} b.[Var]
+    ${props.instructionName} b.[Var2]
+
+    ${props.instructionName} [BX]
+    ${props.instructionName} [BX+SI]
+    ${props.instructionName} [BX+SI+10h]
+    ${props.instructionName} [BX+SI+100h]
+
+    ${props.instructionName} b.[BX]
+    ${props.instructionName} b.[BX+SI]
+    ${props.instructionName} b.[BX+SI+10h]
+    ${props.instructionName} b.[BX+SI+100h]
+`}
+      </CodeBlock>
+    </>
+  );
+}
+
 export function RegisterAddressingMode(props: AddressingModeProps) {
   return (
     <>
