@@ -1,4 +1,5 @@
 pub mod div;
+pub mod idiv;
 pub mod ja;
 pub mod jae;
 pub mod jb;
@@ -26,7 +27,7 @@ pub mod jns;
 pub mod jnz;
 pub mod jo;
 pub mod jp;
-mod jpe;
+pub mod jpe;
 pub mod jpo;
-mod js;
+pub mod js;
 pub mod jz;
