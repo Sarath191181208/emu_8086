@@ -47,6 +47,7 @@ pub(crate) enum Instructions {
     Js,
     Jz,
     Div,
+    Idiv,
     Jmp,
     Lea,
     Les,
