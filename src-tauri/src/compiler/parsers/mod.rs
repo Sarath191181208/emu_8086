@@ -18,6 +18,7 @@ pub mod out_ins;
 pub mod pop;
 pub mod push;
 pub mod sbb;
+pub mod shl;
 pub mod sub;
 pub mod test_ins;
 pub mod var;

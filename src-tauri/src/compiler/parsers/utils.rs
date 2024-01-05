@@ -303,6 +303,13 @@ impl IndexedAddressingTypes {
             Some(Either::Right(offset)) => (0x80 + idx, offset.to_le_bytes().to_vec()),
         }
     }
+
+    pub(super) fn get_instruction_prefixed_with_offset_and_address(&self, offset: u8) -> Vec<u8> {
+        let (mut ins, mut addr_bytes) = self.get_ins_and_and_offset();
+        ins += offset;
+        addr_bytes.insert(0, ins);
+        addr_bytes
+    }
 }
 
 pub(in crate::compiler) fn get_evaluated_token<'a>(

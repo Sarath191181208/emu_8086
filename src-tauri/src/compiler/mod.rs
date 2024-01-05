@@ -60,6 +60,7 @@ use self::{
         pop::parse_pop,
         push::parse_push,
         sbb::parse_sbb,
+        shl::parse_shl,
         sub::parse_sub,
         test_ins::parse_test,
         utils::iterate_with_seperator,
@@ -439,7 +440,34 @@ fn compile(
                     addressing_mode,
                 )?;
 
-                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "ADD", 2)?;
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "XOR", 2)?;
+                Ok(compiled_line)
+            }
+
+            Instructions::Shl => {
+                let addressing_mode = parse_two_arguments_line(
+                    &tokenized_line,
+                    i,
+                    is_org_defined,
+                    "SHL",
+                    &mut compiled_line.label_idx_map,
+                    variable_ref_map,
+                    variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                    compiled_line_offset_maps,
+                )?;
+                i = parse_shl(
+                    &tokenized_line,
+                    i,
+                    is_org_defined,
+                    &mut compiled_line.label_idx_map,
+                    variable_ref_map,
+                    variable_address_map.unwrap_or(&VariableAddressMap::default()),
+                    compiled_line_offset_maps,
+                    compiled_bytes,
+                    compiled_bytes_ref,
+                )?;
+
+                error_if_hasnt_consumed_all_ins(&lexed_str_without_spaces, i, "SHL", 2)?;
                 Ok(compiled_line)
             }
 

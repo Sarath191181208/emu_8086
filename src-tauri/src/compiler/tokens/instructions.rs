@@ -61,6 +61,7 @@ pub(crate) enum Instructions {
     Push,
     Ret,
     Sbb,
+    Shl,
     Sub,
     Test,
     Xchg,

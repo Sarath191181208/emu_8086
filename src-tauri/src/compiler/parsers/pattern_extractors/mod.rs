@@ -9,7 +9,7 @@ use crate::{
             get_all_8bit_registers_suggestions, get_all_8bit_variables_suggestions,
             get_all_registers_and_variable_suggestions,
         },
-        tokenized_line::TokenizedLine,
+        tokenized_line::{self, TokenizedLine},
         tokens::{
             indexed_addressing_types::IndexedAddressingTypes, registers16bit::Registers16bit,
             registers8bit::Registers8bit, Assembly8086Tokens, Token,
@@ -97,6 +97,92 @@ pub(crate) enum AddressingMode {
         register_type: Registers16bit,
         addr_type: IndexedAddressingTypes,
     },
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn parse_high_low_tokens<'a>(
+    tokenized_line: &'a TokenizedLine<'a>,
+    i: usize,
+    is_org_defined: bool,
+    ins: &'a str,
+    label_idx_map: &mut HashMap<String, (Token, usize, bool)>,
+    variable_ref_map: &mut VariableReferenceMap,
+    variable_abs_address_map: &VariableAddressMap,
+    compiled_line_offset_maps: Option<&CompiledLineLabelRef>,
+) -> Result<(Token, Option<Token>), CompilationError> {
+    let high_token = tokenized_line.get(
+        i + 1,
+        format!("Expected arguments after {} got nothing", ins).to_string(),
+        Some(vec![get_all_registers_and_variable_suggestions(Some(
+            variable_abs_address_map,
+        ))]),
+    )?;
+
+    let comma_pos = tokenized_line.find_comma();
+    let compact_high_until = match comma_pos {
+        Some(pos) => pos,
+        None => tokenized_line.len(),
+    };
+
+    let compact_high_token = evaluate_ins(
+        i + 1,
+        compact_high_until,
+        tokenized_line,
+        is_org_defined,
+        label_idx_map,
+        variable_ref_map,
+        variable_abs_address_map,
+        compiled_line_offset_maps,
+    )?
+    .unwrap_or(high_token.clone());
+
+    let high_token = &compact_high_token;
+
+    let low_token: Option<Token> = match tokenized_line.get(
+        comma_pos.unwrap_or(i + 2) + 1,
+        format!(
+            "Expected 16bit value after {:?} got nothing",
+            high_token.token_type
+        )
+        .to_string(),
+        None,
+    ) {
+        Ok(token) => Some(token.clone()),
+        Err(_) => None,
+    };
+
+    let compact_low_token = evaluate_ins(
+        compact_high_until + 1,
+        tokenized_line.len(),
+        tokenized_line,
+        is_org_defined,
+        label_idx_map,
+        variable_ref_map,
+        variable_abs_address_map,
+        compiled_line_offset_maps,
+    )?;
+
+    let mut low_token = match (low_token, compact_low_token) {
+        (None, None) => None,
+        (None, Some(compact_token)) => Some(compact_token),
+        (Some(low_token), None) => Some(low_token),
+        (Some(_), Some(compact_token)) => Some(compact_token),
+    };
+
+    if let Some(ref low_token_unwrapped) = low_token {
+        if let Assembly8086Tokens::Number16bit(num) = low_token_unwrapped.token_type {
+            if num < 0xFF {
+                low_token = Some(Token::new(
+                    Assembly8086Tokens::Number8bit(num as u8),
+                    low_token_unwrapped.line_number,
+                    low_token_unwrapped.column_number,
+                    low_token_unwrapped.token_length,
+                ));
+            }
+        }
+    }
+
+    Ok((high_token.clone(), low_token))
 }
 
 #[allow(clippy::too_many_arguments)]
